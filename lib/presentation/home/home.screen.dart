@@ -11,52 +11,6 @@ class HomeScreen extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return controller.obx(
       (state) => Scaffold(
-        drawer: Drawer(
-          child: Column(
-            children: [
-              DrawerHeader(child: Obx(() => Text(controller.rolName.value))),
-              ListTile(
-                title: Text("Perfil"),
-                onTap: () => Get.toNamed(Routes.PROFILE),
-              ),
-              ListTile(
-                leading: Icon(Icons.logout),
-                iconColor: Color(0XFFF8FAFC),
-                tileColor: Color(0XFFFF3535),
-                title: Text(
-                  "Cerrar sesion",
-                  style: TextStyle(color: Color(0XFFF8FAFC)),
-                ),
-                onTap: () => controller.signOut(),
-              ),
-            ],
-          ),
-        ),
-        appBar: AppBar(
-          centerTitle: true,
-          backgroundColor: Color(0XFFF8FAFC),
-          title: SizedBox(
-            width: 120,
-            child: Image.network(
-              fit: BoxFit.contain,
-              "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
-            ),
-          ),
-          automaticallyImplyActions: false,
-          leading: Builder(
-            builder: (context) {
-              return IconButton(
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                icon: Icon(Icons.account_circle_outlined),
-              );
-            },
-          ),
-          actions: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.search_outlined)),
-          ],
-        ),
         backgroundColor: Color(0XFFF8FAFC),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -67,7 +21,9 @@ class HomeScreen extends GetView<HomeController> {
                 children: [
                   Text("Ultimos folios", textScaleFactor: 1.8),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.toNamed(Routes.FOLIOS);
+                    },
                     child: Text("Ver todo"),
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,

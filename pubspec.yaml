@@ -39,6 +39,8 @@ dependencies:
   powersync: ^2.3.1
   connectivity_plus: ^7.2.0
   path_provider: ^2.1.6
+  get_storage: ^2.1.1
+  adaptive_theme: ^3.7.2
 
 dev_dependencies:
   flutter_test:
