@@ -1,0 +1,32 @@
+# Archivos de compilación de Flutter y Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.pyc
+
+# Archivos de Android (lo que vimos que causa errores de caché)
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+*.iml
+.gradle/
+local.properties
+
+# Archivos de iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+*.framework
+
+# Archivos de sistema y VS Code
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Archivos sensibles (¡MUY IMPORTANTE!)
+.env
