@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 
 class DropdownWidget extends GetView<AddFoliosController> {
   final String? title;
-  final String dropdownValue;
-  final ValueChanged<String?>? onChanged;
-  final List<DropdownMenuItem<String>>? items;
+  final int dropdownValue;
+  final ValueChanged<int?>? onChanged;
+  final List<DropdownMenuItem<int>>? items;
   const DropdownWidget({
     required this.dropdownValue,
     required this.onChanged,
@@ -28,7 +28,7 @@ class DropdownWidget extends GetView<AddFoliosController> {
             border: Border.all(color: Colors.grey, width: 1), // The outline
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
+            child: DropdownButton<int>(
               isExpanded: true,
               value: dropdownValue,
               icon: const Icon(Icons.keyboard_arrow_down),

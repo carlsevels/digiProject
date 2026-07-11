@@ -1,16 +1,44 @@
+import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
+import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-class AddFoliosController extends GetxController {
+class AddFoliosController extends GetxController with StateMixin {
   //TODO: Implement AddFoliosController
-  RxList<String> list = <String>["Seleccionar", 'Folio', 'Factura'].obs;
+  RxInt clienteId = 0.obs;
+  RxInt refaccionId = 0.obs;
+  RxInt condicionPagoId = 0.obs;
+
+  final RxList<Clientes> _clientesModel = <Clientes>[].obs;
+  RxList<Clientes> get clientesModel => this._clientesModel;
+  set clientesModel(RxList<Clientes> value) =>
+      this._clientesModel.value = value;
+
+  final RxList<GeneralModel> _condicionPago = <GeneralModel>[].obs;
+  RxList<GeneralModel> get condicionPago => this._condicionPago;
+  set condicionPago(RxList<GeneralModel> value) =>
+      this._condicionPago.value = value;
+
+  final RxList<GeneralModel> _refacciones = <GeneralModel>[].obs;
+  RxList<GeneralModel> get refacciones => this._refacciones;
+  set refacciones(RxList<GeneralModel> value) =>
+      this._refacciones.value = value;
 
   final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    _onInit();
+  }
+
+  Future<void> _onInit() async {
+    change(null, status: RxStatus.loading());
+    await getClientes();
+    await getRefaccion();
+    await getCondicionPago();
+    print("DEBUG: refacciones cargadas: ${refacciones.length}");
+    change(null, status: RxStatus.success());
   }
 
   @override
@@ -23,19 +51,47 @@ class AddFoliosController extends GetxController {
     super.onClose();
   }
 
+  Future<void> getClientes() async {
+    final result = await AppDatabase.db.getAll("SELECT * FROM clientes;");
+    List<Clientes> listaProcesada = result.map((row) {
+      return Clientes.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+    final defaultItem = Clientes(
+      id: 0,
+      nombreComercial: "Seleccione un Cliente",
+    );
+    listaProcesada.insert(0, defaultItem);
+    clientesModel.assignAll(listaProcesada);
+    clientesModel.value = listaProcesada;
+  }
+
+  Future<void> getRefaccion() async {
+    final result = await AppDatabase.db.getAll(
+      "SELECT * FROM tipos WHERE id not in (1, 2);",
+    );
+    List<GeneralModel> refaccionesList = result.map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+    final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
+    refaccionesList.insert(0, defaultItem);
+    refacciones.assignAll(refaccionesList);
+    refacciones.value = refaccionesList;
+  }
+
+  Future<void> getCondicionPago() async {
+    final result = await AppDatabase.db.getAll("SELECT * FROM condicionPago;");
+    List<GeneralModel> condicionDePagoList = result.map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+    final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
+    condicionDePagoList.insert(0, defaultItem);
+    condicionPago.assignAll(condicionDePagoList);
+    condicionPago.value = condicionDePagoList;
+  }
+
   Future<Map<String, dynamic>?> postFolio() async {
     try {
-      final status = AppDatabase.db.currentStatus;
       final String idParaPowerSync = const Uuid().v4();
-      print("¿Ha terminado la sincronización inicial?: ${status.hasSynced}");
-
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream.firstWhere(
-          (s) => s.hasSynced == true,
-        );
-        print("¡Sincronización completada!");
-      }
 
       await AppDatabase.db.execute(
         '''

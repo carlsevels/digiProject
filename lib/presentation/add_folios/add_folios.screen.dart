@@ -1,3 +1,5 @@
+import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
+import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
@@ -11,7 +13,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
   const AddFoliosScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    RxString dropdownValue = controller.list.first.obs;
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
       appBar: AppBar(
@@ -90,176 +91,200 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Tipo de documento",
-                textScaleFactor: 1.2,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4.0),
-              Obx(
-                () => DropdownWidget(
-                  title: "Seleccione tipo",
-                  dropdownValue: dropdownValue.value,
-                  onChanged: (String? value) {
-                    dropdownValue.value = value!;
-                  },
-                  items: controller.list.map<DropdownMenuItem<String>>((
-                    String value,
-                  ) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+      body: controller.obx((state) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Tipo de documento",
+                  textScaleFactor: 1.2,
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
-              SizedBox(height: 8),
-              InputText(
-                title: "Numero de factura",
-                hintText: "Escribe el numero aqui",
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Cliente",
-                textScaleFactor: 1.2,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text("Buscar Nombre o nombre comercial"),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Obx(
-                    () => Expanded(
-                      child: DropdownWidget(
-                        dropdownValue: dropdownValue.value,
-                        onChanged: (String? value) {
-                          dropdownValue.value = value!;
+                SizedBox(height: 4.0),
+                // Obx(
+                //   () => DropdownWidget(
+                //     title: "Seleccione tipo",
+                //     dropdownValue: dropdownValue,
+                //     onChanged: (String? value) {
+                //       dropdownValue = value!;
+                //     },
+                //     items: controller.list.map<DropdownMenuItem<String>>((
+                //       String value,
+                //     ) {
+                //       return DropdownMenuItem<String>(
+                //         value: value,
+                //         child: Text(value),
+                //       );
+                //     }).toList(),
+                //   ),
+                // ),
+                SizedBox(height: 8),
+                InputText(
+                  title: "Numero de factura",
+                  hintText: "Escribe el numero aqui",
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Cliente",
+                  textScaleFactor: 1.2,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text("Buscar Nombre o nombre comercial"),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Obx(() {
+                        final uniqueClientes = <int, Clientes>{};
+                        for (var c in controller.clientesModel) {
+                          if (c.id != null) {
+                            uniqueClientes[c.id!] = c;
+                          }
+                        }
+                        return DropdownWidget(
+                          dropdownValue: controller.clienteId.value,
+                          onChanged: (int? value) {
+                            if (value != null) {
+                              controller.clienteId.value = value;
+                            }
+                          },
+                          items: uniqueClientes.values
+                              .map<DropdownMenuItem<int>>((Clientes cliente) {
+                                return DropdownMenuItem<int>(
+                                  value: cliente.id!,
+                                  child: Text(
+                                    cliente.nombreComercial ?? 'Sin nombre',
+                                  ),
+                                );
+                              })
+                              .toList(),
+                        );
+                      }),
+                    ),
+                    SizedBox(width: 4),
+                    Center(
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          minimumSize: Size(50, 30),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          backgroundColor: Color(0XFF1D6CFF),
+                          foregroundColor: Color(0XFFFFFFFF),
+                        ),
+                        onPressed: () {
+                          Get.toNamed(Routes.ADD_CLIENTE);
                         },
-                        items: controller.list.map<DropdownMenuItem<String>>((
-                          String value,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
+                        icon: Icon(Icons.add),
+                        label: Text("Nuevo", style: TextStyle(fontSize: 14)),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 4),
-                  Center(
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
-                        minimumSize: Size(50, 30),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(4)),
-                        ),
-                        backgroundColor: Color(0XFF1D6CFF),
-                        foregroundColor: Color(0XFFFFFFFF),
-                      ),
-                      onPressed: () {
-                        Get.toNamed(Routes.ADD_CLIENTE);
-                      },
-                      icon: Icon(Icons.add),
-                      label: Text("Nuevo", style: TextStyle(fontSize: 14)),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Producto",
-                textScaleFactor: 1.2,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4.0),
-              DropdownWidget(
-                title: "Tipo de refaccion",
-                dropdownValue: dropdownValue.value,
-                onChanged: (String? value) {
-                  dropdownValue.value = value!;
-                },
-                items: controller.list.map<DropdownMenuItem<String>>((
-                  String value,
-                ) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 8),
-              InputText(title: "Cantidad", hintText: "Escribir la cantidad"),
-              SizedBox(height: 8),
-              DropdownWidget(
-                title: "Condicion de pago",
-                dropdownValue: dropdownValue.value,
-                onChanged: (String? value) {
-                  dropdownValue.value = value!;
-                },
-                items: controller.list.map<DropdownMenuItem<String>>((
-                  String value,
-                ) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Repartidor",
-                textScaleFactor: 1.2,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 4.0),
-              DropdownWidget(
-                dropdownValue: dropdownValue.value,
-                onChanged: (String? value) {
-                  dropdownValue.value = value!;
-                },
-                items: controller.list.map<DropdownMenuItem<String>>((
-                  String value,
-                ) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 8),
-              Container(
-                width: Get.size.width,
-                child: FilledButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    backgroundColor: const Color(0XFF1D6CFF),
-                    foregroundColor: Colors.white, // Color del texto/icono
-                  ),
-                  onPressed: () {
-                    controller.postFolio();
-                  },
-                  child: Text("Agregar"),
+                  ],
                 ),
-              ),
-            ],
+                SizedBox(height: 8),
+                Text(
+                  "Producto",
+                  textScaleFactor: 1.2,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 4.0),
+
+                SizedBox(height: 8),
+                InputText(title: "Cantidad", hintText: "Escribir la cantidad"),
+                SizedBox(height: 8),
+                Obx(() {
+                  final uniqueCondicionPago = <int, GeneralModel>{};
+                  for (var c in controller.condicionPago) {
+                    if (c.id != null) {
+                      uniqueCondicionPago[c.id!] = c;
+                    }
+                  }
+                  return DropdownWidget(
+                    title: "Condicion de Pagos",
+                    dropdownValue: controller.condicionPagoId.value,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        controller.condicionPagoId.value = value;
+                      }
+                    },
+                    items: uniqueCondicionPago.values
+                        .map<DropdownMenuItem<int>>((
+                          GeneralModel condicionPago,
+                        ) {
+                          return DropdownMenuItem<int>(
+                            value: condicionPago.id!,
+                            child: Text(condicionPago.nombre ?? 'Sin nombre'),
+                          );
+                        })
+                        .toList(),
+                  );
+                }),
+                SizedBox(height: 8),
+                Obx(() {
+                  final uniqueRefacciones = <int, GeneralModel>{};
+
+                  for (var c in controller.refacciones) {
+                    if (c.id != null) {
+                      uniqueRefacciones[c.id!] = c;
+                    }
+                  }
+                  return DropdownWidget(
+                    title: "Tipo de refaccion",
+                    dropdownValue: controller.refaccionId.value,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        controller.refaccionId.value = value;
+                      }
+                    },
+                    items: uniqueRefacciones.values.map<DropdownMenuItem<int>>((
+                      GeneralModel cliente,
+                    ) {
+                      return DropdownMenuItem<int>(
+                        value: cliente.id ?? 0,
+                        child: Text(cliente.nombre ?? 'Sin nombre'),
+                      );
+                    }).toList(),
+                  );
+                }),
+                SizedBox(height: 8),
+                Text(
+                  "Repartidor",
+                  textScaleFactor: 1.2,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 4.0),
+                //repartidor
+                SizedBox(height: 8),
+                Container(
+                  width: Get.size.width,
+                  child: FilledButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      backgroundColor: const Color(0XFF1D6CFF),
+                      foregroundColor: Colors.white, // Color del texto/icono
+                    ),
+                    onPressed: () {
+                      controller.postFolio();
+                    },
+                    child: Text("Agregar"),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

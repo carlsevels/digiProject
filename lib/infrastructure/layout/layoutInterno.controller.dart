@@ -17,7 +17,7 @@ class LayoutInternoController extends GetxController
   }
 
   Future<Map<String, dynamic>?> getDatos() async {
-    change(null, status: RxStatus.loading()); // Indicas que está cargando
+    change(null, status: RxStatus.loading());
     try {
       final miId = Supabase.instance.client.auth.currentUser?.id;
       final status = AppDatabase.db.currentStatus;
