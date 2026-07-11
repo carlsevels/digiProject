@@ -4,6 +4,7 @@ class Users {
   String? apellidoPaterno;
   String? apellidoMaterno;
   int? rolId;
+  String? userId;
 
   Users({
     this.id,
@@ -11,6 +12,7 @@ class Users {
     this.apellidoPaterno,
     this.apellidoMaterno,
     this.rolId,
+    this.userId,
   });
 
   Users.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class Users {
     apellidoPaterno = json['apellidoPaterno'];
     apellidoMaterno = json['apellidoMaterno'];
     rolId = json['rolId'];
+    userId = json['userId']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -28,6 +31,7 @@ class Users {
     data['apellidoPaterno'] = apellidoPaterno;
     data['apellidoMaterno'] = apellidoMaterno;
     data['rolId'] = rolId;
+    data['userId'] = userId;
     return data;
   }
 }

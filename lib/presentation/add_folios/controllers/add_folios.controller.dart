@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddFoliosController extends GetxController with StateMixin {
@@ -10,8 +14,12 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt clienteId = 0.obs;
   RxInt refaccionId = 0.obs;
   RxInt condicionPagoId = 0.obs;
-  RxInt repartidorId = 0.obs;
+  RxInt repartidorId = 2.obs;
   RxInt tipoDocumentoId = 0.obs;
+
+  //Controllers
+  TextEditingController cantidadController = TextEditingController();
+  TextEditingController numReporteController = TextEditingController();
 
   final RxList<Clientes> _clientesModel = <Clientes>[].obs;
   RxList<Clientes> get clientesModel => this._clientesModel;
@@ -118,42 +126,66 @@ class AddFoliosController extends GetxController with StateMixin {
 
   Future<void> getUsersReparto() async {
     final result = await AppDatabase.db.getAll(
-      '''SELECT "datosPersonales".id, "nombre", "apellidoPaterno", "apellidoMaterno", "rolId" FROM "datosPersonales" 
-INNER JOIN roles ON "datosPersonales"."rolId" = "roles"."id"
-WHERE roles.id = 2''',
+      '''SELECT * FROM "datosPersonales" WHERE "rolId" = 2;''',
     );
     List<Users> usersList = result.map((row) {
       return Users.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
-    final defaultItem = Users(id: 0, nombre: "Seleccione una refacción");
-    usersList.insert(0, defaultItem);
+
     reparto.assignAll(usersList);
+    await AppDatabase.db.execute(
+      "DELETE FROM folios WHERE repartidorId IS NULL OR repartidorId = 'null' OR repartidorId = '0';",
+    );
     reparto.value = usersList;
   }
 
   Future<Map<String, dynamic>?> postFolio() async {
     try {
-      final String idParaPowerSync = const Uuid().v4();
+      // 1. Validar autenticación
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        print("Error: Usuario no autenticado");
+        return null;
+      }
 
-      await AppDatabase.db.execute(
-        '''
- INSERT INTO folios (id, "folioId", "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", "statusId", created_at) 
- values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ''',
-        [
-          idParaPowerSync,
-          343,
-          1,
-          1,
-          1,
-          2,
-          1,
-          '0a505f2f-df52-47a8-b288-e4eb0408b74b',
-          '0a505f2f-df52-47a8-b288-e4eb0408b74b',
-          1,
-          '2026-07-10T22:02:10Z',
-        ],
-      );
+      final String idParaPowerSync = const Uuid().v4();
+      final String miId = user.id;
+
+      if (clienteId.value == 0 || tipoDocumentoId.value == 0) {
+        print("Error: Debes seleccionar valores válidos");
+        return null;
+      }
+      // 1. Obtén el UUID del repartidor de forma segura
+      String? repartidorUuid;
+      if (reparto.isNotEmpty && repartidorId.value != 0) {
+        final user = reparto.firstWhere(
+          (u) => u.id == repartidorId.value,
+          orElse: () => Users(userId: null),
+        );
+        repartidorUuid = user.userId;
+      }
+
+      List<Object?> datosEnviados = [
+        idParaPowerSync,
+        numReporteController.text,
+        tipoDocumentoId.value,
+        clienteId.value,
+        refaccionId.value,
+        int.tryParse(cantidadController.text) ?? 0,
+        condicionPagoId.value,
+        repartidorUuid,
+        miId,
+        1,
+        DateTime.now().toIso8601String(),
+      ];
+
+      // 3. Ejecuta
+      await AppDatabase.db.execute('''
+  INSERT INTO folios (id, "folioId", "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", "statusId", created_at) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+''', datosEnviados);
+      print("datosEnviados: ${datosEnviados}");
+      print("Folio creado con éxito: $idParaPowerSync");
     } catch (e) {
       print("Error al crear: $e");
     }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
@@ -141,6 +143,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                       children: [
                         SizedBox(height: 8),
                         InputText(
+                          textController: controller.numReporteController,
                           title: controller.tipoDocumentoId.value == 1
                               ? "Numero de Factura"
                               : "Numero de Folio",
@@ -235,7 +238,11 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                 SizedBox(height: 4.0),
 
                 SizedBox(height: 8),
-                InputText(title: "Cantidad", hintText: "Escribir la cantidad"),
+                InputText(
+                  title: "Cantidad",
+                  hintText: "Escribir la cantidad",
+                  textController: controller.cantidadController,
+                ),
                 SizedBox(height: 8),
                 Obx(() {
                   final uniqueRefacciones = <int, GeneralModel>{};
@@ -309,19 +316,20 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                       uniqueReparto[c.id!] = c;
                     }
                   }
-                  return DropdownWidget(
+                  return DropdownWidget<int>(
                     title: "Seleccionar repartidor",
                     dropdownValue: controller.repartidorId.value,
                     onChanged: (int? value) {
                       if (value != null) {
                         controller.repartidorId.value = value;
+                        print(jsonEncode(controller.reparto));
                       }
                     },
                     items: uniqueReparto.values.map<DropdownMenuItem<int>>((
                       Users reparto,
                     ) {
                       return DropdownMenuItem<int>(
-                        value: reparto.id ?? 0,
+                        value: reparto.id,
                         child: Text(reparto.nombre ?? 'Sin nombre'),
                       );
                     }).toList(),
