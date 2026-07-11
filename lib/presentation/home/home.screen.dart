@@ -34,45 +34,71 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                 ],
               ),
-              ListTile(
-                isThreeLine: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Column(
-                  children: [Text("3", textScaleFactor: 2), Text("Toner")],
-                ),
-                title: Text("TERNIUM"),
-                subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          color: Color(0XFF64748B),
+              InkWell(
+                onTap: () {},
+                child: ListTile(
+                  isThreeLine: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Column(
+                    children: [
+                      Text("3", textScaleFactor: 2),
+                      Flexible(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 35),
+                          child: Text(
+                            "Multifuncional",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        Text(
-                          "Guadalupe - Renta - 103325",
-                          style: TextStyle(color: Color(0XFF64748B)),
+                      ),
+                    ],
+                  ),
+                  title: Text("TERNIUM"),
+                  subtitle: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              color: Color(0XFF64748B),
+                            ),
+                            Flexible(
+                              child: Text(
+                                "Guadalupe - Renta - 103325",
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Color(0XFF64748B)),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    Container(
-                      width: Get.size.width / 5,
-                      child: Center(
-                        child: Text(
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(color: const Color(0XFF1D6CFF)),
+                        ),
+                        child: const Text(
                           "Por entregar",
-                          style: TextStyle(color: Color(0XFF1D6CFF)),
+                          style: TextStyle(
+                            color: Color(0XFF1D6CFF),
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
-                        border: BoxBorder.all(color: Color(0XFF1D6CFF)),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+              SizedBox(height: 8.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -106,6 +132,7 @@ class HomeScreen extends GetView<HomeController> {
                   style: TextStyle(color: Color(0XFF64748B)),
                 ),
               ),
+              SizedBox(height: 8.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -131,6 +158,7 @@ class HomeScreen extends GetView<HomeController> {
                 ),
                 title: Text("Toner"),
               ),
+              SizedBox(height: 8.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

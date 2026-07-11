@@ -11,7 +11,7 @@ class FoliosScreen extends GetView<FoliosController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
-      appBar: AppBar(),
+      appBar: AppBar(backgroundColor: Color(0XFFF8FAFC)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

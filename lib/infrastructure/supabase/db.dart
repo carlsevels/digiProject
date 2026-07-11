@@ -38,28 +38,36 @@ class MyBackendConnector extends PowerSyncBackendConnector {
   // See example implementation here: https://docs.powersync.com/client-sdk-references/flutter#3-integrate-with-your-backend
   @override
   Future<void> uploadData(PowerSyncDatabase database) async {
-    // This function is called whenever there is data to upload, whether the
-    // device is online or offline.
-    // If this call throws an error, it is retried periodically.
-
     final transaction = await database.getNextCrudTransaction();
-    if (transaction == null) {
-      return;
-    }
+    if (transaction == null) return;
 
-    // The data that needs to be changed in the remote db
+    final supabase = Supabase.instance.client;
+
     for (var op in transaction.crud) {
-      switch (op.op) {
-        case UpdateType.put:
-        // TODO: Instruct your backend API to CREATE a record
-        case UpdateType.patch:
-        // TODO: Instruct your backend API to PATCH a record
-        case UpdateType.delete:
-        //TODO: Instruct your backend API to DELETE a record
+      // Si 'record' no existe, lo más probable es que sea 'opData'
+      final Map<String, dynamic> data =
+          (op.opData ?? {}) as Map<String, dynamic>;
+      if (op.table == 'folios') {
+        try {
+          switch (op.op) {
+            case UpdateType.put:
+              // Usamos upsert de Supabase para crear o actualizar
+              await supabase.from('folios').upsert(data);
+              break;
+            case UpdateType.patch:
+              // Para el patch, usamos el id (UUID) que genera PowerSync
+              await supabase.from('folios').update(data).eq('id', op.id);
+              break;
+            case UpdateType.delete:
+              await supabase.from('folios').delete().eq('id', op.id);
+              break;
+          }
+        } catch (e) {
+          print("Error al sincronizar con Supabase: $e");
+          rethrow; // Importante: relanzar el error para que PowerSync reintente
+        }
       }
     }
-
-    // Completes the transaction and moves onto the next one
     await transaction.complete();
   }
 }
@@ -113,7 +121,7 @@ final schema = Schema([
     Column.integer('statusId'),
     Column.text('creadorId'),
     Column.text('repartidorId'),
-    Column.integer('entregaId'),
+    Column.text('folioId'),
   ]),
   Table('clientes', [
     Column.text('created_at'),
@@ -135,13 +143,5 @@ final schema = Schema([
     Column.text('userId'),
     Column.integer('folioId'),
     Column.text('comentario'),
-  ]),
-  Table('entregas', [
-    Column.text('created_at'),
-    Column.text('horaInicial'),
-    Column.text('llegada'),
-    Column.text('salida'),
-    Column.text('fechaEntrega'),
-    Column.text('recibidoPor'),
   ]),
 ]);

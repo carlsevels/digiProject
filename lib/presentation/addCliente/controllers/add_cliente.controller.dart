@@ -1,13 +1,11 @@
 import 'package:get/get.dart';
 
-class HomeController extends GetxController with StateMixin {
-  //TODO: Implement HomeController
+class AddClienteController extends GetxController {
+  //TODO: Implement AddClienteController
 
   final count = 0.obs;
   @override
   void onInit() {
-    change(null, status: RxStatus.loading());
-    change(null, status: RxStatus.success());
     super.onInit();
   }
 

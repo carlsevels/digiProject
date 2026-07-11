@@ -19,25 +19,24 @@ class LayoutInterno extends StatelessWidget {
       (state) => Scaffold(
         key: _scaffoldKey,
         drawer: Drawer(
+          backgroundColor: Color(0XFFF8FAFC),
           child: Column(
             children: [
               Container(
                 width: screenWidth,
                 child: DrawerHeader(
+                  // decoration: BoxDecoration(image: imageUrl),
                   curve: Curves.bounceOut,
-                  child: Obx(
-                    () => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controller.nameUser.value,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(controller.rolName.value),
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        controller.nameUser.value,
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(controller.rolName.value),
+                    ],
                   ),
-                  decoration: BoxDecoration(color: Color(0XFF1D6CFF)),
                 ),
               ),
               ListTile(
@@ -46,7 +45,24 @@ class LayoutInterno extends StatelessWidget {
               ),
               ListTile(title: Text("Repartidores"), onTap: null),
               ListTile(title: Text("Refacciones"), onTap: null),
-              ListTile(title: Text("Clientes"), onTap: null),
+              ExpansionTile(
+                title: Text("Folios"),
+                children: [
+                  ListTile(
+                    title: Text("Agregar Folio"),
+                    onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                  ),
+                ],
+              ),
+              ExpansionTile(
+                title: Text("Clientes"),
+                children: [
+                  ListTile(
+                    title: Text("Agregar Cliente"),
+                    onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
+                  ),
+                ],
+              ),
               Spacer(),
               ListTile(
                 leading: Icon(Icons.logout),

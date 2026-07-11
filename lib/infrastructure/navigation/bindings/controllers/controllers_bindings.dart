@@ -1,3 +1,4 @@
+export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_cliente.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_folios.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/folios.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/home.controller.binding.dart'; 

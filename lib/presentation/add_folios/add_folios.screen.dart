@@ -1,3 +1,6 @@
+import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
+import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
+import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -8,19 +11,13 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
   const AddFoliosScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    RxString dropdownValue = controller.list.first.obs;
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Color(0XFFF8FAFC),
-        centerTitle: true,
-        title: SizedBox(
-          width: 120,
-          child: Image.network(
-            fit: BoxFit.contain,
-            "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
-          ),
-        ),
-        automaticallyImplyActions: false,
+        centerTitle: false,
+        title: Text("Nuevo Folio"),
         actions: [
           SearchAnchor(
             viewBackgroundColor: Color(0XFFF8FAFC),
@@ -38,9 +35,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
             suggestionsBuilder:
                 (BuildContext context, SearchController controller) {
                   // This triggers when the user types or opens the search view
-                  final String query = controller.text;
                   return List<ListTile>.generate(5, (int index) {
-                    final String item = 'Result item $index for "$query"';
                     return ListTile(
                       isThreeLine: true,
                       contentPadding: EdgeInsets.zero,
@@ -95,19 +90,175 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Nuevo folio", textScaleFactor: 2),
-          SizedBox(height: 8.0),
-          Text(
-            "Tipo de documento",
-            textScaleFactor: 1.2,
-            style: TextStyle(fontWeight: FontWeight.bold),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Tipo de documento",
+                textScaleFactor: 1.2,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4.0),
+              Obx(
+                () => DropdownWidget(
+                  title: "Seleccione tipo",
+                  dropdownValue: dropdownValue.value,
+                  onChanged: (String? value) {
+                    dropdownValue.value = value!;
+                  },
+                  items: controller.list.map<DropdownMenuItem<String>>((
+                    String value,
+                  ) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: 8),
+              InputText(
+                title: "Numero de factura",
+                hintText: "Escribe el numero aqui",
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Cliente",
+                textScaleFactor: 1.2,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text("Buscar Nombre o nombre comercial"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Obx(
+                    () => Expanded(
+                      child: DropdownWidget(
+                        dropdownValue: dropdownValue.value,
+                        onChanged: (String? value) {
+                          dropdownValue.value = value!;
+                        },
+                        items: controller.list.map<DropdownMenuItem<String>>((
+                          String value,
+                        ) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Center(
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        minimumSize: Size(50, 30),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                        ),
+                        backgroundColor: Color(0XFF1D6CFF),
+                        foregroundColor: Color(0XFFFFFFFF),
+                      ),
+                      onPressed: () {
+                        Get.toNamed(Routes.ADD_CLIENTE);
+                      },
+                      icon: Icon(Icons.add),
+                      label: Text("Nuevo", style: TextStyle(fontSize: 14)),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Producto",
+                textScaleFactor: 1.2,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4.0),
+              DropdownWidget(
+                title: "Tipo de refaccion",
+                dropdownValue: dropdownValue.value,
+                onChanged: (String? value) {
+                  dropdownValue.value = value!;
+                },
+                items: controller.list.map<DropdownMenuItem<String>>((
+                  String value,
+                ) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 8),
+              InputText(title: "Cantidad", hintText: "Escribir la cantidad"),
+              SizedBox(height: 8),
+              DropdownWidget(
+                title: "Condicion de pago",
+                dropdownValue: dropdownValue.value,
+                onChanged: (String? value) {
+                  dropdownValue.value = value!;
+                },
+                items: controller.list.map<DropdownMenuItem<String>>((
+                  String value,
+                ) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Repartidor",
+                textScaleFactor: 1.2,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4.0),
+              DropdownWidget(
+                dropdownValue: dropdownValue.value,
+                onChanged: (String? value) {
+                  dropdownValue.value = value!;
+                },
+                items: controller.list.map<DropdownMenuItem<String>>((
+                  String value,
+                ) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: 8),
+              Container(
+                width: Get.size.width,
+                child: FilledButton(
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    backgroundColor: const Color(0XFF1D6CFF),
+                    foregroundColor: Colors.white, // Color del texto/icono
+                  ),
+                  onPressed: () {
+                    controller.postFolio();
+                  },
+                  child: Text("Agregar"),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 4.0),
-          Text("Seleccione tipo"),
-        ],
+        ),
       ),
     );
   }
