@@ -1,5 +1,6 @@
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
+import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
@@ -9,6 +10,8 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt clienteId = 0.obs;
   RxInt refaccionId = 0.obs;
   RxInt condicionPagoId = 0.obs;
+  RxInt repartidorId = 0.obs;
+  RxInt tipoDocumentoId = 0.obs;
 
   final RxList<Clientes> _clientesModel = <Clientes>[].obs;
   RxList<Clientes> get clientesModel => this._clientesModel;
@@ -25,6 +28,15 @@ class AddFoliosController extends GetxController with StateMixin {
   set refacciones(RxList<GeneralModel> value) =>
       this._refacciones.value = value;
 
+  final RxList<Users> _reparto = <Users>[].obs;
+  RxList<Users> get reparto => this._reparto;
+  set reparto(RxList<Users> value) => this._reparto.value = value;
+
+  final RxList<GeneralModel> _tipoDocumento = <GeneralModel>[].obs;
+  RxList<GeneralModel> get tipoDocumento => this._tipoDocumento;
+  set tipoDocumento(RxList<GeneralModel> value) =>
+      this._tipoDocumento.value = value;
+
   final count = 0.obs;
   @override
   void onInit() {
@@ -37,6 +49,8 @@ class AddFoliosController extends GetxController with StateMixin {
     await getClientes();
     await getRefaccion();
     await getCondicionPago();
+    await getUsersReparto();
+    await getTipoDocumento();
     print("DEBUG: refacciones cargadas: ${refacciones.length}");
     change(null, status: RxStatus.success());
   }
@@ -65,6 +79,19 @@ class AddFoliosController extends GetxController with StateMixin {
     clientesModel.value = listaProcesada;
   }
 
+  Future<void> getTipoDocumento() async {
+    final result = await AppDatabase.db.getAll(
+      "SELECT * FROM tipos WHERE id IN (1, 2);",
+    );
+    List<GeneralModel> tipoDocumentoList = result.map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+    final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
+    tipoDocumentoList.insert(0, defaultItem);
+    tipoDocumento.assignAll(tipoDocumentoList);
+    tipoDocumento.value = tipoDocumentoList;
+  }
+
   Future<void> getRefaccion() async {
     final result = await AppDatabase.db.getAll(
       "SELECT * FROM tipos WHERE id not in (1, 2);",
@@ -87,6 +114,21 @@ class AddFoliosController extends GetxController with StateMixin {
     condicionDePagoList.insert(0, defaultItem);
     condicionPago.assignAll(condicionDePagoList);
     condicionPago.value = condicionDePagoList;
+  }
+
+  Future<void> getUsersReparto() async {
+    final result = await AppDatabase.db.getAll(
+      '''SELECT "datosPersonales".id, "nombre", "apellidoPaterno", "apellidoMaterno", "rolId" FROM "datosPersonales" 
+INNER JOIN roles ON "datosPersonales"."rolId" = "roles"."id"
+WHERE roles.id = 2''',
+    );
+    List<Users> usersList = result.map((row) {
+      return Users.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+    final defaultItem = Users(id: 0, nombre: "Seleccione una refacción");
+    usersList.insert(0, defaultItem);
+    reparto.assignAll(usersList);
+    reparto.value = usersList;
   }
 
   Future<Map<String, dynamic>?> postFolio() async {

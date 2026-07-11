@@ -18,7 +18,7 @@ class DropdownWidget extends GetView<AddFoliosController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        title != null ? Text(title ?? "") : SizedBox.shrink(),
+        title != null ? Text(title ?? "", style: TextStyle(color: Color(0XFF0F172A)),) : SizedBox.shrink(),
         SizedBox(height: 8),
         Container(
           height: 40,

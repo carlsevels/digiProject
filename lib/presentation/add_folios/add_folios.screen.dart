@@ -1,5 +1,6 @@
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
+import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
@@ -101,38 +102,70 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                 Text(
                   "Tipo de documento",
                   textScaleFactor: 1.2,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0XFF0F172A),
+                  ),
                 ),
                 SizedBox(height: 4.0),
-                // Obx(
-                //   () => DropdownWidget(
-                //     title: "Seleccione tipo",
-                //     dropdownValue: dropdownValue,
-                //     onChanged: (String? value) {
-                //       dropdownValue = value!;
-                //     },
-                //     items: controller.list.map<DropdownMenuItem<String>>((
-                //       String value,
-                //     ) {
-                //       return DropdownMenuItem<String>(
-                //         value: value,
-                //         child: Text(value),
-                //       );
-                //     }).toList(),
-                //   ),
-                // ),
-                SizedBox(height: 8),
-                InputText(
-                  title: "Numero de factura",
-                  hintText: "Escribe el numero aqui",
-                ),
+                Obx(() {
+                  final uniqueTipoDocumento = <int, GeneralModel>{};
+
+                  for (var c in controller.tipoDocumento) {
+                    if (c.id != null) {
+                      uniqueTipoDocumento[c.id!] = c;
+                    }
+                  }
+                  return DropdownWidget(
+                    title: "Tipo de documento",
+                    dropdownValue: controller.tipoDocumentoId.value,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        controller.tipoDocumentoId.value = value;
+                      }
+                    },
+                    items: uniqueTipoDocumento.values
+                        .map<DropdownMenuItem<int>>((GeneralModel cliente) {
+                          return DropdownMenuItem<int>(
+                            value: cliente.id ?? 0,
+                            child: Text(cliente.nombre ?? 'Sin nombre'),
+                          );
+                        })
+                        .toList(),
+                  );
+                }),
+                Obx(() {
+                  if (controller.tipoDocumentoId.value != 0) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 8),
+                        InputText(
+                          title: controller.tipoDocumentoId.value == 1
+                              ? "Numero de Factura"
+                              : "Numero de Folio",
+                          hintText: "Escribe el numero aqui",
+                        ),
+                      ],
+                    );
+                  } else {
+                    return SizedBox.shrink();
+                  }
+                }),
+
                 SizedBox(height: 8),
                 Text(
                   "Cliente",
                   textScaleFactor: 1.2,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0XFF0F172A),
+                  ),
                 ),
-                Text("Buscar Nombre o nombre comercial"),
+                Text(
+                  "Buscar Nombre o nombre comercial",
+                  style: TextStyle(color: Color(0XFF0F172A)),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -194,40 +227,15 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                 Text(
                   "Producto",
                   textScaleFactor: 1.2,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0XFF0F172A),
+                  ),
                 ),
                 SizedBox(height: 4.0),
 
                 SizedBox(height: 8),
                 InputText(title: "Cantidad", hintText: "Escribir la cantidad"),
-                SizedBox(height: 8),
-                Obx(() {
-                  final uniqueCondicionPago = <int, GeneralModel>{};
-                  for (var c in controller.condicionPago) {
-                    if (c.id != null) {
-                      uniqueCondicionPago[c.id!] = c;
-                    }
-                  }
-                  return DropdownWidget(
-                    title: "Condicion de Pagos",
-                    dropdownValue: controller.condicionPagoId.value,
-                    onChanged: (int? value) {
-                      if (value != null) {
-                        controller.condicionPagoId.value = value;
-                      }
-                    },
-                    items: uniqueCondicionPago.values
-                        .map<DropdownMenuItem<int>>((
-                          GeneralModel condicionPago,
-                        ) {
-                          return DropdownMenuItem<int>(
-                            value: condicionPago.id!,
-                            child: Text(condicionPago.nombre ?? 'Sin nombre'),
-                          );
-                        })
-                        .toList(),
-                  );
-                }),
                 SizedBox(height: 8),
                 Obx(() {
                   final uniqueRefacciones = <int, GeneralModel>{};
@@ -256,13 +264,69 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                   );
                 }),
                 SizedBox(height: 8),
+                Obx(() {
+                  final uniqueCondicionPago = <int, GeneralModel>{};
+                  for (var c in controller.condicionPago) {
+                    if (c.id != null) {
+                      uniqueCondicionPago[c.id!] = c;
+                    }
+                  }
+                  return DropdownWidget(
+                    title: "Condicion de Pago",
+                    dropdownValue: controller.condicionPagoId.value,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        controller.condicionPagoId.value = value;
+                      }
+                    },
+                    items: uniqueCondicionPago.values
+                        .map<DropdownMenuItem<int>>((
+                          GeneralModel condicionPago,
+                        ) {
+                          return DropdownMenuItem<int>(
+                            value: condicionPago.id!,
+                            child: Text(condicionPago.nombre ?? 'Sin nombre'),
+                          );
+                        })
+                        .toList(),
+                  );
+                }),
+                SizedBox(height: 8),
                 Text(
                   "Repartidor",
                   textScaleFactor: 1.2,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0XFF0F172A),
+                  ),
                 ),
                 SizedBox(height: 4.0),
-                //repartidor
+                Obx(() {
+                  final uniqueReparto = <int, Users>{};
+
+                  for (var c in controller.reparto) {
+                    if (c.id != null) {
+                      uniqueReparto[c.id!] = c;
+                    }
+                  }
+                  return DropdownWidget(
+                    title: "Seleccionar repartidor",
+                    dropdownValue: controller.repartidorId.value,
+                    onChanged: (int? value) {
+                      if (value != null) {
+                        controller.repartidorId.value = value;
+                      }
+                    },
+                    items: uniqueReparto.values.map<DropdownMenuItem<int>>((
+                      Users reparto,
+                    ) {
+                      return DropdownMenuItem<int>(
+                        value: reparto.id ?? 0,
+                        child: Text(reparto.nombre ?? 'Sin nombre'),
+                      );
+                    }).toList(),
+                  );
+                }),
                 SizedBox(height: 8),
                 Container(
                   width: Get.size.width,

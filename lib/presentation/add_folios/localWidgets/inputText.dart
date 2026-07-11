@@ -17,7 +17,7 @@ class InputText extends GetView<AddFoliosController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title),
+        Text(title, style: TextStyle(color: Color(0XFF0F172A))),
         SizedBox(height: 8),
         Container(
           height: 40,
@@ -26,7 +26,8 @@ class InputText extends GetView<AddFoliosController> {
             textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+
+              hintStyle: TextStyle(fontSize: 14, color: Color(0XFF64748B)),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
