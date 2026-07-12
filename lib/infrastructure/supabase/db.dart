@@ -52,7 +52,7 @@ class MyBackendConnector extends PowerSyncBackendConnector {
           switch (op.op) {
             case UpdateType.put:
               // Usamos upsert de Supabase para crear o actualizar
-              await supabase.from('folios').upsert(data);
+              await supabase.from('folios').upsert(data, onConflict: 'folioId');
               break;
             case UpdateType.patch:
               // Para el patch, usamos el id (UUID) que genera PowerSync

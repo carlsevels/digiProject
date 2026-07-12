@@ -1,4 +1,5 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -12,161 +13,142 @@ class FoliosScreen extends GetView<FoliosController> {
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
       appBar: AppBar(backgroundColor: Color(0XFFF8FAFC)),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Hoy", textScaleFactor: 1.8),
-                TextButton.icon(
-                  style: TextButton.styleFrom(
-                    minimumSize: Size(50, 30),
-
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(4)),
+      body: controller.obx(
+        onEmpty: RefreshIndicator(
+          onRefresh: () async {
+            await controller.getFoliosWithDate();
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [SizedBox(height: 200), FoliosEmptyPage()],
+          ),
+        ),
+        (state) => RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: Color(0XFF1D6CFF),
+          onRefresh: () => controller.getFoliosWithDate(),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: state!.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Hoy", textScaleFactor: 1.8),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(50, 30),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            backgroundColor: const Color(0XFF1D6CFF),
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            Get.toNamed(Routes.ADD_FOLIOS);
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text(
+                            "Agregar folio",
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
                     ),
-                    backgroundColor: Color(0XFF1D6CFF),
-                    foregroundColor: Color(0XFFFFFFFF),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }
+
+              final folio = state[index - 1];
+
+              return InkWell(
+                onTap: () {},
+                child: ListTile(
+                  isThreeLine: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Column(
+                    children: [
+                      Text(folio.cantidad.toString(), textScaleFactor: 2),
+                      Flexible(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 35),
+                          child: Text(
+                            folio.tiporefaccion.toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    Get.toNamed(Routes.ADD_FOLIOS);
-                  },
-                  icon: Icon(Icons.add),
-                  label: Text("Agregar folio", style: TextStyle(fontSize: 14)),
-                ),
-              ],
-            ),
-
-            InkWell(
-              onTap: () {},
-              child: ListTile(
-                isThreeLine: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Column(
-                  children: [
-                    Text("3", textScaleFactor: 2),
-                    Flexible(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 35),
-                        child: Text(
-                          "Multifuncional",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  title: Text(folio.nombreComercial.toString()),
+                  subtitle: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Color(0XFF64748B),
+                            ),
+                            Flexible(
+                              child: Text(
+                                "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId}",
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0XFF64748B),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                title: Text("TERNIUM"),
-                subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Color(0XFF64748B),
-                          ),
-                          Flexible(
-                            child: Text(
-                              "Guadalupe - Renta - 103325",
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Color(0XFF64748B)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: folio.status != "Por entregar"
+                              ? Color(int.parse(folio.statusColor.toString()))
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                            color: Color(
+                              int.parse(folio.statusColor.toString()),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(color: const Color(0XFF1D6CFF)),
-                      ),
-                      child: const Text(
-                        "Por entregar",
-                        style: TextStyle(
-                          color: Color(0XFF1D6CFF),
-                          fontSize: 12,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () {},
-              child: ListTile(
-                isThreeLine: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Column(
-                  children: [
-                    Text("1", textScaleFactor: 2),
-                    Flexible(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 35),
                         child: Text(
-                          "Toner",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          folio.status.toString(),
+                          style: TextStyle(
+                            color: folio.status == "Por entregar"
+                                ? Color(int.parse(folio.statusColor.toString()))
+                                : Colors.white,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                title: Text("TERNIUM"),
-                subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Color(0XFF64748B),
-                          ),
-                          Flexible(
-                            child: Text(
-                              "Guadalupe - Renta - 103325",
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Color(0XFF64748B)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(0xffFF6B35),
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: const Text(
-                        "En ruta",
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );

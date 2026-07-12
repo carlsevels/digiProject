@@ -6,11 +6,13 @@ class InputText extends GetView<AddFoliosController> {
   final String title;
   final String hintText;
   final TextEditingController? textController;
+  TextInputType? keyboardType;
   InputText({
     super.key,
     required this.title,
     required this.hintText,
     this.textController,
+    this.keyboardType,
   });
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class InputText extends GetView<AddFoliosController> {
         Container(
           height: 40,
           child: TextFormField(
+            keyboardType: keyboardType,
             controller: textController,
             textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(

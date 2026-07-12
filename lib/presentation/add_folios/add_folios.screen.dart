@@ -143,6 +143,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                       children: [
                         SizedBox(height: 8),
                         InputText(
+                          keyboardType: TextInputType.number,
                           textController: controller.numReporteController,
                           title: controller.tipoDocumentoId.value == 1
                               ? "Numero de Factura"
@@ -242,6 +243,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                   title: "Cantidad",
                   hintText: "Escribir la cantidad",
                   textController: controller.cantidadController,
+                  keyboardType: TextInputType.number,
                 ),
                 SizedBox(height: 8),
                 Obx(() {

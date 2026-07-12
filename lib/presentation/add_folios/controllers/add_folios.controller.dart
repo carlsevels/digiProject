@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
+import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -141,7 +142,6 @@ class AddFoliosController extends GetxController with StateMixin {
 
   Future<Map<String, dynamic>?> postFolio() async {
     try {
-      // 1. Validar autenticación
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
         print("Error: Usuario no autenticado");
@@ -155,7 +155,6 @@ class AddFoliosController extends GetxController with StateMixin {
         print("Error: Debes seleccionar valores válidos");
         return null;
       }
-      // 1. Obtén el UUID del repartidor de forma segura
       String? repartidorUuid;
       if (reparto.isNotEmpty && repartidorId.value != 0) {
         final user = reparto.firstWhere(
@@ -184,8 +183,24 @@ class AddFoliosController extends GetxController with StateMixin {
   INSERT INTO folios (id, "folioId", "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", "statusId", created_at) 
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', datosEnviados);
-      print("datosEnviados: ${datosEnviados}");
-      print("Folio creado con éxito: $idParaPowerSync");
+      Get.snackbar(
+        "Guardado",
+        "El folio se ha guardado localmente y se sincronizará automáticamente.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blueAccent,
+        colorText: Colors.white,
+      );
+
+      // Clean controllers
+      cantidadController.text = "";
+      numReporteController.text = "";
+      clienteId.value = 0;
+      refaccionId.value = 0;
+      condicionPagoId.value = 0;
+      repartidorId.value = 2;
+      tipoDocumentoId.value = 0;
+
+      Get.toNamed(Routes.FOLIOS);
     } catch (e) {
       print("Error al crear: $e");
     }
