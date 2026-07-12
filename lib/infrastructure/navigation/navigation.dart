@@ -60,5 +60,10 @@ class Nav {
       page: () => const AddClienteScreen(),
       binding: AddClienteControllerBinding(),
     ),
+    GetPage(
+      name: Routes.DETALLES_FOLIO,
+      page: () => const DetallesFolioScreen(),
+      binding: DetallesFolioControllerBinding(),
+    ),
   ];
 }

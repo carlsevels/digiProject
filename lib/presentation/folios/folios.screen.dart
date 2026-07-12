@@ -75,7 +75,9 @@ class FoliosScreen extends GetView<FoliosController> {
               final folio = state[index - 1];
 
               return InkWell(
-                onTap: () {},
+                onTap: () {
+                  Get.toNamed(Routes.DETALLES_FOLIO);
+                },
                 child: ListTile(
                   isThreeLine: true,
                   contentPadding: EdgeInsets.zero,
@@ -184,11 +186,11 @@ class _DatePickerExampleState extends State<DatePickerExample> {
       mainAxisSize: .min,
       spacing: 20,
       children: <Widget>[
-        // // Text(
-        // //   selectedDate != null
-        // //       ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-        // //       : 'No date selected',
-        // // ),
+        // Text(
+        //   selectedDate != null
+        //       ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+        //       : 'No date selected',
+        // ),
         IconButton(onPressed: _selectDate, icon: Icon(Icons.filter_list)),
       ],
     );
