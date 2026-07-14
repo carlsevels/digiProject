@@ -11,7 +11,6 @@ class Folios {
   String? repartidor;
   String? created_at;
   String? municipio;
-  String? folioId;
   String? statusColor;
 
   Folios({
@@ -27,7 +26,6 @@ class Folios {
     this.repartidor,
     this.created_at,
     this.municipio,
-    this.folioId,
     this.statusColor,
   });
 
@@ -44,7 +42,6 @@ class Folios {
     repartidor = json['repartidor'];
     created_at = json['created_at'];
     municipio = json['municipio'];
-    folioId = json['folioId'];
     statusColor = json['statusColor'];
   }
 
@@ -62,7 +59,6 @@ class Folios {
     data['repartidor'] = repartidor;
     data['created_at'] = created_at;
     data['municipio'] = municipio;
-    data['folioId'] = folioId;
     data['statusColor'] = statusColor;
     return data;
   }

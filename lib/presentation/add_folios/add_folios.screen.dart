@@ -346,7 +346,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       backgroundColor: const Color(0XFF1D6CFF),
-                      foregroundColor: Colors.white, // Color del texto/icono
+                      foregroundColor: Colors.white,
                     ),
                     onPressed: () {
                       controller.postFolio();

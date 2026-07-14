@@ -142,68 +142,86 @@ class AddFoliosController extends GetxController with StateMixin {
 
   Future<Map<String, dynamic>?> postFolio() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        print("Error: Usuario no autenticado");
+      final supabase = Supabase.instance.client;
+
+      final String? userId =
+          supabase.auth.currentUser?.id ??
+          supabase.auth.currentSession?.user.id;
+
+      if (userId == null) {
+        Get.snackbar("Error", "La sesión no está activa.");
         return null;
       }
 
+      // 1. EXTRAEMOS LOS DATOS FUERA DE LA TRANSACCIÓN (Seguridad para el Isolate)
       final String idParaPowerSync = const Uuid().v4();
-      final String miId = user.id;
+      final String fechaActual = DateTime.now().toIso8601String();
 
-      if (clienteId.value == 0 || tipoDocumentoId.value == 0) {
-        print("Error: Debes seleccionar valores válidos");
+      // Capturamos valores de los controladores aquí
+      final String folioNumero = numReporteController.text;
+      final int cantidad = int.tryParse(cantidadController.text) ?? 0;
+      final int tipoDoc = tipoDocumentoId.value;
+      final int cliente = clienteId.value;
+      final int refaccion = refaccionId.value;
+      final int condicion = condicionPagoId.value;
+
+      if (cliente == 0 || tipoDoc == 0) {
+        Get.snackbar("Error", "Debes seleccionar valores válidos");
         return null;
       }
+
       String? repartidorUuid;
       if (reparto.isNotEmpty && repartidorId.value != 0) {
-        final user = reparto.firstWhere(
+        final u = reparto.firstWhere(
           (u) => u.id == repartidorId.value,
           orElse: () => Users(userId: null),
         );
-        repartidorUuid = user.userId;
+        repartidorUuid = u.userId;
       }
 
-      List<Object?> datosEnviados = [
+      final datosEnviados = [
         idParaPowerSync,
-        numReporteController.text,
-        tipoDocumentoId.value,
-        clienteId.value,
-        refaccionId.value,
-        int.tryParse(cantidadController.text) ?? 0,
-        condicionPagoId.value,
+        tipoDoc,
+        cliente,
+        refaccion,
+        cantidad,
+        condicion,
         repartidorUuid,
-        miId,
-        1,
-        DateTime.now().toIso8601String(),
+        userId,
+        fechaActual,
+        numReporteController.text,
       ];
 
-      // 3. Ejecuta
-      await AppDatabase.db.execute('''
-  INSERT INTO folios (id, "folioId", "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", "statusId", created_at) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-''', datosEnviados);
-      Get.snackbar(
-        "Guardado",
-        "El folio se ha guardado localmente y se sincronizará automáticamente.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blueAccent,
-        colorText: Colors.white,
-      );
+      await AppDatabase.db.writeTransaction((txn) async {
+        await txn.execute(
+          '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId") 
+       VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+          datosEnviados,
+        );
 
-      // Clean controllers
-      cantidadController.text = "";
-      numReporteController.text = "";
+        await txn.execute(
+          'INSERT INTO historialestados (id, "folioId", "statusId") VALUES (?, ?, ?)',
+          [const Uuid().v4(), idParaPowerSync, 1],
+        );
+
+        print("datosEnviados: ${jsonEncode(datosEnviados)}");
+      });
+
+      cantidadController.clear();
+      numReporteController.clear();
       clienteId.value = 0;
       refaccionId.value = 0;
       condicionPagoId.value = 0;
       repartidorId.value = 2;
       tipoDocumentoId.value = 0;
 
+      Get.snackbar("Guardado", "Registro exitoso.");
       Get.toNamed(Routes.FOLIOS);
     } catch (e) {
       print("Error al crear: $e");
+      Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
     }
+    return null;
   }
 
   void increment() => count.value++;

@@ -1,9 +1,9 @@
-
 //Obtiene la lista de folios del dia de hoy
-String listFoliosQuery() {
+String folioId() {
   return '''
    SELECT 
 f.id, 
+f."folioId", 
 f.created_at,
 f.cantidad,
 t.nombre as tipoFolio,
@@ -25,6 +25,6 @@ FROM folios f
   INNER JOIN "datosPersonales" rp ON f."repartidorId" = rp."userId"
   INNER JOIN direcciones as d ON c.id = d."clienteId"
   INNER JOIN municipios as m ON d."municipioId" = m."id"
-WHERE date(f.created_at) = date('now')
+WHERE f.id = ?
     ''';
 }

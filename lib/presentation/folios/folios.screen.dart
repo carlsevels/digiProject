@@ -76,14 +76,18 @@ class FoliosScreen extends GetView<FoliosController> {
 
               return InkWell(
                 onTap: () {
-                  Get.toNamed(Routes.DETALLES_FOLIO);
+                  Get.toNamed(Routes.DETALLES_FOLIO, arguments: folio.id);
                 },
                 child: ListTile(
-                  isThreeLine: true,
+                  isThreeLine: false,
                   contentPadding: EdgeInsets.zero,
                   leading: Column(
                     children: [
-                      Text(folio.cantidad.toString(), textScaleFactor: 2),
+                      Text(
+                        folio.cantidad.toString(),
+                        textScaleFactor: 3.5,
+                        style: TextStyle(height: 1),
+                      ),
                       Flexible(
                         child: Container(
                           constraints: const BoxConstraints(maxWidth: 35),
@@ -109,7 +113,7 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                             Flexible(
                               child: Text(
-                                "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId}",
+                                "${folio.municipio} - ${folio.condicionPago} - ${folio.id}",
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Color(0XFF64748B),

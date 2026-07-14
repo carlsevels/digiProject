@@ -1,12 +1,22 @@
-import 'package:get/get.dart';
 
-class DetallesFolioController extends GetxController {
+import 'package:bitacora_frontend/infrastructure/models/folios.dart';
+import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
+import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
+import 'package:get/get.dart';
+import 'package:powersync/sqlite3.dart';
+
+class DetallesFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement DetallesFolioController
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    _onInit();
+  }
+
+  Future<void> _onInit() async {
+    final int id = Get.arguments as int;
+    await getDetailsFolio(id);
   }
 
   @override
@@ -19,5 +29,20 @@ class DetallesFolioController extends GetxController {
     super.onClose();
   }
 
-  void increment() => count.value++;
+  Future<void> getDetailsFolio(int idBuscado) async {
+    change(null, status: RxStatus.loading());
+    try {
+      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
+        idBuscado,
+      ]);
+      if (resultSet.isEmpty) {
+        change(null, status: RxStatus.empty());
+        return;
+      }
+      final folio = Folios.fromJson(resultSet.first);
+      change(folio, status: RxStatus.success());
+    } catch (e) {
+      change(null, status: RxStatus.error(e.toString()));
+    }
+  }
 }

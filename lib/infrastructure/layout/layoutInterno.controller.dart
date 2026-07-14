@@ -44,9 +44,9 @@ class LayoutInternoController extends GetxController
       if (resultado != null) {
         rolName.value = resultado["nombre_rol"];
         nameUser.value = resultado["nombre"];
-        change(resultado, status: RxStatus.success()); // Indicas éxito
+        change(resultado, status: RxStatus.success());
       } else {
-        change(null, status: RxStatus.empty()); // Indicas que no hay datos
+        change(null, status: RxStatus.empty());
       }
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
@@ -55,6 +55,7 @@ class LayoutInternoController extends GetxController
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
+
     Get.toNamed(Routes.LOGIN);
   }
 

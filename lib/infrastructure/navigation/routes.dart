@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class Routes {
   static Future<String> get initialRoute async {
     // TODO: implement method
