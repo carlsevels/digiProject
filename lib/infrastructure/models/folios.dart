@@ -45,7 +45,7 @@ class Folios {
     created_at = json['created_at'];
     municipio = json['municipio'];
     statusColor = json['statusColor'];
-    folioId = json['folioid'];
+    folioId = json['folioId'];
   }
 
   Map<String, dynamic> toJson() {
@@ -63,7 +63,7 @@ class Folios {
     data['created_at'] = created_at;
     data['municipio'] = municipio;
     data['statusColor'] = statusColor;
-    data['folioid'] = folioId;
+    data['folioId'] = folioId;
     return data;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,18 @@ class FoliosScreen extends GetView<FoliosController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
-      appBar: AppBar(backgroundColor: Color(0XFFF8FAFC)),
+      appBar: AppBar(
+        backgroundColor: Color(0XFFF8FAFC),
+        centerTitle: true,
+        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.search))],
+        title: SizedBox(
+          width: 120,
+          child: Image.network(
+            fit: BoxFit.contain,
+            "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+          ),
+        ),
+      ),
       body: controller.obx(
         onEmpty: RefreshIndicator(
           onRefresh: () async {
@@ -76,10 +89,17 @@ class FoliosScreen extends GetView<FoliosController> {
 
               return InkWell(
                 onTap: () {
-                  Get.toNamed(
-                    Routes.DETALLES_FOLIO,
-                    arguments: folio.folioId.toString(),
-                  );
+                  print("--- DEBUG NAVEGACIÓN ---");
+                  print("Objeto folio: ${jsonEncode(folio)}");
+                  print("Valor de folioId: ${folio.folioId}");
+                  if (folio.folioId != null) {
+                    Get.toNamed(
+                      Routes.DETALLES_FOLIO,
+                      arguments: folio.folioId.toString(),
+                    );
+                  } else {
+                    print("ERROR: folioId es null, por eso no se envía nada.");
+                  }
                 },
                 child: ListTile(
                   isThreeLine: false,

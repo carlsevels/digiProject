@@ -13,6 +13,10 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
     RxInt _index = 0.obs;
 
     return controller.obx(
+      onLoading: const Center(child: CircularProgressIndicator()),
+      onEmpty: const Center(
+        child: Text("Este folio no existe."),
+      ), 
       (state) => Scaffold(
         floatingActionButton: FloatingActionButton(
           backgroundColor: Color(0XFF00BC16),
