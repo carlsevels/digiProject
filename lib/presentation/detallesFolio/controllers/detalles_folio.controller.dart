@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
@@ -6,7 +8,7 @@ import 'package:powersync/sqlite3.dart';
 
 class DetallesFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement DetallesFolioController
-
+  RxInt currentStep = 0.obs;
   @override
   void onInit() {
     super.onInit();
@@ -47,9 +49,34 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         return;
       }
       final folio = Folios.fromJson(resultSet.first);
+      currentStep.value = getStepIndex(int.parse(folio.statusId ?? ""));
+      print("fOLIOS: ${jsonEncode(folio)}");
       change(folio, status: RxStatus.success());
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
+    }
+  }
+
+  int getStepIndex(int statusId) {
+    switch (statusId) {
+      // Por iniciar
+      case 1:
+        return 0;
+
+      // Llegada
+      case 2:
+        return 1;
+
+      // Entregado
+      case 3:
+        return 3;
+
+      // Sitio
+      case 5:
+        return 2;
+
+      default:
+        return 0;
     }
   }
 }

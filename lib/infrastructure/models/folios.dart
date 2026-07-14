@@ -7,6 +7,7 @@ class Folios {
   String? tiporeporte;
   String? condicionPago;
   String? status;
+  String? statusId;
   String? creador;
   String? repartidor;
   String? created_at;
@@ -29,11 +30,13 @@ class Folios {
     this.municipio,
     this.statusColor,
     this.folioId,
+    this.statusId,
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
     id = (json['id'] is int) ? json['id'] : int.tryParse(json['id'].toString());
     cantidad = json['cantidad'];
+    statusId = json['statusId'];
     tipofolio = json['tipofolio'];
     nombreComercial = json['nombreComercial'];
     tiporefaccion = json['tipoRefaccion'];
@@ -52,6 +55,7 @@ class Folios {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['cantidad'] = cantidad;
+    data['statusId'] = statusId;
     data['tipofolio'] = tipofolio;
     data['nombreComercial'] = nombreComercial;
     data['tipoRefaccion'] = tiporefaccion;

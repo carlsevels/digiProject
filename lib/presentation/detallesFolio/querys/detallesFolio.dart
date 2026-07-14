@@ -14,7 +14,8 @@ rp.nombre AS repartidor,
 m.nombre as municipio,
 st."nombre" as status,
 f."folioId" as folioId,
-st.color as statusColor
+st.color as statusColor,
+st."id"  AS "statusId"
 FROM folios f
   INNER JOIN tipos as t ON f."tipoFolioId" = t.id
   INNER JOIN clientes as c ON f."clienteId" = c.id

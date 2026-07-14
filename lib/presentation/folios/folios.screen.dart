@@ -89,9 +89,6 @@ class FoliosScreen extends GetView<FoliosController> {
 
               return InkWell(
                 onTap: () {
-                  print("--- DEBUG NAVEGACIÓN ---");
-                  print("Objeto folio: ${jsonEncode(folio)}");
-                  print("Valor de folioId: ${folio.folioId}");
                   if (folio.folioId != null) {
                     Get.toNamed(
                       Routes.DETALLES_FOLIO,
@@ -136,7 +133,7 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                             Flexible(
                               child: Text(
-                                "${folio.municipio} - ${folio.condicionPago} - ${folio.id.toString()}",
+                                "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Color(0XFF64748B),
