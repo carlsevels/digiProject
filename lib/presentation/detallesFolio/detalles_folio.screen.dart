@@ -57,7 +57,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Folio: ${state?.id} - ${state?.condicionPago} - ${DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(DateTime.tryParse(state!.created_at.toString())!)}",
+                  "Folio: ${state?.folioId} - ${state?.condicionPago} - ${DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(DateTime.tryParse(state!.created_at.toString())!)}",
                   style: TextStyle(
                     color: Color(0XFF64748B),
                     fontSize: 16,

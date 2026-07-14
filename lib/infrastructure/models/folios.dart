@@ -1,5 +1,5 @@
 class Folios {
-  int? id;
+  String? id;
   String? cantidad;
   String? tipofolio;
   String? nombreComercial;
@@ -12,6 +12,7 @@ class Folios {
   String? created_at;
   String? municipio;
   String? statusColor;
+  String? folioId;
 
   Folios({
     this.id,
@@ -27,6 +28,7 @@ class Folios {
     this.created_at,
     this.municipio,
     this.statusColor,
+    this.folioId,
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class Folios {
     created_at = json['created_at'];
     municipio = json['municipio'];
     statusColor = json['statusColor'];
+    folioId = json['folioid'];
   }
 
   Map<String, dynamic> toJson() {
@@ -60,6 +63,7 @@ class Folios {
     data['created_at'] = created_at;
     data['municipio'] = municipio;
     data['statusColor'] = statusColor;
+    data['folioid'] = folioId;
     return data;
   }
 }

@@ -15,7 +15,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   }
 
   Future<void> _onInit() async {
-    final int id = Get.arguments as int;
+    final String id = Get.arguments as String;
     await getDetailsFolio(id);
   }
 
@@ -29,7 +29,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     super.onClose();
   }
 
-  Future<void> getDetailsFolio(int idBuscado) async {
+  Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
       final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
