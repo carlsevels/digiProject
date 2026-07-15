@@ -199,9 +199,11 @@ class AddFoliosController extends GetxController with StateMixin {
           datosEnviados,
         );
 
+        String fechaMonterrey = DateTime.now().toIso8601String();
+
         await txn.execute(
-          'INSERT INTO historialestados (id, "folioId", "statusId") VALUES (?, ?, ?)',
-          [const Uuid().v4(), idParaPowerSync, 1],
+          'INSERT INTO historialestados (id, "folioId", "statusId", "created_at") VALUES (?, ?, ?, ?)',
+          [const Uuid().v4(), idParaPowerSync, 1, fechaMonterrey],
         );
 
         print("datosEnviados: ${jsonEncode(datosEnviados)}");

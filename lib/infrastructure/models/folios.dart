@@ -14,6 +14,7 @@ class Folios {
   String? municipio;
   String? statusColor;
   String? folioId;
+  String? folioIdHistorial;
 
   Folios({
     this.id,
@@ -31,6 +32,7 @@ class Folios {
     this.statusColor,
     this.folioId,
     this.statusId,
+    this.folioIdHistorial,
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class Folios {
     municipio = json['municipio'];
     statusColor = json['statusColor'];
     folioId = json['folioId'];
+    folioIdHistorial = json['folio_id_historial'];
   }
 
   Map<String, dynamic> toJson() {
@@ -68,6 +71,7 @@ class Folios {
     data['municipio'] = municipio;
     data['statusColor'] = statusColor;
     data['folioId'] = folioId;
+    data['folio_id_historial'] = folioIdHistorial;
     return data;
   }
 }

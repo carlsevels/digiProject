@@ -10,12 +10,23 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
   const DetallesFolioScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    String _formatFecha(dynamic fecha) {
+      final date = DateTime.tryParse(fecha?.toString() ?? "");
+
+      if (date == null) {
+        return "";
+      }
+
+      return DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(date);
+    }
+
     return controller.obx(
-      onLoading: const Center(child: CircularProgressIndicator()),
+      onLoading: Container(
+        color: Colors.white,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
       onEmpty: const Center(child: Text("Este folio no existe.")),
       (state) {
-        final step = controller.getStepIndex(int.parse(state?.statusId ?? ""));
-
         return Scaffold(
           floatingActionButton: FloatingActionButton(
             backgroundColor: Color(0XFF00BC16),
@@ -36,10 +47,19 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                   color: Colors.white,
                 ),
                 child: const Text('Empezar ruta'),
-                action: (controller) async {
-                  controller.loading();
-                  await Future.delayed(const Duration(seconds: 3));
-                  controller.success();
+                action: (sliderController) async {
+                  sliderController.loading();
+
+                  await controller.updateStatusId(
+                    2,
+                    state?.folioIdHistorial?.toString() ?? "",
+                  );
+
+                  sliderController.success();
+
+                  await Future.delayed(const Duration(milliseconds: 500));
+
+                  await this.controller.onInitDetalles();
                 },
               ),
             ),
@@ -59,206 +79,219 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Folio: ${state?.folioId} - ${state?.condicionPago} - ${DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(DateTime.tryParse(state!.created_at.toString())!)}",
-                    style: TextStyle(
-                      color: Color(0XFF64748B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+          body: RefreshIndicator(
+            onRefresh: () async {
+              await controller.onInitDetalles();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Folio: ${state?.folioId} - ${state?.condicionPago} - "
+                      "${_formatFecha(state?.created_at)}",
+                      style: const TextStyle(
+                        color: Color(0XFF64748B),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12.0),
-                  Card(
-                    elevation: 4,
-                    color: Colors.white,
-                    margin: EdgeInsets.zero,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: ListTile(
-                        isThreeLine: false,
-                        contentPadding: EdgeInsets.zero,
-                        leading: Column(
-                          children: [
-                            Text(
-                              state.cantidad ?? "",
-                              textScaleFactor: 3.5,
-                              style: TextStyle(height: 1),
-                            ),
-                            Flexible(
-                              child: Container(
-                                constraints: const BoxConstraints(maxWidth: 35),
-                                child: Text(
-                                  state.tiporefaccion ?? "",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                    SizedBox(height: 12.0),
+                    Card(
+                      elevation: 4,
+                      color: Colors.white,
+                      margin: EdgeInsets.zero,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: ListTile(
+                          isThreeLine: false,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Column(
+                            children: [
+                              Text(
+                                state?.cantidad ?? "",
+                                textScaleFactor: 3.5,
+                                style: TextStyle(height: 1),
+                              ),
+                              Flexible(
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 35,
+                                  ),
+                                  child: Text(
+                                    state?.tiporefaccion ?? "",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        title: Text(
-                          state.nombreComercial ?? "",
-                          style: TextStyle(
-                            color: Color(0XFF1D6CFF),
-                            fontWeight: FontWeight.bold,
+                            ],
                           ),
-                        ),
-                        subtitle: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  Flexible(
-                                    child: Text(
-                                      state.municipio ?? "",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
+                          title: Text(
+                            state?.nombreComercial ?? "",
+                            style: TextStyle(
+                              color: controller.parseColor(
+                                state?.statusColor?.toString(),
+                              ),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on_outlined,
+                                      color: Color(0XFF64748B),
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        state?.municipio ?? "",
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0XFF64748B),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: state.status != "Por entregar"
-                                    ? Color(
-                                        int.parse(state.statusColor.toString()),
-                                      )
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                  color: Color(
-                                    int.parse(state.statusColor.toString()),
-                                  ),
+                                  ],
                                 ),
                               ),
-                              child: Text(
-                                state.status.toString(),
-                                style: TextStyle(
-                                  color: state.status == "Por entregar"
-                                      ? Color(
-                                          int.parse(
-                                            state.statusColor.toString(),
-                                          ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: state?.status != "Por entregar"
+                                      ? controller.parseColor(
+                                          state?.statusColor?.toString(),
                                         )
                                       : Colors.white,
-                                  fontSize: 12,
+                                  borderRadius: BorderRadius.circular(50),
+                                  border: Border.all(
+                                    color: controller.parseColor(
+                                      state?.statusColor?.toString(),
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  state?.status.toString() ?? "",
+                                  style: TextStyle(
+                                    color: state?.status == "Por entregar"
+                                        ? controller.parseColor(
+                                            state?.statusColor?.toString(),
+                                          )
+                                        : Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24.0),
+                    Text(
+                      state?.repartidor ?? "",
+                      style: TextStyle(
+                        color: Color(0XFF0F172A),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w300,
+                        height: 1.2,
+                      ),
+                    ),
+                    Text(
+                      "Repartidor",
+                      style: TextStyle(
+                        color: Color(0XFF64748B),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                    ),
+                    SizedBox(height: 24.0),
+                    Card(
+                      color: Colors.white,
+                      margin: EdgeInsets.zero,
+                      elevation: 4,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 32.0,
+                              child: Text(
+                                "Detalles del Trayecto",
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  color: Color(0XFF0F172A),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 100,
+                              child: Obx(() {
+                                final currentStep =
+                                    controller.currentStep.value;
+
+                                final steps = [
+                                  {
+                                    "title": "Por iniciar",
+                                    "icon": Icons.local_shipping_outlined,
+                                  },
+                                  {
+                                    "title": "En ruta",
+                                    "icon": Icons.location_on_outlined,
+                                  },
+                                  {
+                                    "title": "Sitio",
+                                    "icon": Icons.place_outlined,
+                                  },
+                                  {
+                                    "title": "Entregado",
+                                    "icon": Icons.check_circle_outline,
+                                  },
+                                ];
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Row(
+                                    children: List.generate(steps.length, (
+                                      index,
+                                    ) {
+                                      return _step(
+                                        colorStatus: int.parse(
+                                          state?.statusColor.toString() ?? "",
+                                        ),
+                                        title: steps[index]["title"] as String,
+                                        icon: steps[index]["icon"] as IconData,
+                                        active: currentStep >= index,
+                                        completed: currentStep > index,
+                                        isLast: index == steps.length - 1,
+                                      );
+                                    }),
+                                  ),
+                                );
+                              }),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 24.0),
-                  Text(
-                    state.repartidor ?? "",
-                    style: TextStyle(
-                      color: Color(0XFF0F172A),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
-                      height: 1.2,
-                    ),
-                  ),
-                  Text(
-                    "Repartidor",
-                    style: TextStyle(
-                      color: Color(0XFF64748B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
-                  ),
-                  SizedBox(height: 24.0),
-                  Card(
-                    color: Colors.white,
-                    margin: EdgeInsets.zero,
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 32.0,
-                            child: Text(
-                              "Detalles del Trayecto",
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: Color(0XFF0F172A),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                height: 1,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 100,
-                            child: Obx(() {
-                              final currentStep = controller.currentStep.value;
-
-                              final steps = [
-                                {
-                                  "title": "Por iniciar",
-                                  "icon": Icons.local_shipping_outlined,
-                                },
-                                {
-                                  "title": "Llegada",
-                                  "icon": Icons.location_on_outlined,
-                                },
-                                {
-                                  "title": "Sitio",
-                                  "icon": Icons.place_outlined,
-                                },
-                                {
-                                  "title": "Entregado",
-                                  "icon": Icons.check_circle_outline,
-                                },
-                              ];
-
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Row(
-                                  children: List.generate(steps.length, (
-                                    index,
-                                  ) {
-                                    return _step(
-                                      title: steps[index]["title"] as String,
-                                      icon: steps[index]["icon"] as IconData,
-                                      active: currentStep >= index,
-                                      completed: currentStep > index,
-                                      isLast: index == steps.length - 1,
-                                    );
-                                  }),
-                                ),
-                              );
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -273,8 +306,9 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
     required bool active,
     required bool completed,
     required bool isLast,
+    required int colorStatus,
   }) {
-    const blue = Color(0xff1D6CFF);
+    var color = Color(colorStatus);
 
     return Expanded(
       child: Column(
@@ -286,16 +320,16 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: active ? blue : Colors.white,
+                  color: active ? color : Colors.white,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: active ? blue : Colors.grey.shade300,
+                    color: active ? color : Colors.grey.shade300,
                     width: 2,
                   ),
                   boxShadow: active
                       ? [
                           BoxShadow(
-                            color: blue.withOpacity(.25),
+                            color: color.withOpacity(.25),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -316,7 +350,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                     height: 4,
                     margin: const EdgeInsets.symmetric(horizontal: 6),
                     decoration: BoxDecoration(
-                      color: completed ? blue : Colors.grey.shade300,
+                      color: completed ? color : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
