@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FoliosController extends GetxController with StateMixin<List<Folios>> {
   //TODO: Implement FoliosController
+  RxInt rolUsuario = 0 .obs;
 
   final Rx<DatosPersonales> _datosPersonales = DatosPersonales().obs;
   DatosPersonales get datosPersonales => this._datosPersonales.value;
@@ -49,10 +50,10 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     );
 
     final datosPersonalesData = resultSet.first;
-    final int rolUsuario = datosPersonalesData['rolId'] as int;
+    rolUsuario.value = datosPersonalesData['rolId'] as int;
     final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
-      rolUsuario,
-      rolUsuario,
+      rolUsuario.value,
+      rolUsuario.value,
     ]);
 
     List<Folios> listFolios = getFolios

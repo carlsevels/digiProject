@@ -37,31 +37,32 @@ class FoliosScreen extends GetView<FoliosController> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Hoy", textScaleFactor: 1.8),
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(50, 30),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(4),
+                        if (controller.rolUsuario.value == 2)
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(50, 30),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              backgroundColor: const Color(0XFF1D6CFF),
+                              foregroundColor: Colors.white,
                             ),
-                            backgroundColor: const Color(0XFF1D6CFF),
-                            foregroundColor: Colors.white,
+                            onPressed: () {
+                              Get.toNamed(Routes.ADD_FOLIOS);
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text(
+                              "Agregar folio",
+                              style: TextStyle(fontSize: 14),
+                            ),
                           ),
-                          onPressed: () {
-                            Get.toNamed(Routes.ADD_FOLIOS);
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text(
-                            "Agregar folio",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 16),

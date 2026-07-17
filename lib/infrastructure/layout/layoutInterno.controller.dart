@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,7 +10,8 @@ class LayoutInternoController extends GetxController
     with StateMixin<Map<String, dynamic>> {
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
-
+  DateTime? selectedDate;
+  
   @override
   void onInit() async {
     super.onInit();
@@ -55,17 +57,24 @@ class LayoutInternoController extends GetxController
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
-
     await AppDatabase.db.disconnect();
-
     await Get.delete<LayoutInternoController>(force: true);
-
-    // 4. Redirigir limpiando toda la pila de rutas
     Get.offAllNamed(Routes.LOGIN);
   }
 
   Future<void> signOutAllDevices() async {
     await Supabase.instance.client.auth.signOut(scope: SignOutScope.global);
     Get.toNamed(Routes.LOGIN);
+  }
+
+  Future<void> selectDate(context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2021, 7, 25),
+      firstDate: DateTime(2021),
+      lastDate: DateTime(2022),
+    );
+
+    selectedDate = pickedDate;
   }
 }

@@ -140,11 +140,23 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   Widget statusFolio(int statusId) {
     switch (statusId) {
       case 1 || 4:
-        return Text('Empezar ruta');
+        return Text(
+          'Empezar ruta',
+          textScaleFactor: 1.3,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        );
       case 2:
-        return Text('Legada');
+        return Text(
+          'Llegada',
+          textScaleFactor: 1.3,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        );
       case 5:
-        return Text('Finalizar entrega');
+        return Text(
+          'Finalizar entrega',
+          textScaleFactor: 1.3,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        );
       default:
         return SizedBox.shrink();
     }

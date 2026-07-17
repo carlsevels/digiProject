@@ -35,6 +35,13 @@ FROM folios f
   LEFT JOIN "status" st ON h."statusId" = st."id"
 
 WHERE 
-    (? = 1) OR (? = 2 AND (st.id IS NULL OR st.id != 3))
+    /* 
+       Ajuste a zona horaria de Monterrey (UTC-6) 
+       Se desplaza la fecha de creación y la fecha actual -6 horas 
+       para asegurar que coincidan en el mismo día natural local.
+    */
+    date(f.created_at, '-6 hours') = date('now', '-6 hours')
+    
+    AND (? = 1 OR (? = 2 AND (st.id IS NULL OR st.id != 3)))
 ''';
 }

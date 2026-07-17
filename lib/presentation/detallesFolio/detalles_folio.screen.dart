@@ -163,7 +163,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                       color: Colors.white,
                       margin: EdgeInsets.zero,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 8),
                         child: ListTile(
                           isThreeLine: false,
                           contentPadding: EdgeInsets.zero,
@@ -279,7 +279,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                       margin: EdgeInsets.zero,
                       elevation: 4,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -296,83 +296,80 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              height: 100,
-                              child: Obx(() {
-                                final currentStep =
-                                    controller.currentStep.value;
-
-                                final steps = [
-                                  {
-                                    "title": "Por iniciar",
-                                    "icon": Icons.local_shipping_outlined,
-                                  },
-                                  {
-                                    "title": "En ruta",
-                                    "icon": Icons.location_on_outlined,
-                                  },
-                                  {
-                                    "title": "En Sitio",
-                                    "icon": Icons.place_outlined,
-                                  },
-                                  {
-                                    "title": "Entregado",
-                                    "icon": Icons.check_circle_outline,
-                                  },
-                                ];
-
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: List.generate(
-                                    steps.length * 2 - 1,
-                                    (i) {
-                                      if (i.isEven) {
-                                        final index = i ~/ 2;
-
-                                        return Expanded(
-                                          child: _step(
-                                            colorStatus: int.parse(
-                                              state?.statusColor.toString() ??
-                                                  "0xFF9E9E9E",
-                                            ),
-                                            title:
-                                                steps[index]["title"] as String,
-                                            icon:
-                                                steps[index]["icon"]
-                                                    as IconData,
-                                            active: currentStep >= index,
-                                            completed: currentStep > index,
-                                            isLast: index == steps.length - 1,
+                            Obx(() {
+                              final currentStep =
+                                  controller.currentStep.value;
+                            
+                              final steps = [
+                                {
+                                  "title": "Por iniciar",
+                                  "icon": Icons.local_shipping_outlined,
+                                },
+                                {
+                                  "title": "En ruta",
+                                  "icon": Icons.location_on_outlined,
+                                },
+                                {
+                                  "title": "En Sitio",
+                                  "icon": Icons.place_outlined,
+                                },
+                                {
+                                  "title": "Entregado",
+                                  "icon": Icons.check_circle_outline,
+                                },
+                              ];
+                            
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: List.generate(
+                                  steps.length * 2 - 1,
+                                  (i) {
+                                    if (i.isEven) {
+                                      final index = i ~/ 2;
+                            
+                                      return Expanded(
+                                        child: _step(
+                                          colorStatus: int.parse(
+                                            state?.statusColor.toString() ??
+                                                "0xFF9E9E9E",
                                           ),
-                                        );
-                                      }
-
-                                      final leftIndex = i ~/ 2;
-
-                                      return Container(
-                                        width: 40,
-                                        margin: const EdgeInsets.only(top: 16),
-                                        height: 4,
-                                        decoration: BoxDecoration(
-                                          color: currentStep > leftIndex
-                                              ? Color(
-                                                  int.parse(
-                                                    state?.statusColor
-                                                            .toString() ??
-                                                        "0xFF9E9E9E",
-                                                  ),
-                                                )
-                                              : Colors.grey.shade300,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
+                                          title:
+                                              steps[index]["title"] as String,
+                                          icon:
+                                              steps[index]["icon"]
+                                                  as IconData,
+                                          active: currentStep >= index,
+                                          completed: currentStep > index,
+                                          isLast: index == steps.length - 1,
                                         ),
                                       );
-                                    },
-                                  ),
-                                );
-                              }),
-                            ),
+                                    }
+                            
+                                    final leftIndex = i ~/ 2;
+                            
+                                    return Container(
+                                      width: 40,
+                                      margin: const EdgeInsets.only(top: 16),
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: currentStep > leftIndex
+                                            ? Color(
+                                                int.parse(
+                                                  state?.statusColor
+                                                          .toString() ??
+                                                      "0xFF9E9E9E",
+                                                ),
+                                              )
+                                            : Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(
+                                          20,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
                           ],
                         ),
                       ),
