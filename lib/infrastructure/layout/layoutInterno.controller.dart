@@ -56,7 +56,12 @@ class LayoutInternoController extends GetxController
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
 
-    Get.toNamed(Routes.LOGIN);
+    await AppDatabase.db.disconnect();
+
+    await Get.delete<LayoutInternoController>(force: true);
+
+    // 4. Redirigir limpiando toda la pila de rutas
+    Get.offAllNamed(Routes.LOGIN);
   }
 
   Future<void> signOutAllDevices() async {

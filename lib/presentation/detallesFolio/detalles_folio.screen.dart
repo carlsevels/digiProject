@@ -41,6 +41,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                     controller.pedidoPendiente(
                       state?.folioIdHistorial?.toString() ?? "",
                     );
+                    controller.onInitDetalles();
                   },
                   child: Icon(Icons.cancel_outlined, color: Colors.white),
                 ),
