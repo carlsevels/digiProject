@@ -8,9 +8,10 @@ class Routes {
 
   static const ADD_CLIENTE = '/add-cliente';
   static const ADD_FOLIOS = '/add-folios';
+  static const DETALLES_FOLIO = '/detalles-folio';
   static const FOLIOS = '/folios';
   static const HOME = '/home';
   static const LOGIN = '/login';
   static const PROFILE = '/profile';
-  static const DETALLES_FOLIO = '/detalles-folio';
+  static const SUCCESS = '/success';
 }

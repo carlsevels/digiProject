@@ -13,6 +13,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement DetallesFolioController
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
+  int? nextStatus;
 
   @override
   void onInit() {
@@ -35,6 +36,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       return;
     }
     print("FolioId: $id");
+
     await getDetailsFolio(id);
   }
 
@@ -68,6 +70,8 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
         );
       }
+
+      print("Folio: ${jsonEncode(folio)}");
       change(folio, status: RxStatus.success());
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
@@ -120,6 +124,10 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       case 3:
         return 3;
 
+      // Pendiente
+      case 4:
+        return 0;
+
       // Sitio
       case 5:
         return 2;
@@ -131,7 +139,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
 
   Widget statusFolio(int statusId) {
     switch (statusId) {
-      case 1:
+      case 1 || 4:
         return Text('Empezar ruta');
       case 2:
         return Text('Legada');
@@ -142,9 +150,10 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     }
   }
 
-  Future<void> changeStatus(String statusId, String folioId) async {
+  Future<int?> changeStatus(String statusId, String folioId) async {
     switch (statusId) {
-      case "1":
+      case "1" || "4":
+        nextStatus = 2;
         await AppDatabase.db.execute(insertStatusFolio(), [
           const Uuid().v4(),
           folioId,
@@ -152,6 +161,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           DateTime.now().toIso8601String(),
         ]);
       case "2":
+        nextStatus = 5;
         await AppDatabase.db.execute(insertStatusFolio(), [
           const Uuid().v4(),
           folioId,
@@ -159,6 +169,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           DateTime.now().toIso8601String(),
         ]);
       case "5":
+        nextStatus = 3;
         await AppDatabase.db.execute(insertStatusFolio(), [
           const Uuid().v4(),
           folioId,
@@ -166,5 +177,15 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           DateTime.now().toIso8601String(),
         ]);
     }
+    return nextStatus;
+  }
+
+  Future<void> pedidoPendiente(String folioId) async {
+    await AppDatabase.db.execute(insertStatusFolio(), [
+      const Uuid().v4(),
+      folioId,
+      4,
+      DateTime.now().toIso8601String(),
+    ]);
   }
 }

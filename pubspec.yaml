@@ -43,7 +43,8 @@ dependencies:
   adaptive_theme: ^3.7.2
   action_slider: ^0.7.0
   intl: ^0.20.3
-
+  confetti: ^0.8.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

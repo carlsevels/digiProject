@@ -65,5 +65,10 @@ class Nav {
       page: () => const DetallesFolioScreen(),
       binding: DetallesFolioControllerBinding(),
     ),
+    GetPage(
+      name: Routes.SUCCESS,
+      page: () => const SuccessScreen(),
+      binding: SuccessControllerBinding(),
+    ),
   ];
 }

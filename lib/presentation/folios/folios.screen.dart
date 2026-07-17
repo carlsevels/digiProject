@@ -1,9 +1,7 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
 import 'controllers/folios.controller.dart';
 
 class FoliosScreen extends GetView<FoliosController> {

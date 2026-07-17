@@ -1,3 +1,4 @@
+import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -28,10 +29,29 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
       onEmpty: const Center(child: Text("Este folio no existe.")),
       (state) {
         return Scaffold(
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: Color(0XFF00BC16),
-            onPressed: () {},
-            child: Icon(Icons.phone, color: Colors.white),
+          floatingActionButton: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (controller.statusId.value == 5)
+                FloatingActionButton(
+                  tooltip: "Cancelar",
+                  heroTag: "btn2",
+                  backgroundColor: Colors.red,
+                  onPressed: () {
+                    controller.pedidoPendiente(
+                      state?.folioIdHistorial?.toString() ?? "",
+                    );
+                  },
+                  child: Icon(Icons.cancel_outlined, color: Colors.white),
+                ),
+              SizedBox(width: 16),
+              FloatingActionButton(
+                heroTag: "btn1",
+                backgroundColor: Color(0XFF00BC16),
+                onPressed: () {},
+                child: Icon(Icons.phone, color: Colors.white),
+              ),
+            ],
           ),
           bottomNavigationBar: controller.statusId.value != 3
               ? SafeArea(
@@ -70,6 +90,30 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                           state?.folioIdHistorial?.toString() ?? "",
                         );
                         sliderController.success();
+
+                        int? nextStatus = await controller.changeStatus(
+                          controller.statusId.toString(),
+                          state?.folioIdHistorial?.toString() ?? "",
+                        );
+
+                        if (nextStatus == 3) {
+                          sliderController.success();
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
+
+                          Get.toNamed(
+                            Routes.SUCCESS,
+                            arguments: state?.folioId.toString(),
+                          );
+                        } else {
+                          sliderController.success();
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
+                          await controller.onInitDetalles();
+                        }
+
                         await Future.delayed(const Duration(milliseconds: 500));
                         await this.controller.onInitDetalles();
                       },
@@ -352,70 +396,49 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
   }) {
     final color = Color(colorStatus);
 
-    return Expanded(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 36,
-                height: 36,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  decoration: BoxDecoration(
-                    color: active ? color : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: active ? color : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                    boxShadow: active
-                        ? [
-                            BoxShadow(
-                              color: color.withOpacity(.25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ]
-                        : [],
-                  ),
-                  child: Icon(
-                    completed ? Icons.check_rounded : icon,
-                    size: 20,
-                    color: active ? Colors.white : Colors.grey.shade400,
-                  ),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: isLast
-                          ? Colors.transparent
-                          : (completed ? color : Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? Colors.black87 : Colors.grey.shade500,
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: active ? color : Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: active ? color : Colors.grey.shade300,
+              width: 2,
             ),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
           ),
-        ],
-      ),
+          child: Icon(
+            completed ? Icons.check_rounded : icon,
+            size: 20,
+            color: active ? Colors.white : Colors.grey.shade400,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+            color: active ? Colors.black87 : Colors.grey.shade500,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -65,6 +65,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     if (listFolios.isEmpty) {
       change(listFolios, status: RxStatus.empty());
     } else {
+      print("listFolios: ${jsonEncode(listFolios)}");
       change(listFolios, status: RxStatus.success());
     }
   }
