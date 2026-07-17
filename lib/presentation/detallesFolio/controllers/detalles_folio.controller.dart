@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 class DetallesFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement DetallesFolioController
   RxInt currentStep = 0.obs;
+  RxInt statusId = 0.obs;
 
   @override
   void onInit() {
@@ -54,16 +55,14 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       }
       final folio = Folios.fromJson(resultSet.first);
 
-      print("fOLIOS: ${jsonEncode(folio)}");
-
       final ultimoRegistro = await getUltimoStatus(
         folio.folioIdHistorial ?? "",
       );
 
       if (ultimoRegistro != null) {
-        int statusId = ultimoRegistro["statusId"] as int;
-        currentStep.value = getStepIndex(statusId);
-        print("Status actual actualizado a: $statusId");
+        statusId.value = ultimoRegistro["statusId"] as int;
+        currentStep.value = getStepIndex(statusId.value);
+        print("Status actual actualizado a: ${currentStep.value}");
       } else {
         print(
           "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
@@ -88,31 +87,15 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       );
 
       if (result.isNotEmpty) {
-        return result.first; // Este es el registro más reciente
+        return result.first;
       }
-      return null; // No hay historial para este folio
+      return null;
     } catch (e) {
       print("Error al obtener el último status: $e");
       return null;
     }
   }
 
-  Future<void> updateStatusId(int statusId, String folioId) async {
-    try {
-      await AppDatabase.db.execute(insertStatusFolio(), [
-        const Uuid().v4(),
-        folioId,
-        statusId,
-        DateTime.now().toIso8601String(),
-      ]);
-
-      print("Actualización completada exitosamente.");
-    } catch (e) {
-      print("Error crítico en updateStatusId: $e");
-    }
-  }
-
-  // Función para parsear colores de forma segura
   Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
     if (colorStr == null || colorStr.isEmpty) return defaultColor;
 
@@ -143,6 +126,45 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
 
       default:
         return 0;
+    }
+  }
+
+  Widget statusFolio(int statusId) {
+    switch (statusId) {
+      case 1:
+        return Text('Empezar ruta');
+      case 2:
+        return Text('Legada');
+      case 5:
+        return Text('Finalizar entrega');
+      default:
+        return SizedBox.shrink();
+    }
+  }
+
+  Future<void> changeStatus(String statusId, String folioId) async {
+    switch (statusId) {
+      case "1":
+        await AppDatabase.db.execute(insertStatusFolio(), [
+          const Uuid().v4(),
+          folioId,
+          2,
+          DateTime.now().toIso8601String(),
+        ]);
+      case "2":
+        await AppDatabase.db.execute(insertStatusFolio(), [
+          const Uuid().v4(),
+          folioId,
+          5,
+          DateTime.now().toIso8601String(),
+        ]);
+      case "5":
+        await AppDatabase.db.execute(insertStatusFolio(), [
+          const Uuid().v4(),
+          folioId,
+          3,
+          DateTime.now().toIso8601String(),
+        ]);
     }
   }
 }

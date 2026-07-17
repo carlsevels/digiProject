@@ -54,11 +54,7 @@ class LoginController extends GetxController with StateMixin {
           await UserStorage.guardarRol(rol);
           print("Rol guardado: $rol");
 
-          if (rol == "Admin") {
-            Get.toNamed(Routes.HOME);
-          } else {
-            Get.toNamed(Routes.FOLIOS);
-          }
+          Get.toNamed(Routes.FOLIOS);
         }
       }
     } catch (e) {

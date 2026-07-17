@@ -99,6 +99,7 @@ class LayoutInterno extends StatelessWidget {
             },
           ),
           actions: [
+            IconButton(onPressed: () {}, icon: Icon(Icons.filter_list_outlined)),
             IconButton(onPressed: () {}, icon: Icon(Icons.search_outlined)),
           ],
         ),

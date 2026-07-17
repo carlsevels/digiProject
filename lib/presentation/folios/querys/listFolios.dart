@@ -5,16 +5,16 @@ SELECT
     f."folioId", 
     f.created_at,
     f.cantidad,
-    t.nombre as tipoFolio,
+    t.nombre as tipofolioid,
     c."nombreComercial", 
     tr.nombre as tipoRefaccion,
     cp.nombre as "condicionPago",
     cr.nombre AS creador,
     rp.nombre AS repartidor,
     m.nombre as municipio,
-    -- Si no hay historial, usamos un estado por defecto
-    COALESCE(st.nombre, 'Nuevo') as status,
-    COALESCE(st.color, '#808080') as statusColor
+    st.nombre as status,
+    st.color as statusColor,
+    h."folioId" as folio_id_historial
 FROM folios f
   LEFT JOIN tipos as t ON f."tipoFolioId" = t.id
   LEFT JOIN clientes as c ON f."clienteId" = c.id
@@ -24,8 +24,6 @@ FROM folios f
   LEFT JOIN "datosPersonales" rp ON f."repartidorId" = rp."userId"
   LEFT JOIN direcciones as d ON c.id = d."clienteId"
   LEFT JOIN municipios as m ON d."municipioId" = m."id"
-  
-  -- Subconsulta para traer el último historial sin duplicar folios
   LEFT JOIN (
       SELECT h1.* FROM historialestados h1
       INNER JOIN (
@@ -34,11 +32,9 @@ FROM folios f
           GROUP BY "folioId"
       ) h2 ON h1."folioId" = h2."folioId" AND h1."created_at" = h2.max_date
   ) as h ON f."id" = h."folioId"
-  
-  -- LEFT JOIN con status basado en el historial recuperado
   LEFT JOIN "status" st ON h."statusId" = st."id"
-  
-WHERE date(f.created_at, 'localtime') = date('now', 'localtime')
-ORDER BY f.created_at DESC
+
+WHERE 
+    (? = 1) OR (? = 2 AND (st.id IS NULL OR st.id != 3))
 ''';
 }

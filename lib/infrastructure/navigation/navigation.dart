@@ -42,7 +42,7 @@ class Nav {
     ),
     GetPage(
       name: Routes.FOLIOS,
-      page: () => const FoliosScreen(),
+      page: () => Layout(child: const FoliosScreen()),
       binding: FoliosControllerBinding(),
     ),
     GetPage(

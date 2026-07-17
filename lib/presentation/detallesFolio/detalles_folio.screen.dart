@@ -33,37 +33,50 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
             onPressed: () {},
             child: Icon(Icons.phone, color: Colors.white),
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: ActionSlider.standard(
-                height: 50,
-                toggleColor: Color(0XFF1D6CFF),
-                icon: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
-                ),
-                child: const Text('Empezar ruta'),
-                action: (sliderController) async {
-                  sliderController.loading();
-
-                  await controller.updateStatusId(
-                    2,
-                    state?.folioIdHistorial?.toString() ?? "",
-                  );
-
-                  sliderController.success();
-
-                  await Future.delayed(const Duration(milliseconds: 500));
-
-                  await this.controller.onInitDetalles();
-                },
-              ),
-            ),
-          ),
+          bottomNavigationBar: controller.statusId.value != 3
+              ? SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: ActionSlider.standard(
+                      height: 60,
+                      toggleColor: const Color(0XFF1D6CFF),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      sliderBehavior: SliderBehavior.stretch,
+                      backgroundColor: Colors.white,
+                      icon: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: controller.statusFolio(
+                          controller.statusId.value,
+                        ),
+                      ),
+                      action: (sliderController) async {
+                        sliderController.loading();
+                        await controller.changeStatus(
+                          controller.statusId.toString(),
+                          state?.folioIdHistorial?.toString() ?? "",
+                        );
+                        sliderController.success();
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        await this.controller.onInitDetalles();
+                      },
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
           backgroundColor: Color(0XFFF8FAFC),
           appBar: AppBar(
             backgroundColor: Color(0XFFF8FAFC),
@@ -254,7 +267,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                                     "icon": Icons.location_on_outlined,
                                   },
                                   {
-                                    "title": "Sitio",
+                                    "title": "En Sitio",
                                     "icon": Icons.place_outlined,
                                   },
                                   {
@@ -263,25 +276,54 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                                   },
                                 ];
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    children: List.generate(steps.length, (
-                                      index,
-                                    ) {
-                                      return _step(
-                                        colorStatus: int.parse(
-                                          state?.statusColor.toString() ?? "",
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: List.generate(
+                                    steps.length * 2 - 1,
+                                    (i) {
+                                      if (i.isEven) {
+                                        final index = i ~/ 2;
+
+                                        return Expanded(
+                                          child: _step(
+                                            colorStatus: int.parse(
+                                              state?.statusColor.toString() ??
+                                                  "0xFF9E9E9E",
+                                            ),
+                                            title:
+                                                steps[index]["title"] as String,
+                                            icon:
+                                                steps[index]["icon"]
+                                                    as IconData,
+                                            active: currentStep >= index,
+                                            completed: currentStep > index,
+                                            isLast: index == steps.length - 1,
+                                          ),
+                                        );
+                                      }
+
+                                      final leftIndex = i ~/ 2;
+
+                                      return Container(
+                                        width: 40,
+                                        margin: const EdgeInsets.only(top: 16),
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: currentStep > leftIndex
+                                              ? Color(
+                                                  int.parse(
+                                                    state?.statusColor
+                                                            .toString() ??
+                                                        "0xFF9E9E9E",
+                                                  ),
+                                                )
+                                              : Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
-                                        title: steps[index]["title"] as String,
-                                        icon: steps[index]["icon"] as IconData,
-                                        active: currentStep >= index,
-                                        completed: currentStep > index,
-                                        isLast: index == steps.length - 1,
                                       );
-                                    }),
+                                    },
                                   ),
                                 );
                               }),
@@ -308,49 +350,51 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
     required bool isLast,
     required int colorStatus,
   }) {
-    var color = Color(colorStatus);
+    final color = Color(colorStatus);
 
     return Expanded(
       child: Column(
         children: [
           Row(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              SizedBox(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: active ? color : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: active ? color : Colors.grey.shade300,
-                    width: 2,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    color: active ? color : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active ? color : Colors.grey.shade300,
+                      width: 2,
+                    ),
+                    boxShadow: active
+                        ? [
+                            BoxShadow(
+                              color: color.withOpacity(.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
+                        : [],
                   ),
-                  boxShadow: active
-                      ? [
-                          BoxShadow(
-                            color: color.withOpacity(.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Icon(
-                  completed ? Icons.check_rounded : icon,
-                  size: 20,
-                  color: active ? Colors.white : Colors.grey.shade400,
+                  child: Icon(
+                    completed ? Icons.check_rounded : icon,
+                    size: 20,
+                    color: active ? Colors.white : Colors.grey.shade400,
+                  ),
                 ),
               ),
-
               if (!isLast)
                 Expanded(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
+                  child: Container(
                     height: 4,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      color: completed ? color : Colors.grey.shade300,
+                      color: isLast
+                          ? Colors.transparent
+                          : (completed ? color : Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
