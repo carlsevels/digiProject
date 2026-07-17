@@ -126,8 +126,24 @@ class FoliosEmptyPage extends GetView<FoliosController> {
                   color: primary,
                 ),
               ),
-
               const SizedBox(height: 40),
+
+              // Texto de Fecha Dinámico
+              Text(
+                controller.obtenerEtiquetaFecha(
+                  DateTime.tryParse(controller.fechaSeleccionada.value) ??
+                      DateTime.now(),
+                ),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: primary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+
+              const SizedBox(height: 24),
 
               Text(
                 "No hay folios",
@@ -143,7 +159,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               const SizedBox(height: 14),
 
               Text(
-                "Todavía no has registrado ningún folio para el día de hoy.\nEmpieza creando el primero.",
+                "Todavía no has registrado ningún folio para el día seleccionado.\nEmpieza creando el primero.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -154,7 +170,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
 
               const SizedBox(height: 28),
 
-              // Badge (no Card)
+              // Badge informativo
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -186,6 +202,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
 
               const SizedBox(height: 48),
 
+              // Botón
               SizedBox(
                 width: double.infinity,
                 height: 56,

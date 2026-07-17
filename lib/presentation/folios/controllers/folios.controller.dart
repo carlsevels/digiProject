@@ -9,6 +9,7 @@ import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.que
 import 'package:bitacora_frontend/presentation/folios/querys/listFolios.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -18,6 +19,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   DateTime? selectedDate;
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
+  final RxString fechaSeleccionada = "".obs;
 
   final Rx<DatosPersonales> _datosPersonales = DatosPersonales().obs;
   DatosPersonales get datosPersonales => this._datosPersonales.value;
@@ -68,13 +70,11 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       final datosPersonalesData = resultSet.first;
       rolUsuario.value = datosPersonalesData['rolId'] as int;
 
-      final fecha = (selectedDate ?? DateTime.now()).toIso8601String().split(
-        'T',
-      )[0];
+      fechaSeleccionada.value = (selectedDate ?? DateTime.now())
+          .toIso8601String()
+          .split('T')[0];
 
-      
-
-      print("Fecha seleccionada: $fecha");
+      print("Fecha seleccionada: ${fechaSeleccionada.value}");
 
       final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
         (selectedDate ?? DateTime.now()).toIso8601String().split('T')[0],
@@ -156,6 +156,29 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       }
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
+    }
+  }
+
+  String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    final fecha = DateTime(
+      fechaSeleccionada.year,
+      fechaSeleccionada.month,
+      fechaSeleccionada.day,
+    );
+
+    final diferencia = hoy.difference(fecha).inDays;
+
+    if (diferencia == 0) {
+      return "Hoy";
+    } else if (diferencia == 1) {
+      return "Ayer";
+    } else if (diferencia > 1 && diferencia <= 7) {
+      return "Hace $diferencia días";
+    } else {
+      // Esto mostrará algo como "3 de Junio"
+      return DateFormat("d 'de' MMMM", 'es_ES').format(fechaSeleccionada);
     }
   }
 
