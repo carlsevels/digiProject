@@ -8,160 +8,266 @@ class FoliosScreen extends GetView<FoliosController> {
   const FoliosScreen({super.key});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0XFFF8FAFC),
-      body: controller.obx(
-        onEmpty: RefreshIndicator(
-          onRefresh: () async {
-            await controller.getFoliosWithDate();
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: const [SizedBox(height: 200), FoliosEmptyPage()],
-          ),
-        ),
-        (state) => RefreshIndicator(
-          color: Colors.white,
-          backgroundColor: Color(0XFF1D6CFF),
-          onRefresh: () => controller.getFoliosWithDate(),
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: state!.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Hoy", textScaleFactor: 1.8),
-                        if (controller.rolUsuario.value == 2)
-                          TextButton.icon(
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(50, 30),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
-                              ),
-                              backgroundColor: const Color(0XFF1D6CFF),
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () {
-                              Get.toNamed(Routes.ADD_FOLIOS);
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text(
-                              "Agregar folio",
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              }
+    final screenWidth = MediaQuery.of(context).size.width;
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-              final folio = state[index - 1];
-
-              return InkWell(
-                onTap: () {
-                  if (folio.folioId != null) {
-                    Get.toNamed(
-                      Routes.DETALLES_FOLIO,
-                      arguments: folio.folioId.toString(),
-                    );
-                  } else {
-                    print("ERROR: folioId es null, por eso no se envía nada.");
-                  }
-                },
-                child: ListTile(
-                  isThreeLine: false,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Column(
-                    children: [
-                      Text(
-                        folio.cantidad.toString(),
-                        textScaleFactor: 3.5,
-                        style: TextStyle(height: 1),
-                      ),
-                      Flexible(
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 35),
-                          child: Text(
-                            folio.tiporefaccion.toString(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  title: Text(folio.nombreComercial.toString()),
-                  subtitle: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              color: Color(0XFF64748B),
-                            ),
-                            Flexible(
-                              child: Text(
-                                "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0XFF64748B),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: folio.status != "Por entregar"
-                              ? Color(int.parse(folio.statusColor.toString()))
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                            color: Color(
-                              int.parse(folio.statusColor.toString()),
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          folio.status.toString(),
-                          style: TextStyle(
-                            color: folio.status == "Por entregar"
-                                ? Color(int.parse(folio.statusColor.toString()))
-                                : Colors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+    return controller.obx(
+      onLoading: Center(child: CircularProgressIndicator()),
+      onError: (error) => Center(child: Text("Error: $error")),
+      onEmpty: RefreshIndicator(
+        onRefresh: () async {
+          await controller.getFoliosWithDate();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height,
+            child: const Center(child: FoliosEmptyPage()),
           ),
         ),
       ),
+      (state) {
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Color(0XFFF8FAFC),
+            title: SizedBox(
+              width: 120,
+              child: Image.network(
+                fit: BoxFit.contain,
+                "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+              ),
+            ),
+            automaticallyImplyActions: false,
+            leading: Builder(
+              builder: (context) {
+                return IconButton(
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  icon: Icon(Icons.account_circle_outlined),
+                );
+              },
+            ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  controller.selectDate(context);
+                },
+                icon: Icon(Icons.filter_list_outlined),
+              ),
+              IconButton(onPressed: () {}, icon: Icon(Icons.search_outlined)),
+            ],
+          ),
+          key: _scaffoldKey,
+          drawer: Drawer(
+            backgroundColor: Color(0XFFF8FAFC),
+            child: Column(
+              children: [
+                Container(
+                  width: screenWidth,
+                  child: DrawerHeader(
+                    // decoration: BoxDecoration(image: imageUrl),
+                    curve: Curves.bounceOut,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          controller.nameUser.value,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(controller.rolName.value),
+                      ],
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: Text("Perfil"),
+                  onTap: () => Get.toNamed(Routes.PROFILE),
+                ),
+                ListTile(title: Text("Repartidores"), onTap: null),
+                ListTile(title: Text("Refacciones"), onTap: null),
+                ExpansionTile(
+                  title: Text("Folios"),
+                  children: [
+                    ListTile(
+                      title: Text("Agregar Folio"),
+                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                    ),
+                  ],
+                ),
+                ExpansionTile(
+                  title: Text("Clientes"),
+                  children: [
+                    ListTile(
+                      title: Text("Agregar Cliente"),
+                      onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
+                    ),
+                  ],
+                ),
+                Spacer(),
+                ListTile(
+                  leading: Icon(Icons.logout),
+                  iconColor: Color(0XFFF8FAFC),
+                  tileColor: Color(0XFFFF3535),
+                  title: Text(
+                    "Cerrar sesion",
+                    style: TextStyle(color: Color(0XFFF8FAFC)),
+                  ),
+                  onTap: () => controller.signOut(),
+                ),
+              ],
+            ),
+          ),
+
+          backgroundColor: Color(0XFFF8FAFC),
+          body: RefreshIndicator(
+            color: Colors.white,
+            backgroundColor: Color(0XFF1D6CFF),
+            onRefresh: () => controller.getFoliosWithDate(),
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: state!.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Hoy", textScaleFactor: 1.8),
+                          if (controller.rolUsuario.value == 2)
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(50, 30),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(4),
+                                  ),
+                                ),
+                                backgroundColor: const Color(0XFF1D6CFF),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                Get.toNamed(Routes.ADD_FOLIOS);
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text(
+                                "Agregar folio",
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+
+                final folio = state[index - 1];
+
+                return InkWell(
+                  onTap: () {
+                    if (folio.folioId != null) {
+                      Get.toNamed(
+                        Routes.DETALLES_FOLIO,
+                        arguments: folio.folioId.toString(),
+                      );
+                    } else {
+                      print(
+                        "ERROR: folioId es null, por eso no se envía nada.",
+                      );
+                    }
+                  },
+                  child: ListTile(
+                    isThreeLine: false,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Column(
+                      children: [
+                        Text(
+                          folio.cantidad.toString(),
+                          textScaleFactor: 3.5,
+                          style: TextStyle(height: 1),
+                        ),
+                        Flexible(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 35),
+                            child: Text(
+                              folio.tiporefaccion.toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    title: Text(folio.nombreComercial.toString()),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                color: Color(0XFF64748B),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0XFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: folio.status != "Por entregar"
+                                ? Color(int.parse(folio.statusColor.toString()))
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: Color(
+                                int.parse(folio.statusColor.toString()),
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            folio.status.toString(),
+                            style: TextStyle(
+                              color: folio.status == "Por entregar"
+                                  ? Color(
+                                      int.parse(folio.statusColor.toString()),
+                                    )
+                                  : Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
