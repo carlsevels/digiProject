@@ -14,4 +14,5 @@ class Routes {
   static const LOGIN = '/login';
   static const PROFILE = '/profile';
   static const SUCCESS = '/success';
+  static const SEARCH_FOLIO = '/search-folio';
 }

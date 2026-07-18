@@ -95,7 +95,10 @@ class AddFoliosController extends GetxController with StateMixin {
     List<GeneralModel> tipoDocumentoList = result.map((row) {
       return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
-    final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
+    final defaultItem = GeneralModel(
+      id: 0,
+      nombre: "Seleccione tipo de documento",
+    );
     tipoDocumentoList.insert(0, defaultItem);
     tipoDocumento.assignAll(tipoDocumentoList);
     tipoDocumento.value = tipoDocumentoList;
@@ -119,7 +122,10 @@ class AddFoliosController extends GetxController with StateMixin {
     List<GeneralModel> condicionDePagoList = result.map((row) {
       return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
-    final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
+    final defaultItem = GeneralModel(
+      id: 0,
+      nombre: "Seleccione una condición de pago",
+    );
     condicionDePagoList.insert(0, defaultItem);
     condicionPago.assignAll(condicionDePagoList);
     condicionPago.value = condicionDePagoList;
@@ -153,12 +159,9 @@ class AddFoliosController extends GetxController with StateMixin {
         return null;
       }
 
-      // 1. EXTRAEMOS LOS DATOS FUERA DE LA TRANSACCIÓN (Seguridad para el Isolate)
       final String idParaPowerSync = const Uuid().v4();
       final String fechaActual = DateTime.now().toIso8601String();
 
-      // Capturamos valores de los controladores aquí
-      final String folioNumero = numReporteController.text;
       final int cantidad = int.tryParse(cantidadController.text) ?? 0;
       final int tipoDoc = tipoDocumentoId.value;
       final int cliente = clienteId.value;

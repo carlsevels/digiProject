@@ -70,5 +70,10 @@ class Nav {
       page: () => const SuccessScreen(),
       binding: SuccessControllerBinding(),
     ),
+    GetPage(
+      name: Routes.SEARCH_FOLIO,
+      page: () => const SearchFolioScreen(),
+      binding: SearchFolioControllerBinding(),
+    ),
   ];
 }

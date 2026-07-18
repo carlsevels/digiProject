@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-// 1. Añadimos <T> para hacerlo genérico
 class DropdownWidget<T> extends StatelessWidget {
   final String? title;
-  final T? dropdownValue; // 2. Usamos T en lugar de int
+  final T? dropdownValue;
   final ValueChanged<T?>? onChanged;
-  final List<DropdownMenuItem<T>> items; // 3. Usamos T aquí también
+  final List<DropdownMenuItem<T>> items;
 
   const DropdownWidget({
     required this.dropdownValue,
@@ -32,7 +31,6 @@ class DropdownWidget<T> extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
-              // 4. DropdownButton tipado con T
               isExpanded: true,
               value: dropdownValue,
               icon: const Icon(Icons.keyboard_arrow_down),

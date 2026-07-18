@@ -102,7 +102,12 @@ class FoliosEmptyPage extends GetView<FoliosController> {
             },
             icon: Icon(Icons.filter_list_outlined),
           ),
-          IconButton(onPressed: () {}, icon: Icon(Icons.search_outlined)),
+          IconButton(
+            onPressed: () {
+              Get.toNamed(Routes.SEARCH_FOLIO);
+            },
+            icon: Icon(Icons.search_outlined),
+          ),
         ],
       ),
 

@@ -23,74 +23,12 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
         centerTitle: false,
         title: Text("Nuevo Folio"),
         actions: [
-          SearchAnchor(
-            viewBackgroundColor: Color(0XFFF8FAFC),
-            isFullScreen: true,
-            viewHintText: "Buscar folio o factura",
-            headerHintStyle: TextStyle(color: Color(0XFF64748B)),
-            dividerColor: Color(0XFF64748B),
-            viewPadding: EdgeInsets.symmetric(horizontal: 16.0),
-            builder: (BuildContext context, SearchController controller) {
-              return IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => controller.openView(),
-              );
-            },
-            suggestionsBuilder:
-                (BuildContext context, SearchController controller) {
-                  // This triggers when the user types or opens the search view
-                  return List<ListTile>.generate(5, (int index) {
-                    return ListTile(
-                      isThreeLine: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Column(
-                        children: [
-                          Text("3", textScaleFactor: 2),
-                          Text("Toner"),
-                        ],
-                      ),
-                      title: Text("TERNIUM"),
-                      subtitle: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                color: Color(0XFF64748B),
-                              ),
-                              Text(
-                                "Guadalupe - Renta - 103325",
-                                style: TextStyle(color: Color(0XFF64748B)),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: const Color(0XFF1D6CFF),
-                              ),
-                            ),
-                            child: const Text(
-                              "Por entregar",
-                              style: TextStyle(
-                                color: Color(0XFF1D6CFF),
-                                fontSize: 12,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  });
-                },
+          SizedBox(
+            height: 50,
+            child: Image.asset(
+              "assets/logos/digireyShort.png",
+              opacity: const AlwaysStoppedAnimation(.5),
+            ),
           ),
         ],
       ),
@@ -182,23 +120,58 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                             uniqueClientes[c.id!] = c;
                           }
                         }
-                        return DropdownWidget(
-                          dropdownValue: controller.clienteId.value,
-                          onChanged: (int? value) {
-                            if (value != null) {
-                              controller.clienteId.value = value;
-                            }
-                          },
-                          items: uniqueClientes.values
-                              .map<DropdownMenuItem<int>>((Clientes cliente) {
-                                return DropdownMenuItem<int>(
-                                  value: cliente.id!,
-                                  child: Text(
-                                    cliente.nombreComercial ?? 'Sin nombre',
-                                  ),
-                                );
-                              })
-                              .toList(),
+                        return Container(
+                          height: 40,
+
+                          child: Autocomplete<Clientes>(
+                            displayStringForOption: (Clientes option) =>
+                                option.nombreComercial ?? "",
+
+                            optionsBuilder:
+                                (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return const Iterable<Clientes>.empty();
+                                  }
+
+                                  return controller.clientesModel.where((
+                                    Clientes c,
+                                  ) {
+                                    final nombre =
+                                        c.nombreComercial?.toLowerCase() ?? '';
+                                    return nombre.contains(
+                                      textEditingValue.text.toLowerCase(),
+                                    );
+                                  });
+                                },
+
+                            fieldViewBuilder:
+                                (
+                                  context,
+                                  textController,
+                                  focusNode,
+                                  onFieldSubmitted,
+                                ) {
+                                  return TextField(
+                                    controller: textController,
+                                    focusNode: focusNode,
+                                    decoration: const InputDecoration(
+                                      label: Text(
+                                        'Buscar Cliente',
+                                        style: TextStyle(
+                                          color: Color(0XFF64748B),
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(),
+                                      suffixIcon: Icon(Icons.search),
+                                    ),
+                                  );
+                                },
+
+                            onSelected: (Clientes selection) {
+                              controller.clienteId.value = selection.id ?? 0;
+                              print(controller.clienteId.value);
+                            },
+                          ),
                         );
                       }),
                     ),

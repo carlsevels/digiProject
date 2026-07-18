@@ -12,7 +12,36 @@ class FoliosScreen extends GetView<FoliosController> {
     final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
     return controller.obx(
-      onLoading: Center(child: CircularProgressIndicator()),
+      onLoading: Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: SizedBox(
+                  width: 120,
+                  child: Image.asset(
+                    "assets/logos/digirey.png",
+                    opacity: const AlwaysStoppedAnimation(.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ),
+        ),
+      ),
       onError: (error) => Center(child: Text("Error: $error")),
       onEmpty: RefreshIndicator(
         onRefresh: () async {
@@ -56,7 +85,12 @@ class FoliosScreen extends GetView<FoliosController> {
                 },
                 icon: Icon(Icons.filter_list_outlined),
               ),
-              IconButton(onPressed: () {}, icon: Icon(Icons.search_outlined)),
+              IconButton(
+                onPressed: () {
+                  Get.toNamed(Routes.SEARCH_FOLIO);
+                },
+                icon: Icon(Icons.search_outlined),
+              ),
             ],
           ),
           key: _scaffoldKey,
