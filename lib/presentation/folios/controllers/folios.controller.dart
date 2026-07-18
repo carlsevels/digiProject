@@ -29,6 +29,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   set datosPersonales(value) => this._datosPersonales.value = value;
 
   final count = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
