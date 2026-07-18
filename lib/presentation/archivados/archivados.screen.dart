@@ -139,51 +139,157 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                     direction: DismissDirection.horizontal,
                     confirmDismiss: (direction) async {
                       if (direction == DismissDirection.startToEnd) {
-                        return await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirmar'),
-                            content: const Text(
-                              '¿Estás seguro de restaurar este folio?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () => controller.archivarFolio(
-                                  folio.folioId ?? "",
+                        return await showDialog<bool>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
                                 ),
-                                child: const Text('Restaurar'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Color(0xFFE8F5E9),
+                                        child: Icon(
+                                          Icons.settings_backup_restore_rounded,
+                                          size: 40,
+                                          color: Color(0xFF319F43),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'Restaurar Folio',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        '¿Estás seguro de restaurar este folio?',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              controller.archivarFolio(
+                                                folio.folioId ?? "",
+                                              );
+                                              Navigator.pop(context, true);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF319F43,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Restaurar'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                        );
+                            ) ??
+                            false;
                       }
+
                       if (direction == DismissDirection.endToStart) {
-                        return await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirmar'),
-                            content: const Text(
-                              '¿Estás seguro de elminar este folio?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () => controller.eliminarFolio(
-                                  folio.folioId ?? "",
+                        return await showDialog<bool>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
                                 ),
-                                child: const Text('Eliminar'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Color(0xFFFEECEC),
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 40,
+                                          color: Color(0xFFD9534F),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'Eliminar Folio',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        '¿Estás seguro de eliminar este folio?',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              controller.eliminarFolio(
+                                                folio.folioId ?? "",
+                                              );
+                                              Navigator.pop(context, true);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFFD9534F,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                        );
+                            ) ??
+                            false;
                       }
+
                       return true;
                     },
                     background: Container(

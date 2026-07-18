@@ -170,30 +170,12 @@ class ArchivadosController extends GetxController
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      print("Intentando borrar folio con ID: $folioId");
-
-      await AppDatabase.db.execute(
-        '''
-      DELETE FROM folios 
-      WHERE "folioId" = ?;
-      ''',
-        [folioId],
-      );
-
-      print("DELETE terminado");
-
-      final filas = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM folios 
-      WHERE "folioId" = ?;
-      ''',
-        [folioId],
-      );
-
-      print("Después del delete: $filas");
-    } catch (e, st) {
-      print("Error de SQL: $e");
-      print(st);
+      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
+        folioId,
+      ]);
+    } catch (e) {
+      print("Error de SQL: ${e.toString()}");
+      return null;
     }
   }
 

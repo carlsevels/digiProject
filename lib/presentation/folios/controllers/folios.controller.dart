@@ -229,5 +229,17 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     }
   }
 
+    Future<void> eliminarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
+        folioId,
+      ]);
+    } catch (e) {
+      print("Error de SQL: ${e.toString()}");
+      return null;
+    }
+  }
+
+
   void increment() => count.value++;
 }
