@@ -22,22 +22,18 @@ void main() async {
     anonKey: 'sb_publishable_O52dOsup-TjPfGQCMhvFFQ_GiEe6TuX',
   );
 
-  final supabase = Supabase.instance.client;
-
-  await Supabase.initialize(
-    url: 'https://qraxigpgdckpnoisacqc.supabase.co',
-    anonKey: 'sb_publishable_O52dOsup-TjPfGQCMhvFFQ_GiEe6TuX',
-  );
-
   await AppDatabase.initialize();
+
+  final supabase = Supabase.instance.client;
   final bool tieneSesion = supabase.auth.currentUser != null;
-  final String rutaInicial = tieneSesion ? Routes.FOLIOS : Routes.LOGIN;
 
   if (tieneSesion) {
     await AppDatabase.db.connect(connector: MyBackendConnector(AppDatabase.db));
+
+    await AppDatabase.db.waitForFirstSync();
   }
 
-  runApp(Main(rutaInicial));
+  runApp(Main(tieneSesion ? Routes.FOLIOS : Routes.LOGIN));
 }
 
 class Main extends StatelessWidget {

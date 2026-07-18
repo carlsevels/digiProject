@@ -137,16 +137,18 @@ class FoliosScreen extends GetView<FoliosController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            controller.obtenerEtiquetaFecha(
-                              DateTime.tryParse(
-                                    controller.fechaSeleccionada.value,
-                                  ) ??
-                                  DateTime.now(),
+                          Obx(
+                            () => Text(
+                              controller.obtenerEtiquetaFecha(
+                                DateTime.tryParse(
+                                      controller.fechaSeleccionada.value,
+                                    ) ??
+                                    DateTime.now(),
+                              ),
+                              textScaler: const TextScaler.linear(1.8),
                             ),
-                            textScaleFactor: 1.8,
                           ),
-                          if (controller.rolUsuario.value == 2)
+                          if (controller.rolUsuario.value == 1)
                             TextButton.icon(
                               style: TextButton.styleFrom(
                                 minimumSize: const Size(50, 30),

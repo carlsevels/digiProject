@@ -202,27 +202,30 @@ class FoliosEmptyPage extends GetView<FoliosController> {
 
               const SizedBox(height: 48),
 
-              // Botón
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Get.toNamed(Routes.ADD_FOLIOS);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+              if (controller.rolUsuario.value == 1)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Get.toNamed(Routes.ADD_FOLIOS);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text(
+                      "Crear nuevo folio",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  icon: const Icon(Icons.add),
-                  label: const Text(
-                    "Crear nuevo folio",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
                 ),
-              ),
             ],
           ),
         ),

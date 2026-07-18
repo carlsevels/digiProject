@@ -51,27 +51,17 @@ class MyBackendConnector extends PowerSyncBackendConnector {
   // See example implementation here: https://docs.powersync.com/client-sdk-references/flutter#3-integrate-with-your-backend
   @override
   Future<void> uploadData(PowerSyncDatabase database) async {
-    // This function is called whenever there is data to upload, whether the
-    // device is online or offline.
-    // If this call throws an error, it is retried periodically.
-
     final transaction = await database.getNextCrudTransaction();
-    if (transaction == null) {
-      return;
-    }
     if (transaction == null) return;
 
     final supabase = Supabase.instance.client;
-    // The data that needs to be changed in the remote db
+
     for (var op in transaction.crud) {
       final table = op.table;
-      // AQUÍ ESTÁ EL CAMBIO: usa opData en lugar de record
-      final data = op.opData;
+      final data = op.opData ?? {}; // Usar mapa vacío si es null
 
-      data!['id'] = op.id; // <--- ESTO ES LO QUE FALTA
-
-      // 3. Verificamos antes de enviar (para depurar)
-      print("Enviando a $table el registro con ID: ${data['id']}");
+      // Asegurar que el ID esté presente para operaciones que lo requieren
+      data['id'] = op.id;
 
       if (op.op == UpdateType.put) {
         await supabase.from(table).upsert(data);
@@ -82,21 +72,37 @@ class MyBackendConnector extends PowerSyncBackendConnector {
       }
     }
 
-    // Completes the transaction and moves onto the next one
     await transaction.complete();
   }
 }
 
 class AppDatabase {
-  static late PowerSyncDatabase db;
+  static late PowerSyncDatabase _db;
+  static bool _isInitialized = false;
+
+  // Getter para acceder a la DB de forma segura
+  static PowerSyncDatabase get db {
+    if (!_isInitialized) {
+      throw Exception(
+        "AppDatabase no ha sido inicializada. Llama a initialize() primero.",
+      );
+    }
+    return _db;
+  }
+
   static Future<void> initialize() async {
-    // Obtener el directorio seguro en Android
+    if (_isInitialized) return;
+
     final dir = await getApplicationDocumentsDirectory();
     final path = join(dir.path, 'database.sqlite');
 
-    db = PowerSyncDatabase(schema: schema, path: path);
-    await db.initialize();
-    await db.connect(connector: MyBackendConnector(db));
+    _db = PowerSyncDatabase(schema: schema, path: path);
+    await _db.initialize();
+
+    await _db.connect(connector: MyBackendConnector(_db));
+
+    _isInitialized = true;
+    print("PowerSync inicializado correctamente.");
   }
 }
 

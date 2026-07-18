@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:bitacora_frontend/infrastructure/models/datosPersonales.dart';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
@@ -10,6 +11,8 @@ import 'package:bitacora_frontend/presentation/folios/querys/listFolios.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:powersync/powersync.dart';
 import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -67,18 +70,20 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
         return;
       }
 
-      final datosPersonalesData = resultSet.first;
-      rolUsuario.value = datosPersonalesData['rolId'] as int;
+      rolUsuario.value = resultSet.first['rolId'] as int;
 
-      fechaSeleccionada.value = (selectedDate ?? DateTime.now())
+      // Obtenemos la fecha en formato YYYY-MM-DD
+      final String fechaHoy = (selectedDate ?? DateTime.now())
           .toIso8601String()
           .split('T')[0];
 
-      print("Fecha seleccionada: ${fechaSeleccionada.value}");
+      print(
+        "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
+      );
 
+      // Pasamos solo los 2 parámetros necesarios
       final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
-        (selectedDate ?? DateTime.now()).toIso8601String().split('T')[0],
-        rolUsuario.value,
+        fechaHoy,
         rolUsuario.value,
       ]);
 
@@ -111,15 +116,35 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
+
+      fechaSeleccionada.value = picked.toIso8601String().split('T')[0];
+
       await getFoliosWithDate();
     }
   }
 
   Future<void> signOut() async {
-    await Supabase.instance.client.auth.signOut();
-    await AppDatabase.db.disconnect();
-    await Get.delete<FoliosController>(force: true);
-    Get.offAllNamed(Routes.LOGIN);
+    try {
+      // 1. Desconecta la base de datos
+      await AppDatabase.db.disconnect();
+
+      // 2. Obtén la ruta correcta donde se guardan los documentos de la app
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/${AppDatabase.db}');
+
+      // 3. Borra el archivo si existe
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      // 4. Continúa con el cierre de sesión normal
+      await Supabase.instance.client.auth.signOut();
+      await Get.deleteAll(force: true);
+      Get.offAllNamed(Routes.LOGIN);
+    } catch (e) {
+      debugPrint("Error al cerrar sesión: $e");
+      Get.offAllNamed(Routes.LOGIN);
+    }
   }
 
   Future<Map<String, dynamic>?> getDatos() async {
@@ -161,6 +186,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {
     final ahora = DateTime.now();
+    // Limpiamos horas para que la comparación sea solo por días
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final fecha = DateTime(
       fechaSeleccionada.year,
@@ -168,7 +194,10 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       fechaSeleccionada.day,
     );
 
-    final diferencia = hoy.difference(fecha).inDays;
+    // AQUÍ ESTÁ LA CLAVE: calculamos la diferencia en días como entero
+    final int diferencia = hoy.difference(fecha).inDays;
+
+    print("DEBUG: Hoy es $hoy, fecha recibida $fecha, diferencia: $diferencia");
 
     if (diferencia == 0) {
       return "Hoy";
@@ -177,7 +206,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     } else if (diferencia > 1 && diferencia <= 7) {
       return "Hace $diferencia días";
     } else {
-      // Esto mostrará algo como "3 de Junio"
       return DateFormat("d 'de' MMMM", 'es_ES').format(fechaSeleccionada);
     }
   }
