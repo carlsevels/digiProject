@@ -257,17 +257,24 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                                 children: [
                                   Container(
                                     height: 32.0,
-                                    child: Text(
-                                      "Detalles del Trayecto",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        color: Color(0XFF0F172A),
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1,
-                                      ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.route_outlined),
+                                        SizedBox(width: 8.0),
+                                        Text(
+                                          "Detalles del Trayecto",
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                            color: Color(0XFF0F172A),
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
+                                  SizedBox(height: 8.0),
                                   Obx(() {
                                     final currentStep =
                                         controller.currentStep.value;

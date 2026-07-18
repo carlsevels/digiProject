@@ -6,158 +6,228 @@ import 'controllers/folios.controller.dart';
 
 class FoliosScreen extends GetView<FoliosController> {
   const FoliosScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-    return controller.obx(
-      onLoading: Container(
-        color: Colors.white,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.8, end: 1.0),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeInOut,
-                builder: (context, value, child) =>
-                    Transform.scale(scale: value, child: child),
-                child: SizedBox(
-                  width: 120,
-                  child: Image.asset(
-                    "assets/logos/digirey.png",
-                    opacity: const AlwaysStoppedAnimation(.5),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0XFFF8FAFC),
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: const Color(0XFFF8FAFC),
+        title: SizedBox(
+          width: 120,
+          child: Image.network(
+            fit: BoxFit.contain,
+            "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
           ),
         ),
-      ),
-      onError: (error) => Center(child: Text("Error: $error")),
-      onEmpty: RefreshIndicator(
-        onRefresh: () async {
-          await controller.getFoliosWithDate();
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: const Center(child: FoliosEmptyPage()),
-          ),
-        ),
-      ),
-      (state) {
-        return Scaffold(
-          appBar: AppBar(
-            centerTitle: true,
-            backgroundColor: Color(0XFFF8FAFC),
-            title: SizedBox(
-              width: 120,
-              child: Image.network(
-                fit: BoxFit.contain,
-                "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
-              ),
-            ),
-            automaticallyImplyActions: false,
-            leading: Builder(
-              builder: (context) {
-                return IconButton(
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                  icon: Icon(Icons.account_circle_outlined),
-                );
+        automaticallyImplyActions: false,
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
               },
-            ),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  controller.selectDate(context);
-                },
-                icon: Icon(Icons.filter_list_outlined),
-              ),
-              IconButton(
-                onPressed: () {
-                  Get.toNamed(Routes.SEARCH_FOLIO);
-                },
-                icon: Icon(Icons.search_outlined),
-              ),
-            ],
+              icon: const Icon(Icons.account_circle_outlined),
+            );
+          },
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              controller.selectDate(context);
+            },
+            icon: const Icon(Icons.filter_list_outlined),
           ),
-          key: _scaffoldKey,
-          drawer: Drawer(
-            backgroundColor: Color(0XFFF8FAFC),
-            child: Column(
-              children: [
-                Container(
-                  width: screenWidth,
-                  child: DrawerHeader(
-                    // decoration: BoxDecoration(image: imageUrl),
-                    curve: Curves.bounceOut,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controller.nameUser.value,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+          IconButton(
+            onPressed: () {
+              Get.toNamed(Routes.SEARCH_FOLIO);
+            },
+            icon: const Icon(Icons.search_outlined),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: const Color(0XFFF8FAFC),
+        child: Column(
+          children: [
+            Container(
+              height: 220,
+              width: screenWidth,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xff1565C0), Color(0xff42A5F5)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: DrawerHeader(
+                margin: EdgeInsets.zero,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        controller.nameUser.value.isNotEmpty
+                            ? controller.nameUser.value[0].toUpperCase()
+                            : "?",
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff1565C0),
                         ),
-                        Text(controller.rolName.value),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                ListTile(
-                  title: Text("Perfil"),
-                  onTap: () => Get.toNamed(Routes.PROFILE),
-                ),
-                ListTile(title: Text("Repartidores"), onTap: null),
-                ListTile(title: Text("Refacciones"), onTap: null),
-                ExpansionTile(
-                  title: Text("Folios"),
-                  children: [
-                    ListTile(
-                      title: Text("Agregar Folio"),
-                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                    const SizedBox(height: 16),
+                    Obx(
+                      () => Text(
+                        controller.nameUser.value,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Obx(
+                      () => Row(
+                        children: [
+                          const Icon(
+                            Icons.badge_outlined,
+                            color: Colors.white70,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            controller.rolName.value,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                ExpansionTile(
-                  title: Text("Clientes"),
-                  children: [
-                    ListTile(
-                      title: Text("Agregar Cliente"),
-                      onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
-                    ),
-                  ],
-                ),
-                Spacer(),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_circle_outlined),
+              title: const Text("Perfil"),
+              onTap: () => Get.toNamed(Routes.PROFILE),
+            ),
+            ListTile(
+              leading: const Icon(Icons.badge_outlined),
+              title: const Text("Repartidores"),
+              onTap: null,
+            ),
+            ListTile(
+              leading: const Icon(Icons.precision_manufacturing_outlined),
+              title: const Text("Refacciones"),
+              onTap: null,
+            ),
+            ExpansionTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: const Text("Folios"),
+              children: [
                 ListTile(
-                  leading: Icon(Icons.logout),
-                  iconColor: Color(0XFFF8FAFC),
-                  tileColor: Color(0XFFFF3535),
-                  title: Text(
-                    "Cerrar sesion",
-                    style: TextStyle(color: Color(0XFFF8FAFC)),
+                  leading: const Icon(Icons.add),
+                  title: const Text("Agregar"),
+                  onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.archive_outlined),
+                  title: const Text("Archivados"),
+                  onTap: () => Get.toNamed(Routes.ARCHIVADOS),
+                ),
+              ],
+            ),
+            ExpansionTile(
+              leading: const Icon(Icons.groups_outlined),
+              title: const Text("Clientes"),
+              children: [
+                ListTile(
+                  title: const Text("Agregar Cliente"),
+                  onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
+                ),
+              ],
+            ),
+            const Divider(height: 1),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              leading: const Icon(Icons.logout_rounded, color: Colors.red),
+              title: const Text(
+                "Cerrar sesión",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: controller.signOut,
+            ),
+          ],
+        ),
+      ),
+      // El obx ahora solo envuelve el cuerpo (body) del Scaffold
+      body: controller.obx(
+        onLoading: Container(
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.8, end: 1.0),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeInOut,
+                  builder: (context, value, child) =>
+                      Transform.scale(scale: value, child: child),
+                  child: SizedBox(
+                    width: 120,
+                    child: Image.asset(
+                      "assets/logos/digirey.png",
+                      opacity: const AlwaysStoppedAnimation(.5),
+                    ),
                   ),
-                  onTap: () => controller.signOut(),
+                ),
+                const SizedBox(height: 24),
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ],
             ),
           ),
-
-          backgroundColor: Color(0XFFF8FAFC),
-          body: RefreshIndicator(
+        ),
+        onError: (error) => Center(child: Text("Error: $error")),
+        onEmpty: RefreshIndicator(
+          onRefresh: () async {
+            await controller.getFoliosWithDate();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: const Center(child: FoliosEmptyPage()),
+            ),
+          ),
+        ),
+        (state) {
+          return RefreshIndicator(
             color: Colors.white,
-            backgroundColor: Color(0XFF1D6CFF),
+            backgroundColor: const Color(0XFF1D6CFF),
             onRefresh: () => controller.getFoliosWithDate(),
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -186,26 +256,24 @@ class FoliosScreen extends GetView<FoliosController> {
                             TextButton.icon(
                               style: TextButton.styleFrom(
                                 minimumSize: const Size(50, 30),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
+                                padding: EdgeInsets.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 shape: const RoundedRectangleBorder(
                                   borderRadius: BorderRadius.all(
                                     Radius.circular(4),
                                   ),
                                 ),
-                                backgroundColor: const Color(0XFF1D6CFF),
-                                foregroundColor: Colors.white,
                               ),
                               onPressed: () {
                                 Get.toNamed(Routes.ADD_FOLIOS);
                               },
-                              icon: const Icon(Icons.add),
+                              icon: const Icon(
+                                Icons.add,
+                                color: Color(0XFF1D6CFF),
+                              ),
                               label: const Text(
-                                "Agregar folio",
-                                style: TextStyle(fontSize: 14),
+                                "Agregar Folio",
+                                style: TextStyle(color: Color(0XFF1D6CFF)),
                               ),
                             ),
                         ],
@@ -214,9 +282,7 @@ class FoliosScreen extends GetView<FoliosController> {
                     ],
                   );
                 }
-
                 final folio = state[index - 1];
-
                 return InkWell(
                   onTap: () {
                     if (folio.folioId != null) {
@@ -224,108 +290,154 @@ class FoliosScreen extends GetView<FoliosController> {
                         Routes.DETALLES_FOLIO,
                         arguments: folio.folioId.toString(),
                       );
-                    } else {
-                      print(
-                        "ERROR: folioId es null, por eso no se envía nada.",
-                      );
                     }
                   },
-                  child: ListTile(
-                    isThreeLine: false,
-                    contentPadding: EdgeInsets.zero,
-                    leading: Column(
-                      children: [
-                        Text(
-                          folio.cantidad.toString(),
-                          textScaleFactor: 3.5,
-                          style: TextStyle(height: 1),
-                        ),
-                        Flexible(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 35),
-                            child: Text(
-                              folio.tiporefaccion.toString(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                  child: Dismissible(
+                    key: ValueKey(folio.id),
+                    direction: DismissDirection.horizontal,
+                    confirmDismiss: (direction) async => false,
+                    background: Container(
+                      color: Colors.orange,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.archive_outlined,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Archivar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    title: Text(folio.nombreComercial.toString()),
-                    subtitle: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on_outlined,
-                                color: Color(0XFF64748B),
+                    secondaryBackground: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Eliminar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.delete_outline,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ],
+                      ),
+                    ),
+                    child: ListTile(
+                      isThreeLine: false,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Column(
+                        children: [
+                          Text(
+                            folio.cantidad.toString(),
+                            textScaleFactor: 3.5,
+                            style: const TextStyle(height: 1),
+                          ),
+                          Flexible(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 35),
+                              child: Text(
+                                folio.tiporefaccion.toString(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              Flexible(
-                                child: Text(
-                                  "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0XFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                      title: Text(folio.nombreComercial.toString()),
+                      subtitle: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Color(0XFF64748B),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Color(0XFF64748B),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: folio.status != "Por entregar"
-                                ? Color(int.parse(folio.statusColor.toString()))
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-                              color: Color(
-                                int.parse(folio.statusColor.toString()),
-                              ),
+                              ],
                             ),
                           ),
-                          child: Text(
-                            folio.status.toString(),
-                            style: TextStyle(
-                              color: folio.status == "Por entregar"
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: folio.status != "Por entregar"
                                   ? Color(
                                       int.parse(folio.statusColor.toString()),
                                     )
                                   : Colors.white,
-                              fontSize: 12,
+                              borderRadius: BorderRadius.circular(50),
+                              border: Border.all(
+                                color: Color(
+                                  int.parse(folio.statusColor.toString()),
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              folio.status.toString(),
+                              style: TextStyle(
+                                color: folio.status == "Por entregar"
+                                    ? Color(
+                                        int.parse(folio.statusColor.toString()),
+                                      )
+                                    : Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
 
 class DatePickerExample extends StatefulWidget {
   const DatePickerExample({super.key});
-
   @override
   State<DatePickerExample> createState() => _DatePickerExampleState();
 }
 
 class _DatePickerExampleState extends State<DatePickerExample> {
   DateTime? selectedDate;
-
   Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -333,7 +445,6 @@ class _DatePickerExampleState extends State<DatePickerExample> {
       firstDate: DateTime(2021),
       lastDate: DateTime(2022),
     );
-
     setState(() {
       selectedDate = pickedDate;
     });
@@ -342,15 +453,9 @@ class _DatePickerExampleState extends State<DatePickerExample> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: .min,
-      spacing: 20,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        // Text(
-        //   selectedDate != null
-        //       ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-        //       : 'No date selected',
-        // ),
-        IconButton(onPressed: _selectDate, icon: Icon(Icons.filter_list)),
+        IconButton(onPressed: _selectDate, icon: const Icon(Icons.filter_list)),
       ],
     );
   }

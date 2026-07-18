@@ -13,6 +13,7 @@ class Routes {
   static const HOME = '/home';
   static const LOGIN = '/login';
   static const PROFILE = '/profile';
-  static const SUCCESS = '/success';
   static const SEARCH_FOLIO = '/search-folio';
+  static const SUCCESS = '/success';
+  static const ARCHIVADOS = '/archivados';
 }

@@ -148,6 +148,7 @@ final schema = Schema([
     Column.text('creadorId'),
     Column.text('repartidorId'),
     Column.text('folioId'),
+    Column.integer('isArchived'),
   ]),
   Table('historialestados', [
     Column.text('created_at'),

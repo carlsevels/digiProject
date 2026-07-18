@@ -75,5 +75,10 @@ class Nav {
       page: () => const SearchFolioScreen(),
       binding: SearchFolioControllerBinding(),
     ),
+    GetPage(
+      name: Routes.ARCHIVADOS,
+      page: () => const ArchivadosScreen(),
+      binding: ArchivadosControllerBinding(),
+    ),
   ];
 }

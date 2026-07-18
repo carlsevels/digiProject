@@ -1,7 +1,7 @@
 String listFoliosQuery() {
   return '''
 SELECT 
-    f.id, f."folioId", f.created_at, f.cantidad,
+    f.id, f."folioId", f.created_at, f.cantidad, f.isArchived, f."isArchived",
     t.nombre AS tipofolioid,
     c."nombreComercial",
     tr.nombre AS tipoRefaccion,
@@ -33,9 +33,11 @@ LEFT JOIN status st ON h."statusId" = st.id
 WHERE
     TRIM(f.created_at) = TRIM(?)
     AND (
-        ? = 1  -- Si es admin, esta condición es verdadera y se muestran todos
+        ? = 1 
         OR 
-        (st.id != 3 OR st.id IS NULL) -- Si no es admin, filtra el status 3
+        (st.id != 3 OR st.id IS NULL) 
+        
     )
+   AND f."isArchived"= FALSE
 ''';
 }
