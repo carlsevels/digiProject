@@ -150,6 +150,53 @@ class ArchivadosController extends GetxController
     }
   }
 
+  Future<void> archivarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute(
+        '''
+        UPDATE folios 
+        SET "isArchived" = false 
+        WHERE "folioId" = ?;
+        ''',
+        [folioId],
+      );
+      await getFoliosWithDate(id.text);
+      return null;
+    } catch (e) {
+      print("Error al archivar folio: $e");
+      return null;
+    }
+  }
+
+  Future<void> eliminarFolio(String folioId) async {
+    try {
+      print("Intentando borrar folio con ID: $folioId");
+
+      await AppDatabase.db.execute(
+        '''
+      DELETE FROM folios 
+      WHERE "folioId" = ?;
+      ''',
+        [folioId],
+      );
+
+      print("DELETE terminado");
+
+      final filas = await AppDatabase.db.getAll(
+        '''
+      SELECT * FROM folios 
+      WHERE "folioId" = ?;
+      ''',
+        [folioId],
+      );
+
+      print("Después del delete: $filas");
+    } catch (e, st) {
+      print("Error de SQL: $e");
+      print(st);
+    }
+  }
+
   @override
   void onReady() {
     super.onReady();

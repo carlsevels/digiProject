@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class FoliosEmptyPage extends GetView<FoliosController> {
-  const FoliosEmptyPage({super.key});
+  bool needDate = false;
+  FoliosEmptyPage({super.key, required this.needDate});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +16,6 @@ class FoliosEmptyPage extends GetView<FoliosController> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icono
           Container(
             width: 120,
             height: 120,
@@ -30,24 +30,26 @@ class FoliosEmptyPage extends GetView<FoliosController> {
             ),
           ),
           const SizedBox(height: 40),
-    
-          // Texto de Fecha Dinámico
-          Text(
-            controller.obtenerEtiquetaFecha(
-              DateTime.tryParse(controller.fechaSeleccionada.value) ??
-                  DateTime.now(),
+          if (needDate == true)
+            Column(
+              children: [
+                Text(
+                  controller.obtenerEtiquetaFecha(
+                    DateTime.tryParse(controller.fechaSeleccionada.value) ??
+                        DateTime.now(),
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: primary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: primary,
-              letterSpacing: -0.5,
-            ),
-          ),
-    
-          const SizedBox(height: 24),
-    
+
           Text(
             "No hay folios",
             textAlign: TextAlign.center,
@@ -58,9 +60,9 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               letterSpacing: -.6,
             ),
           ),
-    
+
           const SizedBox(height: 14),
-    
+
           Text(
             "Todavía no has registrado ningún folio para el día seleccionado.\nEmpieza creando el primero.",
             textAlign: TextAlign.center,
@@ -70,10 +72,9 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               color: Colors.grey.shade600,
             ),
           ),
-    
+
           const SizedBox(height: 28),
-    
-          // Badge informativo
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
@@ -99,9 +100,9 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               ],
             ),
           ),
-    
+
           const SizedBox(height: 48),
-    
+
           if (controller.rolUsuario.value == 1)
             SizedBox(
               width: double.infinity,

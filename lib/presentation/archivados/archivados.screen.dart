@@ -8,11 +8,26 @@ import 'controllers/archivados.controller.dart';
 
 class ArchivadosScreen extends GetView<ArchivadosController> {
   const ArchivadosScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0XFFF8FAFC),
       appBar: AppBar(
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.search))],
+        iconTheme: const IconThemeData(color: Color(0XFF64748B)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Color(0XFF64748B), height: 1.0),
+        ),
+        backgroundColor: const Color(0XFFF8FAFC),
+        actions: [
+          IconButton(
+            onPressed: () {
+              controller.getFoliosWithDate(controller.id.text);
+            },
+            icon: Icon(Icons.search, color: Color(0XFF64748B)),
+          ),
+        ],
         title: TextField(
           controller: controller.id,
           onSubmitted: (value) {
@@ -22,7 +37,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
           decoration: const InputDecoration(
             hintText: 'Buscar por ID de Folio...',
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.grey),
+            hintStyle: TextStyle(color: Color(0XFF64748B)),
           ),
           style: const TextStyle(color: Color(0xff0F172A), fontSize: 18),
           keyboardType: TextInputType.number,
@@ -69,7 +84,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
               height: MediaQuery.of(context).size.height,
-              child: const Center(child: FoliosEmptyPage()),
+              child: Center(child: FoliosEmptyPage(needDate: false)),
             ),
           ),
         ),
@@ -122,7 +137,55 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                   child: Dismissible(
                     key: ValueKey(folio.id),
                     direction: DismissDirection.horizontal,
-                    confirmDismiss: (direction) async => false,
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirmar'),
+                            content: const Text(
+                              '¿Estás seguro de restaurar este folio?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () => controller.archivarFolio(
+                                  folio.folioId ?? "",
+                                ),
+                                child: const Text('Restaurar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      if (direction == DismissDirection.endToStart) {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirmar'),
+                            content: const Text(
+                              '¿Estás seguro de elminar este folio?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () => controller.eliminarFolio(
+                                  folio.folioId ?? "",
+                                ),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return true;
+                    },
                     background: Container(
                       color: const Color(0xFF10B981),
                       alignment: Alignment.centerLeft,

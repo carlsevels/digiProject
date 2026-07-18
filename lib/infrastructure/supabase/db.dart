@@ -68,7 +68,28 @@ class MyBackendConnector extends PowerSyncBackendConnector {
       } else if (op.op == UpdateType.patch) {
         await supabase.from(table).update(data).eq('id', op.id);
       } else if (op.op == UpdateType.delete) {
-        await supabase.from(table).delete().eq('id', op.id);
+        try {
+          final registro = await supabase
+              .from(table)
+              .select('folioId')
+              .eq('id', op.id)
+              .single();
+
+          final folioId = registro['folioId'];
+
+          print("🗑️ Eliminando en Supabase folioId: $folioId");
+
+          final result = await supabase
+              .from(table)
+              .delete()
+              .eq('folioId', folioId)
+              .select();
+
+          print("Respuesta Supabase DELETE: $result");
+        } catch (e, st) {
+          print("❌ Error DELETE Supabase: $e");
+          print(st);
+        }
       }
     }
 

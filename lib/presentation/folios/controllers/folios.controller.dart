@@ -211,5 +211,23 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     }
   }
 
+  Future<void> archivarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute(
+        '''
+        UPDATE folios 
+        SET "isArchived" = true 
+        WHERE "folioId" = ?;
+        ''',
+        [folioId],
+      );
+      await getFoliosWithDate();
+      return null;
+    } catch (e) {
+      print("Error al archivar folio: $e");
+      return null;
+    }
+  }
+
   void increment() => count.value++;
 }

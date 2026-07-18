@@ -220,7 +220,7 @@ class FoliosScreen extends GetView<FoliosController> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
               height: MediaQuery.of(context).size.height,
-              child: const Center(child: FoliosEmptyPage()),
+              child: Center(child: FoliosEmptyPage(needDate: true)),
             ),
           ),
         ),
@@ -294,8 +294,56 @@ class FoliosScreen extends GetView<FoliosController> {
                   },
                   child: Dismissible(
                     key: ValueKey(folio.id),
-                    direction: DismissDirection.horizontal,
-                    confirmDismiss: (direction) async => false,
+                    direction: controller.rolName == "Reparto"
+                        ? DismissDirection.startToEnd
+                        : DismissDirection.horizontal,
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirmar'),
+                            content: const Text(
+                              '¿Estás seguro de archivar este folio?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    controller.archivarFolio(folio.folioId ?? ""),
+                                child: const Text('Archivar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                       if (direction == DismissDirection.endToStart) {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirmar'),
+                            content: const Text(
+                              '¿Estás seguro de elminar este folio?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    controller.archivarFolio(folio.folioId ?? ""),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return true;
+                    },
                     background: Container(
                       color: Colors.orange,
                       alignment: Alignment.centerLeft,
