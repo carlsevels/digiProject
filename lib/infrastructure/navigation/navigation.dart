@@ -80,5 +80,20 @@ class Nav {
       page: () => const ArchivadosScreen(),
       binding: ArchivadosControllerBinding(),
     ),
+    GetPage(
+      name: Routes.REFACCIONES,
+      page: () => const RefaccionesScreen(),
+      binding: RefaccionesControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.ADD_REFACCION,
+      page: () => const AddRefaccionScreen(),
+      binding: AddRefaccionControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.CLIENTES,
+      page: () => const ClientesScreen(),
+      binding: ClientesControllerBinding(),
+    ),
   ];
 }

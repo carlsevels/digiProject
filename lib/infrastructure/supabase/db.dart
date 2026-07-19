@@ -58,7 +58,7 @@ class MyBackendConnector extends PowerSyncBackendConnector {
 
     for (var op in transaction.crud) {
       final table = op.table;
-      final data = op.opData ?? {}; // Usar mapa vacío si es null
+      final data = op.opData ?? {};
 
       // Asegurar que el ID esté presente para operaciones que lo requieren
       data['id'] = op.id;
@@ -69,23 +69,32 @@ class MyBackendConnector extends PowerSyncBackendConnector {
         await supabase.from(table).update(data).eq('id', op.id);
       } else if (op.op == UpdateType.delete) {
         try {
-          final registro = await supabase
-              .from(table)
-              .select('folioId')
-              .eq('id', op.id)
-              .single();
+          // Lista de tablas que requieren búsqueda por folioId
+          final List<String> tablasConFolioId = [
+            'folios',
+            'historialestados',
+            'comentarios',
+          ];
 
-          final folioId = registro['folioId'];
+          if (tablasConFolioId.contains(table)) {
+            // Lógica especial: Buscar primero el valor de folioId
+            final registro = await supabase
+                .from(table)
+                .select('folioId')
+                .eq('id', op.id)
+                .single();
 
-          print("🗑️ Eliminando en Supabase folioId: $folioId");
+            final folioId = registro['folioId'];
 
-          final result = await supabase
-              .from(table)
-              .delete()
-              .eq('folioId', folioId)
-              .select();
+            await supabase.from(table).delete().eq('folioId', folioId);
 
-          print("Respuesta Supabase DELETE: $result");
+            print("🗑️ Eliminado en Supabase usando folioId: $folioId");
+          } else {
+            // Lógica general: Borrar usando el 'id' (para tablas como 'tipos', 'clientes', etc.)
+            await supabase.from(table).delete().eq('id', op.id);
+
+            print("🗑️ Eliminado en Supabase usando id: ${op.id}");
+          }
         } catch (e, st) {
           print("❌ Error DELETE Supabase: $e");
           print(st);
@@ -101,7 +110,6 @@ class AppDatabase {
   static late PowerSyncDatabase _db;
   static bool _isInitialized = false;
 
-  // Getter para acceder a la DB de forma segura
   static PowerSyncDatabase get db {
     if (!_isInitialized) {
       throw Exception(

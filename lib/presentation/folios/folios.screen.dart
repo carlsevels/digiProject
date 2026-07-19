@@ -132,10 +132,18 @@ class FoliosScreen extends GetView<FoliosController> {
               title: const Text("Repartidores"),
               onTap: null,
             ),
-            ListTile(
+            ExpansionTile(
+              title: Text("Refacciones"),
               leading: const Icon(Icons.precision_manufacturing_outlined),
-              title: const Text("Refacciones"),
-              onTap: null,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.format_list_numbered_sharp),
+                  title: const Text("Refacciones"),
+                  onTap: () {
+                    Get.toNamed(Routes.REFACCIONES);
+                  },
+                ),
+              ],
             ),
             ExpansionTile(
               leading: const Icon(Icons.receipt_long_outlined),
@@ -181,7 +189,6 @@ class FoliosScreen extends GetView<FoliosController> {
           ],
         ),
       ),
-      // El obx ahora solo envuelve el cuerpo (body) del Scaffold
       body: controller.obx(
         onLoading: Container(
           color: Colors.white,
@@ -221,7 +228,7 @@ class FoliosScreen extends GetView<FoliosController> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
-              height: MediaQuery.of(context).size.height,
+              height: Get.size.height,
               child: Center(child: FoliosEmptyPage(needDate: true)),
             ),
           ),
@@ -361,7 +368,7 @@ class FoliosScreen extends GetView<FoliosController> {
                                             Navigator.pop(context, true);
                                           },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor:  Colors.orange,
+                                            backgroundColor: Colors.orange,
                                             foregroundColor: Colors.white,
                                           ),
                                           child: const Text('Archivar'),

@@ -120,58 +120,54 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                             uniqueClientes[c.id!] = c;
                           }
                         }
-                        return Container(
-                          height: 40,
-
-                          child: Autocomplete<Clientes>(
-                            displayStringForOption: (Clientes option) =>
-                                option.nombreComercial ?? "",
-
-                            optionsBuilder:
-                                (TextEditingValue textEditingValue) {
-                                  if (textEditingValue.text.isEmpty) {
-                                    return const Iterable<Clientes>.empty();
-                                  }
-
-                                  return controller.clientesModel.where((
-                                    Clientes c,
-                                  ) {
-                                    final nombre =
-                                        c.nombreComercial?.toLowerCase() ?? '';
-                                    return nombre.contains(
-                                      textEditingValue.text.toLowerCase(),
-                                    );
-                                  });
-                                },
-
-                            fieldViewBuilder:
-                                (
-                                  context,
-                                  textController,
-                                  focusNode,
-                                  onFieldSubmitted,
+                        return Autocomplete<Clientes>(
+                          displayStringForOption: (Clientes option) =>
+                              option.nombreComercial ?? "",
+                        
+                          optionsBuilder:
+                              (TextEditingValue textEditingValue) {
+                                if (textEditingValue.text.isEmpty) {
+                                  return const Iterable<Clientes>.empty();
+                                }
+                        
+                                return controller.clientesModel.where((
+                                  Clientes c,
                                 ) {
-                                  return TextField(
-                                    controller: textController,
-                                    focusNode: focusNode,
-                                    decoration: const InputDecoration(
-                                      label: Text(
-                                        'Buscar Cliente',
-                                        style: TextStyle(
-                                          color: Color(0XFF64748B),
-                                        ),
-                                      ),
-                                      border: OutlineInputBorder(),
-                                      suffixIcon: Icon(Icons.search),
-                                    ),
+                                  final nombre =
+                                      c.nombreComercial?.toLowerCase() ?? '';
+                                  return nombre.contains(
+                                    textEditingValue.text.toLowerCase(),
                                   );
-                                },
-
-                            onSelected: (Clientes selection) {
-                              controller.clienteId.value = selection.id ?? 0;
-                              print(controller.clienteId.value);
-                            },
-                          ),
+                                });
+                              },
+                        
+                          fieldViewBuilder:
+                              (
+                                context,
+                                textController,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                return TextField(
+                                  controller: textController,
+                                  focusNode: focusNode,
+                                  decoration: const InputDecoration(
+                                    label: Text(
+                                      'Buscar Cliente',
+                                      style: TextStyle(
+                                        color: Color(0XFF64748B),
+                                      ),
+                                    ),
+                                    border: OutlineInputBorder(),
+                                    suffixIcon: Icon(Icons.search),
+                                  ),
+                                );
+                              },
+                        
+                          onSelected: (Clientes selection) {
+                            controller.clienteId.value = selection.id ?? 0;
+                            print(controller.clienteId.value);
+                          },
                         );
                       }),
                     ),

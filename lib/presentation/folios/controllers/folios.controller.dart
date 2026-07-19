@@ -73,7 +73,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
       rolUsuario.value = resultSet.first['rolId'] as int;
 
-      // Obtenemos la fecha en formato YYYY-MM-DD
       final String fechaHoy = (selectedDate ?? DateTime.now())
           .toIso8601String()
           .split('T')[0];
@@ -126,19 +125,15 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> signOut() async {
     try {
-      // 1. Desconecta la base de datos
       await AppDatabase.db.disconnect();
 
-      // 2. Obtén la ruta correcta donde se guardan los documentos de la app
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/${AppDatabase.db}');
 
-      // 3. Borra el archivo si existe
       if (await file.exists()) {
         await file.delete();
       }
 
-      // 4. Continúa con el cierre de sesión normal
       await Supabase.instance.client.auth.signOut();
       await Get.deleteAll(force: true);
       Get.offAllNamed(Routes.LOGIN);
@@ -229,7 +224,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     }
   }
 
-    Future<void> eliminarFolio(String folioId) async {
+  Future<void> eliminarFolio(String folioId) async {
     try {
       await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
         folioId,
@@ -239,7 +234,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       return null;
     }
   }
-
 
   void increment() => count.value++;
 }
