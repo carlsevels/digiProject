@@ -176,7 +176,6 @@ class RefaccionesScreen extends GetView<RefaccionesController> {
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          // Cerramos el diálogo antes de ejecutar
                                           Navigator.pop(context, true);
                                           controller.eliminarRefaccion(
                                             refaccion.id.toString(),

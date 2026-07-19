@@ -122,11 +122,11 @@ class FoliosScreen extends GetView<FoliosController> {
                 ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.account_circle_outlined),
-              title: const Text("Perfil"),
-              onTap: () => Get.toNamed(Routes.PROFILE),
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.account_circle_outlined),
+            //   title: const Text("Perfil"),
+            //   onTap: () => Get.toNamed(Routes.PROFILE),
+            // ),
             ListTile(
               leading: const Icon(Icons.badge_outlined),
               title: const Text("Repartidores"),
@@ -162,10 +162,16 @@ class FoliosScreen extends GetView<FoliosController> {
               ],
             ),
             ExpansionTile(
-              leading: const Icon(Icons.groups_outlined),
+              leading: const Icon(Icons.business_center_outlined),
               title: const Text("Clientes"),
               children: [
                 ListTile(
+                  leading: Icon(Icons.format_list_numbered_outlined),
+                  title: const Text("Clientes"),
+                  onTap: () => Get.toNamed(Routes.CLIENTES),
+                ),
+                ListTile(
+                  leading: Icon(Icons.person_add_alt_1_outlined),
                   title: const Text("Agregar Cliente"),
                   onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
                 ),

@@ -1,23 +1,17 @@
-import 'dart:io';
 
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:powersync/powersync.dart';
-
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:path/path.dart' as p;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('es', "");
 
-  await Supabase.initialize(
+await Supabase.initialize(
     url: 'https://qraxigpgdckpnoisacqc.supabase.co',
     anonKey: 'sb_publishable_O52dOsup-TjPfGQCMhvFFQ_GiEe6TuX',
   );
@@ -25,15 +19,15 @@ void main() async {
   await AppDatabase.initialize();
 
   final supabase = Supabase.instance.client;
-  final bool tieneSesion = supabase.auth.currentUser != null;
+  final session = supabase.auth.currentSession;
 
-  if (tieneSesion) {
+  if (session != null) {
     await AppDatabase.db.connect(connector: MyBackendConnector(AppDatabase.db));
 
     await AppDatabase.db.waitForFirstSync();
   }
 
-  runApp(Main(tieneSesion ? Routes.FOLIOS : Routes.LOGIN));
+  runApp(Main(session != null ? Routes.FOLIOS : Routes.LOGIN));
 }
 
 class Main extends StatelessWidget {
