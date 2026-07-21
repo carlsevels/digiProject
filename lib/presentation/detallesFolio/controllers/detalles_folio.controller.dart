@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:powersync/sqlite3.dart';
 import 'package:uuid/uuid.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetallesFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement DetallesFolioController
@@ -199,5 +200,22 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       4,
       DateTime.now().toIso8601String(),
     ]);
+  }
+
+  Future<void> llamarTelefonoSoporteTecnico() async {
+    final Uri uri = Uri.parse('tel:8110294162');
+
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+
+      if (!launched) {
+        print('No existe aplicación para llamadas');
+      }
+    } catch (e) {
+      print('Error llamada: $e');
+    }
   }
 }

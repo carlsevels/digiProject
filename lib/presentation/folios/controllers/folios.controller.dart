@@ -178,6 +178,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
     }
+    return null;
   }
 
   String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {

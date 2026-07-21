@@ -49,7 +49,9 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
               FloatingActionButton(
                 heroTag: "btn1",
                 backgroundColor: Color(0XFF00BC16),
-                onPressed: () {},
+                onPressed: () {
+                  controller.llamarTelefonoSoporteTecnico();
+                },
                 child: Icon(Icons.phone, color: Colors.white),
               ),
             ],

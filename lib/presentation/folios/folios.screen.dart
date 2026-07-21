@@ -52,152 +52,154 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ],
       ),
-      drawer: Drawer(
-        backgroundColor: const Color(0XFFF8FAFC),
-        child: Column(
-          children: [
-            Container(
-              height: 220,
-              width: screenWidth,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xff1565C0), Color(0xff42A5F5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      drawer: Obx(
+        () => Drawer(
+          backgroundColor: const Color(0XFFF8FAFC),
+          child: Column(
+            children: [
+              Container(
+                height: 220,
+                width: screenWidth,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xff1565C0), Color(0xff42A5F5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: DrawerHeader(
+                  margin: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundColor: Colors.white,
+                        child: Text(
+                          controller.nameUser.value.isNotEmpty
+                              ? controller.nameUser.value[0].toUpperCase()
+                              : "?",
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xff1565C0),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Obx(
+                        () => Text(
+                          controller.nameUser.value,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Obx(
+                        () => Row(
+                          children: [
+                            const Icon(
+                              Icons.badge_outlined,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              controller.rolName.value,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: DrawerHeader(
-                margin: EdgeInsets.zero,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
+
+              // ListTile(
+              //   leading: const Icon(Icons.account_circle_outlined),
+              //   title: const Text("Perfil"),
+              //   onTap: () => Get.toNamed(Routes.PROFILE),
+              // ),
+              if (controller.rolName.value == "Admin")
+                ListTile(
+                  leading: const Icon(Icons.badge_outlined),
+                  title: const Text("Repartidores"),
+                  onTap: null,
+                ),
+              if (controller.rolName.value == "Admin")
+                ExpansionTile(
+                  title: Text("Refacciones"),
+                  leading: const Icon(Icons.precision_manufacturing_outlined),
                   children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        controller.nameUser.value.isNotEmpty
-                            ? controller.nameUser.value[0].toUpperCase()
-                            : "?",
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xff1565C0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Obx(
-                      () => Text(
-                        controller.nameUser.value,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Obx(
-                      () => Row(
-                        children: [
-                          const Icon(
-                            Icons.badge_outlined,
-                            color: Colors.white70,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            controller.rolName.value,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
+                    ListTile(
+                      leading: const Icon(Icons.format_list_numbered_sharp),
+                      title: const Text("Refacciones"),
+                      onTap: () {
+                        Get.toNamed(Routes.REFACCIONES);
+                      },
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // ListTile(
-            //   leading: const Icon(Icons.account_circle_outlined),
-            //   title: const Text("Perfil"),
-            //   onTap: () => Get.toNamed(Routes.PROFILE),
-            // ),
-            if (controller.rolName.value == "Admin")
-              ListTile(
-                leading: const Icon(Icons.badge_outlined),
-                title: const Text("Repartidores"),
-                onTap: null,
-              ),
-            if (controller.rolName.value == "Admin")
-              ExpansionTile(
-                title: Text("Refacciones"),
-                leading: const Icon(Icons.precision_manufacturing_outlined),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.format_list_numbered_sharp),
-                    title: const Text("Refacciones"),
-                    onTap: () {
-                      Get.toNamed(Routes.REFACCIONES);
-                    },
-                  ),
-                ],
-              ),
-            if (controller.rolName.value == "Admin")
-              ExpansionTile(
-                leading: const Icon(Icons.receipt_long_outlined),
-                title: const Text("Folios"),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: const Text("Agregar"),
-                    onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.archive_outlined),
-                    title: const Text("Archivados"),
-                    onTap: () => Get.toNamed(Routes.ARCHIVADOS),
-                  ),
-                ],
-              ),
-            if (controller.rolName.value == "Admin")
-              ExpansionTile(
-                leading: const Icon(Icons.business_center_outlined),
-                title: const Text("Clientes"),
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.format_list_numbered_outlined),
-                    title: const Text("Clientes"),
-                    onTap: () => Get.toNamed(Routes.CLIENTES),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person_add_alt_1_outlined),
-                    title: const Text("Agregar Cliente"),
-                    onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
-                  ),
-                ],
-              ),
-            if (controller.rolName.value == "Admin") const Divider(height: 1),
-            ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              leading: const Icon(Icons.logout_rounded, color: Colors.red),
-              title: const Text(
-                "Cerrar sesión",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
+              if (controller.rolName.value == "Admin")
+                ExpansionTile(
+                  leading: const Icon(Icons.receipt_long_outlined),
+                  title: const Text("Folios"),
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.add),
+                      title: const Text("Agregar"),
+                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.archive_outlined),
+                      title: const Text("Archivados"),
+                      onTap: () => Get.toNamed(Routes.ARCHIVADOS),
+                    ),
+                  ],
                 ),
+              if (controller.rolName.value == "Admin")
+                ExpansionTile(
+                  leading: const Icon(Icons.business_center_outlined),
+                  title: const Text("Clientes"),
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.format_list_numbered_outlined),
+                      title: const Text("Clientes"),
+                      onTap: () => Get.toNamed(Routes.CLIENTES),
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.person_add_alt_1_outlined),
+                      title: const Text("Agregar Cliente"),
+                      onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
+                    ),
+                  ],
+                ),
+              if (controller.rolName.value == "Admin") const Divider(height: 1),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text(
+                  "Cerrar sesión",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: controller.signOut,
               ),
-              onTap: controller.signOut,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: controller.obx(

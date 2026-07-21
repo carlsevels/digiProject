@@ -11,63 +11,80 @@ class LoginScreen extends GetView<LoginController> {
     return controller.obx(
       (state) => Scaffold(
         backgroundColor: Colors.white,
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                width: Get.size.width,
-                height: Get.size.height / 3,
-                child: Image.asset("assets/logos/digirey.png"),
-              ),
-              Flexible(
-                child: Container(
-                  height: Get.size.height / 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Bienvenido", textScaleFactor: 2),
-                      TextFormField(
-                        controller: controller.emailController,
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.person_outline),
-                          border: OutlineInputBorder(),
-                          label: Text("Usuario"),
-                        ),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: Get.size.width,
+                  height: Get.size.height / 3.5,
+                  child: Image.asset("assets/logos/digirey.png"),
+                ),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Bienvenido", textScaleFactor: 2),
+
+                    TextFormField(
+                      controller: controller.emailController,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.person_outline),
+                        border: OutlineInputBorder(),
+                        labelText: "Usuario",
                       ),
-                      SizedBox(height: 8.0),
-                      TextFormField(
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Obx(
+                      () => TextFormField(
+                        obscureText: !controller.showPassword.value,
                         controller: controller.passwordController,
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.password_outlined),
-                          border: OutlineInputBorder(),
-                          label: Text("Contraseña"),
-                        ),
-                      ),
-                      SizedBox(height: 8.0),
-                      Center(
-                        child: Container(
-                          width: Get.size.width,
-                          child: FilledButton(
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4.0),
-                              ),
-                              backgroundColor: Color(0XFF1D6CFF),
-                            ),
+                          prefixIcon: const Icon(Icons.password_outlined),
+                          suffixIcon: IconButton(
                             onPressed: () {
-                              controller.signInWithEmail();
+                              controller.showPassword.value =
+                                  !controller.showPassword.value;
                             },
-                            child: Text("Entrar"),
+                            icon: Icon(
+                              controller.showPassword.value
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.remove_red_eye_outlined,
+                            ),
                           ),
+                          border: const OutlineInputBorder(),
+                          labelText: "Contraseña",
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    SizedBox(
+                      width: Get.width,
+                      child: FilledButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          backgroundColor: const Color(0XFF1D6CFF),
+                        ),
+                        onPressed: () {
+                          controller.signInWithEmail();
+                        },
+                        child: const Text("Entrar"),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

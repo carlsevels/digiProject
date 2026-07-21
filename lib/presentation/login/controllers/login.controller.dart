@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginController extends GetxController with StateMixin {
   //TODO: Implement LoginController
+  RxBool showPassword = false.obs;
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -31,34 +32,66 @@ class LoginController extends GetxController with StateMixin {
 
   Future<void> signInWithEmail() async {
     try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+        barrierDismissible: false,
+      );
+
       final AuthResponse res = await Supabase.instance.client.auth
           .signInWithPassword(
-            email: emailController.text,
-            password: passwordController.text,
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
           );
 
       if (res.user != null) {
-        // AQUÍ ESTÁ EL TRUCO:
-        // Si borraste el archivo en signOut, debes asegurarte de que
-        // la conexión se vuelva a abrir antes de esperar el sync.
-        await AppDatabase.initialize(); // Asegúrate de tener este método en AppDatabase
+        await AppDatabase.initialize();
 
         await AppDatabase.db.waitForFirstSync();
 
         final miId = res.user!.id;
+
         final data = await AppDatabase.db.getOptional(
-          'SELECT dp."nombre", r."name" as "rol_nombre" FROM "datosPersonales" dp INNER JOIN "roles" r ON dp."rolId" = r."id" WHERE dp."userId" = ?',
+          '''
+        SELECT 
+          dp."nombre",
+          r."name" as "rol_nombre"
+        FROM "datosPersonales" dp
+        INNER JOIN "roles" r 
+          ON dp."rolId" = r."id"
+        WHERE dp."userId" = ?
+        ''',
           [miId],
         );
 
         if (data != null) {
           await UserStorage.guardarRol(data['rol_nombre'] as String);
+
+          Get.back(); // cerrar cargando
+
           Get.offAllNamed(Routes.FOLIOS);
+        } else {
+          Get.back(); // cerrar cargando
+          Get.snackbar(
+            "Error",
+            "No se encontraron datos del usuario",
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
         }
       }
     } catch (e) {
+      if (Get.isDialogOpen == true) {
+        Get.back(); // cerrar cargando si hay error
+      }
+
       print("Error crítico: $e");
-      // Si falla aquí es porque la BD no pudo abrirse tras el borrado
+
+      Get.snackbar(
+        "Error",
+        "Usuario o contraseña incorrectos",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
