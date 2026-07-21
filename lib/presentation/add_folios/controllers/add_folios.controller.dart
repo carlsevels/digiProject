@@ -193,12 +193,13 @@ class AddFoliosController extends GetxController with StateMixin {
         userId,
         fechaActual,
         numReporteController.text,
+        false
       ];
 
       await AppDatabase.db.writeTransaction((txn) async {
         await txn.execute(
-          '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId") 
-       VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+          '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId", isArchived) 
+       VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
           datosEnviados,
         );
 

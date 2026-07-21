@@ -10,7 +10,7 @@ SELECT
     rp.nombre AS repartidor,
     m.nombre AS municipio,
     st.nombre AS status,
-    st.color AS statusColor
+    st.color AS statuscolor
 FROM folios f
 LEFT JOIN tipos t ON f."tipoFolioId" = t.id
 LEFT JOIN clientes c ON f."clienteId" = c.id

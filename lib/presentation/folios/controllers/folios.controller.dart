@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:powersync/powersync.dart';
 import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -38,6 +37,9 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
+
+    await getDatos();
+
     await getFoliosWithDate();
   }
 
@@ -94,8 +96,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           .toList();
       print("object: ${jsonEncode(listFolios)}");
       if (listFolios.isEmpty) {
-        await getDatos();
-
         change(listFolios, status: RxStatus.empty());
       } else {
         change(listFolios, status: RxStatus.success());
@@ -182,7 +182,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {
     final ahora = DateTime.now();
-    // Limpiamos horas para que la comparación sea solo por días
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final fecha = DateTime(
       fechaSeleccionada.year,
@@ -190,7 +189,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       fechaSeleccionada.day,
     );
 
-    // AQUÍ ESTÁ LA CLAVE: calculamos la diferencia en días como entero
     final int diferencia = hoy.difference(fecha).inDays;
 
     print("DEBUG: Hoy es $hoy, fecha recibida $fecha, diferencia: $diferencia");

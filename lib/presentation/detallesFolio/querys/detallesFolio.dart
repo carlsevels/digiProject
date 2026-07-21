@@ -14,7 +14,7 @@ SELECT
     m.nombre as municipio,
     st.nombre as status,
     h."folioId" as folio_id_historial,
-    st.color as statusColor
+    st.color as statuscolor
 FROM folios f
   LEFT JOIN tipos as t ON f."tipoFolioId" = t.id
   LEFT JOIN clientes as c ON f."clienteId" = c.id
@@ -22,18 +22,23 @@ FROM folios f
   LEFT JOIN "condicionPago" as cp ON f."condicionDePagoId" = cp.id
   LEFT JOIN "datosPersonales" cr ON f."creadorId" = cr."userId"
   LEFT JOIN "datosPersonales" rp ON f."repartidorId" = rp."userId"
-  LEFT JOIN direcciones as d ON c.id = d."clienteId"
+  LEFT JOIN (
+      SELECT "clienteId", "municipioId" 
+      FROM direcciones
+      GROUP BY "clienteId"
+  ) as d ON c.id = d."clienteId"
   LEFT JOIN municipios as m ON d."municipioId" = m."id"
-  -- JOIN para obtener el último registro del historial
- LEFT JOIN (
-      SELECT h1.* FROM historialestados h1
-      INNER JOIN (
+  -- AQUÍ USAMOS f.id porque en tu DB historialestados.folioId apunta al UUID (f.id)
+  LEFT JOIN (
+      SELECT h1.* 
+      FROM historialestados h1
+      JOIN (
           SELECT "folioId", MAX("created_at") as max_date 
           FROM historialestados 
           GROUP BY "folioId"
       ) h2 ON h1."folioId" = h2."folioId" AND h1."created_at" = h2.max_date
-  ) as h ON f."id" = h."folioId"
-LEFT JOIN "status" st ON h."statusId" = st."id"
+  ) as h ON f.id = h."folioId"
+  LEFT JOIN "status" st ON h."statusId" = st."id"
 WHERE f."folioId" = ?
     ''';
 }

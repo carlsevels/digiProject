@@ -38,23 +38,25 @@ class Folios {
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
-    id = (json['id'] is int) ? json['id'] : int.tryParse(json['id'].toString());
-    cantidad = json['cantidad'];
-    statusId = json['statusId'];
-    tipofolio = json['tipofolio'];
-    isArchived = json['isArchived'];
-    nombreComercial = json['nombreComercial'];
-    tiporefaccion = json['tipoRefaccion'];
-    tiporeporte = json['tipoReporte'];
-    condicionPago = json['condicionPago'];
-    status = json['status'];
-    creador = json['creador'];
-    repartidor = json['repartidor'];
-    created_at = json['created_at'];
-    municipio = json['municipio'];
-    statusColor = json['statusColor'];
-    folioId = json['folioId'];
-    folioIdHistorial = json['folio_id_historial'];
+    id = json['id']?.toString();
+    cantidad = json['cantidad']?.toString();
+    statusId = json['statusid']?.toString();
+    tipofolio = json['tipofolio']?.toString();
+    isArchived = json['isArchived'] is bool 
+        ? (json['isArchived'] ? 1 : 0) 
+        : int.tryParse(json['isArchived']?.toString() ?? '0') ?? 0;
+    nombreComercial = json['nombreComercial']?.toString();
+    tiporefaccion = json['tipoRefaccion']?.toString();
+    tiporeporte = json['tipoReporte']?.toString();
+    condicionPago = json['condicionPago']?.toString();
+    status = json['status']?.toString();
+    creador = json['creador']?.toString();
+    repartidor = json['repartidor']?.toString();
+    created_at = json['created_at']?.toString();
+    municipio = json['municipio']?.toString();
+    statusColor = json['statuscolor']?.toString();
+    folioId = json['folioId']?.toString();
+    folioIdHistorial = json['folio_id_historial']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -62,7 +64,7 @@ class Folios {
     data['id'] = id;
     data['cantidad'] = cantidad;
     data['isArchived'] = isArchived;
-    data['statusId'] = statusId;
+    data['statusid'] = statusId;
     data['tipofolio'] = tipofolio;
     data['nombreComercial'] = nombreComercial;
     data['tipoRefaccion'] = tiporefaccion;
@@ -73,7 +75,7 @@ class Folios {
     data['repartidor'] = repartidor;
     data['created_at'] = created_at;
     data['municipio'] = municipio;
-    data['statusColor'] = statusColor;
+    data['statuscolor'] = statusColor;
     data['folioId'] = folioId;
     data['folio_id_historial'] = folioIdHistorial;
     return data;
