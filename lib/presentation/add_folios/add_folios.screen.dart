@@ -105,9 +105,10 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                   ),
                 ),
                 Text(
-                  "Buscar Nombre o nombre comercial",
+                  "Buscar Razon Social o Nombre Comercial",
                   style: TextStyle(color: Color(0XFF0F172A)),
                 ),
+                SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -122,25 +123,39 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         }
                         return Autocomplete<Clientes>(
                           displayStringForOption: (Clientes option) =>
-                              option.nombreComercial ?? "",
-                        
-                          optionsBuilder:
-                              (TextEditingValue textEditingValue) {
-                                if (textEditingValue.text.isEmpty) {
-                                  return const Iterable<Clientes>.empty();
-                                }
-                        
-                                return controller.clientesModel.where((
-                                  Clientes c,
-                                ) {
-                                  final nombre =
-                                      c.nombreComercial?.toLowerCase() ?? '';
-                                  return nombre.contains(
-                                    textEditingValue.text.toLowerCase(),
-                                  );
-                                });
-                              },
-                        
+                              "${option.nombreComercial} - ${option.razonSocial}",
+
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text.isEmpty) {
+                              return const Iterable<Clientes>.empty();
+                            }
+
+                            String limpiarTexto(String? texto) {
+                              if (texto == null) return '';
+                              var sinAcentos = texto
+                                  .toLowerCase()
+                                  .replaceAll(RegExp(r'[áàäâ]'), 'a')
+                                  .replaceAll(RegExp(r'[éèëê]'), 'e')
+                                  .replaceAll(RegExp(r'[íìïî]'), 'i')
+                                  .replaceAll(RegExp(r'[óòöô]'), 'o')
+                                  .replaceAll(RegExp(r'[úùüû]'), 'u')
+                                  .replaceAll(RegExp(r'[ñ]'), 'n');
+                              return sinAcentos;
+                            }
+
+                            final query = limpiarTexto(textEditingValue.text);
+
+                            return controller.clientesModel.where((Clientes c) {
+                              final nombreComercial = limpiarTexto(
+                                c.nombreComercial,
+                              );
+                              final razonSocial = limpiarTexto(c.razonSocial);
+
+                              return nombreComercial.contains(query) ||
+                                  razonSocial.contains(query);
+                            });
+                          },
+
                           fieldViewBuilder:
                               (
                                 context,
@@ -163,7 +178,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                                   ),
                                 );
                               },
-                        
+
                           onSelected: (Clientes selection) {
                             controller.clienteId.value = selection.id ?? 0;
                             print(controller.clienteId.value);
@@ -171,29 +186,29 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         );
                       }),
                     ),
-                    SizedBox(width: 4),
-                    Center(
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          minimumSize: Size(50, 30),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(4)),
-                          ),
-                          backgroundColor: Color(0XFF1D6CFF),
-                          foregroundColor: Color(0XFFFFFFFF),
-                        ),
-                        onPressed: () {
-                          Get.toNamed(Routes.ADD_CLIENTE);
-                        },
-                        icon: Icon(Icons.add),
-                        label: Text("Nuevo", style: TextStyle(fontSize: 14)),
-                      ),
-                    ),
+                    // SizedBox(width: 4),
+                    // Center(
+                    //   child: TextButton.icon(
+                    //     style: TextButton.styleFrom(
+                    //       minimumSize: Size(50, 30),
+                    //       padding: EdgeInsets.symmetric(
+                    //         horizontal: 8,
+                    //         vertical: 4,
+                    //       ),
+                    //       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    //       shape: const RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.all(Radius.circular(4)),
+                    //       ),
+                    //       backgroundColor: Color(0XFF1D6CFF),
+                    //       foregroundColor: Color(0XFFFFFFFF),
+                    //     ),
+                    //     onPressed: () {
+                    //       Get.toNamed(Routes.ADD_CLIENTE);
+                    //     },
+                    //     icon: Icon(Icons.add),
+                    //     label: Text("Nuevo", style: TextStyle(fontSize: 14)),
+                    //   ),
+                    // ),
                   ],
                 ),
                 SizedBox(height: 8),

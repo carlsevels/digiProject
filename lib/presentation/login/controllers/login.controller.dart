@@ -29,29 +29,41 @@ class LoginController extends GetxController with StateMixin {
   void onClose() {
     super.onClose();
   }
+Future<void> signInWithEmail() async {
+  try {
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+      barrierDismissible: false,
+    );
 
-  Future<void> signInWithEmail() async {
-    try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator(color: Colors.white)),
-        barrierDismissible: false,
-      );
+    print("1. Intentando login Supabase");
 
-      final AuthResponse res = await Supabase.instance.client.auth
-          .signInWithPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-          );
+    final AuthResponse res =
+        await Supabase.instance.client.auth.signInWithPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
 
-      if (res.user != null) {
-        await AppDatabase.initialize();
+    print("2. Usuario Supabase: ${res.user?.id}");
 
-        await AppDatabase.db.waitForFirstSync();
+    if (res.user != null) {
 
-        final miId = res.user!.id;
+      print("3. Inicializando PowerSync");
 
-        final data = await AppDatabase.db.getOptional(
-          '''
+      await AppDatabase.initialize();
+
+      print("4. Esperando sincronización");
+
+      await AppDatabase.db.waitForFirstSync();
+
+      print("5. Buscando datos personales");
+
+      final miId = res.user!.id;
+
+      final data = await AppDatabase.db.getOptional(
+        '''
         SELECT 
           dp."nombre",
           r."name" as "rol_nombre"
@@ -60,40 +72,46 @@ class LoginController extends GetxController with StateMixin {
           ON dp."rolId" = r."id"
         WHERE dp."userId" = ?
         ''',
-          [miId],
+        [miId],
+      );
+
+      print("6. Datos encontrados: $data");
+
+      if (data != null) {
+        await UserStorage.guardarRol(
+          data['rol_nombre'] as String,
         );
 
-        if (data != null) {
-          await UserStorage.guardarRol(data['rol_nombre'] as String);
+        Get.back();
+        Get.offAllNamed(Routes.FOLIOS);
+      } else {
+        Get.back();
 
-          Get.back(); // cerrar cargando
-
-          Get.offAllNamed(Routes.FOLIOS);
-        } else {
-          Get.back(); // cerrar cargando
-          Get.snackbar(
-            "Error",
-            "No se encontraron datos del usuario",
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-        }
+        Get.snackbar(
+          "Error",
+          "Usuario autenticado pero sin datos personales",
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
       }
-    } catch (e) {
-      if (Get.isDialogOpen == true) {
-        Get.back(); // cerrar cargando si hay error
-      }
-
-      print("Error crítico: $e");
-
-      Get.snackbar(
-        "Error",
-        "Usuario o contraseña incorrectos",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     }
-  }
 
+  } catch (e, stack) {
+
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+
+    print("ERROR LOGIN: $e");
+    print(stack);
+
+    Get.snackbar(
+      "Error",
+      e.toString(),
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+}
   void increment() => count.value++;
 }

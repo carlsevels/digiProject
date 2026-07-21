@@ -135,37 +135,35 @@ class FoliosScreen extends GetView<FoliosController> {
                   title: const Text("Repartidores"),
                   onTap: null,
                 ),
-              if (controller.rolName.value == "Admin")
-                ExpansionTile(
-                  title: Text("Refacciones"),
-                  leading: const Icon(Icons.precision_manufacturing_outlined),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.format_list_numbered_sharp),
-                      title: const Text("Refacciones"),
-                      onTap: () {
-                        Get.toNamed(Routes.REFACCIONES);
-                      },
-                    ),
-                  ],
-                ),
-              if (controller.rolName.value == "Admin")
-                ExpansionTile(
-                  leading: const Icon(Icons.receipt_long_outlined),
-                  title: const Text("Folios"),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text("Agregar"),
-                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.archive_outlined),
-                      title: const Text("Archivados"),
-                      onTap: () => Get.toNamed(Routes.ARCHIVADOS),
-                    ),
-                  ],
-                ),
+              ExpansionTile(
+                title: Text("Refacciones"),
+                leading: const Icon(Icons.precision_manufacturing_outlined),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.format_list_numbered_sharp),
+                    title: const Text("Refacciones"),
+                    onTap: () {
+                      Get.toNamed(Routes.REFACCIONES);
+                    },
+                  ),
+                ],
+              ),
+              ExpansionTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: const Text("Folios"),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text("Agregar"),
+                    onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.archive_outlined),
+                    title: const Text("Archivados"),
+                    onTap: () => Get.toNamed(Routes.ARCHIVADOS),
+                  ),
+                ],
+              ),
               if (controller.rolName.value == "Admin")
                 ExpansionTile(
                   leading: const Icon(Icons.business_center_outlined),
@@ -274,30 +272,29 @@ class FoliosScreen extends GetView<FoliosController> {
                               textScaler: const TextScaler.linear(1.8),
                             ),
                           ),
-                          if (controller.rolUsuario.value == 1)
-                            TextButton.icon(
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(50, 30),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(50, 30),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
                                 ),
                               ),
-                              onPressed: () {
-                                Get.toNamed(Routes.ADD_FOLIOS);
-                              },
-                              icon: const Icon(
-                                Icons.add,
-                                color: Color(0XFF1D6CFF),
-                              ),
-                              label: const Text(
-                                "Agregar Folio",
-                                style: TextStyle(color: Color(0XFF1D6CFF)),
-                              ),
                             ),
+                            onPressed: () {
+                              Get.toNamed(Routes.ADD_FOLIOS);
+                            },
+                            icon: const Icon(
+                              Icons.add,
+                              color: Color(0XFF1D6CFF),
+                            ),
+                            label: const Text(
+                              "Agregar Folio",
+                              style: TextStyle(color: Color(0XFF1D6CFF)),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
