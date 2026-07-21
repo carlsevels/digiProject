@@ -202,52 +202,56 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on_outlined,
-                                      color: Color(0XFF64748B),
-                                    ),
-                                    Flexible(
-                                      child: Text(
-                                        state?.municipio ?? "",
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0XFF64748B),
+                              if (state?.municipio != null)
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on_outlined,
+                                        color: Color(0XFF64748B),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          state?.municipio ?? "",
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Color(0XFF64748B),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: state?.status != "Por entregar"
-                                      ? controller.parseColor(
-                                          state?.statusColor?.toString(),
-                                        )
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(
-                                    color: controller.parseColor(
-                                      state?.statusColor?.toString(),
-                                    ),
+                                    ],
                                   ),
                                 ),
-                                child: Text(
-                                  state?.status.toString() ?? "",
-                                  style: TextStyle(
-                                    color: state?.status == "Por entregar"
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: state?.status != "Por entregar"
                                         ? controller.parseColor(
                                             state?.statusColor?.toString(),
                                           )
                                         : Colors.white,
-                                    fontSize: 12,
+                                    borderRadius: BorderRadius.circular(50),
+                                    border: Border.all(
+                                      color: controller.parseColor(
+                                        state?.statusColor?.toString(),
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    state?.status.toString() ?? "",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: state?.status == "Por entregar"
+                                          ? controller.parseColor(
+                                              state?.statusColor?.toString(),
+                                            )
+                                          : Colors.white,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                               ),

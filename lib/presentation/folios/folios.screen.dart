@@ -559,7 +559,17 @@ class FoliosScreen extends GetView<FoliosController> {
                                 ),
                                 Flexible(
                                   child: Text(
-                                    "${folio.municipio} - ${folio.condicionPago} - ${folio.folioId.toString()}",
+                                    [
+                                          folio.municipio,
+                                          folio.condicionPago,
+                                          folio.folioId?.toString(),
+                                        ]
+                                        .where(
+                                          (e) =>
+                                              e != null &&
+                                              e.toString().trim().isNotEmpty,
+                                        )
+                                        .join(" - "),
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: Color(0XFF64748B),
