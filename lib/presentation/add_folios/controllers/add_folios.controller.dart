@@ -86,9 +86,6 @@ class AddFoliosController extends GetxController with StateMixin {
     listaProcesada.insert(0, defaultItem);
     clientesModel.assignAll(listaProcesada);
     clientesModel.value = listaProcesada;
-    print("Clientes: ${clientesModel.length}");
-    print("result: ${result.length}");
-    print("listaProcesada: ${listaProcesada.length}");
   }
 
   Future<void> getTipoDocumento() async {
@@ -196,7 +193,7 @@ class AddFoliosController extends GetxController with StateMixin {
         userId,
         fechaActual,
         numReporteController.text,
-        false
+        false,
       ];
 
       await AppDatabase.db.writeTransaction((txn) async {

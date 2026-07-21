@@ -123,7 +123,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         }
                         return Autocomplete<Clientes>(
                           displayStringForOption: (Clientes option) =>
-                              "${option.nombreComercial} - ${option.razonSocial}",
+                              "${option.id} - ${option.nombreComercial} - ${option.razonSocial}",
 
                           optionsBuilder: (TextEditingValue textEditingValue) {
                             if (textEditingValue.text.isEmpty) {
@@ -146,16 +146,19 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                             final query = limpiarTexto(textEditingValue.text);
 
                             return controller.clientesModel.where((Clientes c) {
+                              if (c.id == 0) return false;
+
+                              final idString = c.id?.toString() ?? '';
                               final nombreComercial = limpiarTexto(
                                 c.nombreComercial,
                               );
                               final razonSocial = limpiarTexto(c.razonSocial);
 
-                              return nombreComercial.contains(query) ||
+                              return idString.contains(query) ||
+                                  nombreComercial.contains(query) ||
                                   razonSocial.contains(query);
                             });
                           },
-
                           fieldViewBuilder:
                               (
                                 context,
