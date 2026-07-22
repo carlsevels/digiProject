@@ -1,6 +1,6 @@
 String listClientesQuery() {
   return '''
-  SELECT 
+SELECT 
       c.id, 
       c."nombreComercial",
       c."razonSocial",
@@ -10,6 +10,7 @@ String listClientesQuery() {
     LEFT JOIN "municipios" m ON d."municipioId" = m.id
     WHERE (? = '' 
            OR CAST(c."nombreComercial" AS TEXT) LIKE '%' || ? || '%' 
-           OR CAST(c."razonSocial" AS TEXT) LIKE '%' || ? || '%');
+           OR CAST(c."razonSocial" AS TEXT) LIKE '%' || ? || '%')
+    LIMIT ? OFFSET ?;
   ''';
 }

@@ -3,8 +3,34 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/clientes.controller.dart';
 
-class ClientesScreen extends GetView<ClientesController> {
+class ClientesScreen extends StatefulWidget { // Cambiado a StatefulWidget para manejar el ScrollController
   const ClientesScreen({super.key});
+
+  @override
+  State<ClientesScreen> createState() => _ClientesScreenState();
+}
+
+class _ClientesScreenState extends State<ClientesScreen> {
+  final ClientesController controller = Get.find<ClientesController>();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      controller.loadMoreClientes();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +53,11 @@ class ClientesScreen extends GetView<ClientesController> {
             backgroundColor: const Color(0XFF1D6CFF),
             onRefresh: () => controller.getClientes(),
             child: ListView.builder(
+              controller: _scrollController, // <--- Conectado aquí
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              itemCount: list.isEmpty ? 2 : list.length + 2,
+              // Añadimos +1 al itemCount si está cargando más elementos
+              itemCount: list.isEmpty ? 2 : list.length + 2 + (controller.isLoadingMore.value ? 1 : 0),
               itemBuilder: (context, index) {
                 // Header
                 if (index == 0) {
@@ -78,25 +106,32 @@ class ClientesScreen extends GetView<ClientesController> {
                       TextFormField(
                         textInputAction: TextInputAction.search,
                         controller: controller.buscadorController,
+                        onFieldSubmitted: (value) => controller.getClientes(),
                         decoration: InputDecoration(
                           suffixIcon: IconButton(
-                            icon: Icon(Icons.search),
-                            onPressed: () {
-                              controller.getClientes();
-                            },
+                            icon: const Icon(Icons.search),
+                            onPressed: () => controller.getClientes(),
                           ),
-                          enabledBorder: UnderlineInputBorder(
+                          enabledBorder: const UnderlineInputBorder(
                             borderSide: BorderSide(color: Color(0XFF64748B)),
                           ),
-                          focusedBorder: UnderlineInputBorder(
+                          focusedBorder: const UnderlineInputBorder(
                             borderSide: BorderSide(color: Color(0XFF64748B)),
                           ),
                           hintText: "Buscar cliente",
-                          hintStyle: TextStyle(color: Color(0XFF64748B)),
+                          hintStyle: const TextStyle(color: Color(0XFF64748B)),
                         ),
                       ),
                       const SizedBox(height: 16),
                     ],
+                  );
+                }
+
+                // Indicador de carga al final del scroll
+                if (index == list.length + 2) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
@@ -114,7 +149,7 @@ class ClientesScreen extends GetView<ClientesController> {
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  title: Text("${cliente.id} - ${cliente.nombreComercial} - ${cliente.razonSocial}", ),
+                  title: Text("${cliente.id} - ${cliente.nombreComercial} - ${cliente.razonSocial}"),
                   subtitle: Text(cliente.municipio ?? "Sin ubicación"),
                   trailing: IconButton(
                     icon: const Icon(Icons.close, size: 16),
@@ -167,7 +202,7 @@ class ClientesScreen extends GetView<ClientesController> {
                             ],
                           ),
                           TextButton.icon(
-                            onPressed: () => Get.toNamed(Routes.ADD_REFACCION),
+                            onPressed: () => Get.toNamed(Routes.ADD_CLIENTE),
                             icon: const Icon(
                               Icons.add,
                               color: Color(0XFF1D6CFF),
@@ -209,8 +244,8 @@ class ClientesScreen extends GetView<ClientesController> {
                   Container(
                     width: 120,
                     height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0XFFEFF6FF),
+                    decoration: const BoxDecoration(
+                      color: Color(0XFFEFF6FF),
                       shape: BoxShape.circle,
                     ),
                     child: const Center(
@@ -221,7 +256,7 @@ class ClientesScreen extends GetView<ClientesController> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 23),
                   const Text(
                     "No hay clientes",
                     textAlign: TextAlign.center,
@@ -235,7 +270,7 @@ class ClientesScreen extends GetView<ClientesController> {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
-                      "Todavía no has registrado ningun cliente.",
+                      "Todavía no has registrado ningún cliente.",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
@@ -246,7 +281,6 @@ class ClientesScreen extends GetView<ClientesController> {
           ),
         ),
       ),
-
       onError: (error) => Scaffold(
         body: Center(
           child: Text("Error al cargar: $error", textAlign: TextAlign.center),
@@ -303,7 +337,6 @@ class ClientesScreen extends GetView<ClientesController> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // controller.eliminarCliente(cliente.id.toString());
                         Navigator.pop(context, true);
                       },
                       style: ElevatedButton.styleFrom(
