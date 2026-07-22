@@ -281,9 +281,9 @@ class _ClientesScreenState extends State<ClientesScreen> {
                               width: double.infinity,
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.blueAccent,
+                                  foregroundColor: Color(0XFF1D6CFF),
                                   side: const BorderSide(
-                                    color: Colors.blueAccent,
+                                    color: Color(0XFF1D6CFF),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -292,7 +292,6 @@ class _ClientesScreenState extends State<ClientesScreen> {
                                 icon: const Icon(Icons.map_outlined, size: 18),
                                 label: const Text("Abrir en Google Maps"),
                                 onPressed: () async {
-                                  // 1. Armamos el texto completo de la dirección para buscarla mejor
                                   final String direccionQuery =
                                       [
                                             controller.direccion.calle,

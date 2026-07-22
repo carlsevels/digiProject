@@ -14,7 +14,12 @@ SELECT
     m.nombre as municipio,
     st.nombre as status,
     h."folioId" as folio_id_historial,
-    st.color as statuscolor
+    st.color as statuscolor,
+    d."calle",
+    d."colonia",
+    d."codigoPostal",
+    d."numExt",
+    d."numInt"
 FROM folios f
   LEFT JOIN tipos as t ON f."tipoFolioId" = t.id
   LEFT JOIN clientes as c ON f."clienteId" = c.id
@@ -23,12 +28,18 @@ FROM folios f
   LEFT JOIN "datosPersonales" cr ON f."creadorId" = cr."userId"
   LEFT JOIN "datosPersonales" rp ON f."repartidorId" = rp."userId"
   LEFT JOIN (
-      SELECT "clienteId", "municipioId" 
+      SELECT 
+          "clienteId", 
+          MAX("municipioId") as "municipioId",
+          MAX("calle") as "calle",
+          MAX("colonia") as "colonia",
+          MAX("codigoPostal") as "codigoPostal",
+          MAX("numExt") as "numExt",
+          MAX("numInt") as "numInt"
       FROM direcciones
       GROUP BY "clienteId"
   ) as d ON c.id = d."clienteId"
   LEFT JOIN municipios as m ON d."municipioId" = m."id"
-  -- AQUÍ USAMOS f.id porque en tu DB historialestados.folioId apunta al UUID (f.id)
   LEFT JOIN (
       SELECT h1.* 
       FROM historialestados h1

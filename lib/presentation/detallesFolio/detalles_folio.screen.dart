@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import 'controllers/detalles_folio.controller.dart';
 import 'package:action_slider/action_slider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetallesFolioScreen extends GetView<DetallesFolioController> {
   const DetallesFolioScreen({super.key});
@@ -299,6 +300,183 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                       ),
                     ),
                     SizedBox(height: 24.0),
+                    Card(
+                      elevation: 4,
+                      child: Container(
+                        width: double.maxFinite,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "${state.calle ?? 'S/N'} #${state.numExt ?? ''}"
+                                    "${(state.numInt != null && state.numInt.toString().isNotEmpty) ? ' Int. ${state.numInt}' : ''}",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 16),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.map,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Colonia:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    state.colonia ?? "No especificada",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_city,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Municipio:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    state.municipio ?? "No especificado",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.markunread_mailbox,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "C.P.:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    state.codigoPostal ?? "No especificado",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.0),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Color(0XFF1D6CFF),
+                          side: const BorderSide(color: Color(0XFF1D6CFF)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.map_outlined, size: 18),
+                        label: const Text("Abrir en Google Maps"),
+                        onPressed: () async {
+                          final String direccionQuery =
+                              [
+                                    state.calle,
+                                    if (state.numExt != null)
+                                      '#${state.numExt}',
+                                    state.colonia,
+                                    state.municipio,
+                                    state.codigoPostal,
+                                  ]
+                                  .where(
+                                    (e) => e != null && e.toString().isNotEmpty,
+                                  )
+                                  .join(', ');
+
+                          final Uri googleMapsUrl = Uri.parse(
+                            'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(direccionQuery)}',
+                          );
+
+                          if (await canLaunchUrl(googleMapsUrl)) {
+                            await launchUrl(
+                              googleMapsUrl,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } else {
+                            Get.snackbar(
+                              "Error",
+                              "No se pudo abrir Google Maps",
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 16.0),
                     Card(
                       color: Colors.white,
                       margin: EdgeInsets.zero,

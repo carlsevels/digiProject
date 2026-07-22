@@ -16,6 +16,11 @@ class Folios {
   String? folioId;
   String? folioIdHistorial;
   int? isArchived;
+  String? calle;
+  String? colonia;
+  String? codigoPostal;
+  String? numExt;
+  String? numInt;
 
   Folios({
     this.id,
@@ -35,15 +40,25 @@ class Folios {
     this.statusId,
     this.folioIdHistorial,
     this.isArchived,
+    this.calle,
+    this.codigoPostal,
+    this.colonia,
+    this.numExt,
+    this.numInt,
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
+    calle = json['calle']?.toString();
+    codigoPostal = json['codigoPostal']?.toString();
+    colonia = json['colonia']?.toString();
+    numExt = json['numExt']?.toString();
+    numInt = json['numInt']?.toString();
     cantidad = json['cantidad']?.toString();
     statusId = json['statusid']?.toString();
     tipofolio = json['tipofolio']?.toString();
-    isArchived = json['isArchived'] is bool 
-        ? (json['isArchived'] ? 1 : 0) 
+    isArchived = json['isArchived'] is bool
+        ? (json['isArchived'] ? 1 : 0)
         : int.tryParse(json['isArchived']?.toString() ?? '0') ?? 0;
     nombreComercial = json['nombreComercial']?.toString();
     tiporefaccion = json['tipoRefaccion']?.toString();
@@ -63,6 +78,11 @@ class Folios {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['cantidad'] = cantidad;
+    data['calle'] = calle;
+    data['codigoPostal'] = codigoPostal;
+    data['colonia'] = colonia;
+    data['numExt'] = numExt;
+    data['numInt'] = numInt;
     data['isArchived'] = isArchived;
     data['statusid'] = statusId;
     data['tipofolio'] = tipofolio;

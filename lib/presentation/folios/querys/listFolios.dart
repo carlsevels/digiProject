@@ -13,6 +13,11 @@ SELECT
     cr.nombre AS creador,
     rp.nombre AS repartidor,
     m.nombre AS municipio,
+    d."calle",
+    d."colonia",
+    d."codigoPostal",
+    d."numExt",
+    d."numInt",
     st.nombre AS status,
     st.id AS statusid,
     st.color AS statuscolor
