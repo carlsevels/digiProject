@@ -136,38 +136,39 @@ class FoliosScreen extends GetView<FoliosController> {
                     ),
                   ),
                 ),
-
+                // PARA FUTUROS CAMBIOS
                 // ListTile(
                 //   leading: const Icon(Icons.account_circle_outlined),
                 //   title: const Text("Perfil"),
                 //   onTap: () => Get.toNamed(Routes.PROFILE),
                 // ),
-                ExpansionTile(
-                  title: Text("Digirey"),
-                  leading: SizedBox(
-                    height: 28.0,
-                    child: Image.asset(
-                      "assets/logos/digireyShort.png",
-                      opacity: const AlwaysStoppedAnimation(.5),
-                    ),
-                  ),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.format_list_numbered_outlined),
-                      title: const Text("Usuarios"),
-                      onTap: () {
-                        Get.toNamed(Routes.USUARIOS);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text("Registrar"),
-                      onTap: () {
-                        Get.toNamed(Routes.ADD_USUARIO);
-                      },
-                    ),
-                  ],
-                ),
+                // PARA FUTUROS CAMBIOS
+                // ExpansionTile(
+                //   title: Text("Digirey"),
+                //   leading: SizedBox(
+                //     height: 28.0,
+                //     child: Image.asset(
+                //       "assets/logos/digireyShort.png",
+                //       opacity: const AlwaysStoppedAnimation(.5),
+                //     ),
+                //   ),
+                //   children: [
+                //     ListTile(
+                //       leading: const Icon(Icons.format_list_numbered_outlined),
+                //       title: const Text("Usuarios"),
+                //       onTap: () {
+                //         Get.toNamed(Routes.USUARIOS);
+                //       },
+                //     ),
+                //     ListTile(
+                //       leading: const Icon(Icons.add),
+                //       title: const Text("Registrar"),
+                //       onTap: () {
+                //         Get.toNamed(Routes.ADD_USUARIO);
+                //       },
+                //     ),
+                //   ],
+                // ),
                 if (controller.rolName.value == "Admin")
                   ListTile(
                     leading: const Icon(Icons.badge_outlined),
