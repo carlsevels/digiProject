@@ -1,16 +1,24 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
+import 'package:bitacora_frontend/infrastructure/models/direcciones.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
+import 'package:bitacora_frontend/presentation/clientes/querys/direccionCliente.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientesController extends GetxController
     with StateMixin<List<Clientes>> {
   //TODO: Implement ClientesController
   TextEditingController buscadorController = TextEditingController();
+
+  final Rx<Direcciones> _direccion = Direcciones().obs;
+  Direcciones get direccion => this._direccion.value;
+  set direccion(value) => this._direccion.value = value;
+
   int _page = 0;
   final int _limit = 20;
   var isLoadingMore = false.obs;
@@ -90,15 +98,44 @@ class ClientesController extends GetxController
         _hasMoreData = false;
       }
 
-      // Obtenemos la lista actual del estado y le agregamos los nuevos elementos
       final currentList = state ?? [];
       currentList.addAll(moreClientes);
 
       change(currentList, status: RxStatus.success());
     } catch (e) {
-      _page--; // Revertir incremento si falla
+      _page--;
     } finally {
       isLoadingMore.value = false;
+    }
+  }
+
+  Future<void> getDireccionCliente(dynamic clienteId) async {
+    try {
+      final status = AppDatabase.db.currentStatus;
+
+      if (status.hasSynced != true) {
+        print("Esperando a que PowerSync sincronice...");
+        await AppDatabase.db.statusStream
+            .firstWhere((s) => s.hasSynced == true)
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () =>
+                  throw Exception('Timeout waiting for PowerSync sync.'),
+            );
+      }
+
+      final resultado = await AppDatabase.db.getOptional(
+        direccionClienteQuery(),
+        [clienteId],
+      );
+      print("Direccion: ${jsonEncode(direccion)}");
+      direccion = resultado != null
+          ? Direcciones.fromJson(resultado)
+          : Direcciones();
+
+      print("Direccion: ${jsonEncode(direccion)}");
+    } catch (e) {
+      print("Error al obtener la dirección del cliente: $e");
     }
   }
 
