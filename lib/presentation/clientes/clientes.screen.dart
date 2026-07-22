@@ -2,6 +2,7 @@ import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/clientes.controller.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ClientesScreen extends StatefulWidget {
   const ClientesScreen({super.key});
@@ -275,6 +276,55 @@ class _ClientesScreenState extends State<ClientesScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.blueAccent,
+                                  side: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.map_outlined, size: 18),
+                                label: const Text("Abrir en Google Maps"),
+                                onPressed: () async {
+                                  // 1. Armamos el texto completo de la dirección para buscarla mejor
+                                  final String direccionQuery =
+                                      [
+                                            controller.direccion.calle,
+                                            if (controller.direccion.numExt !=
+                                                null)
+                                              '#${controller.direccion.numExt}',
+                                            controller.direccion.colonia,
+                                            controller.direccion.municipio,
+                                            controller.direccion.codigoPostal,
+                                          ]
+                                          .where(
+                                            (e) => e != null && e.isNotEmpty,
+                                          )
+                                          .join(', ');
+
+                                  final Uri googleMapsUrl = Uri.parse(
+                                    'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(direccionQuery)}',
+                                  );
+
+                                  if (await canLaunchUrl(googleMapsUrl)) {
+                                    await launchUrl(
+                                      googleMapsUrl,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  } else {
+                                    Get.snackbar(
+                                      "Error",
+                                      "No se pudo abrir Google Maps",
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ],
                         ),
