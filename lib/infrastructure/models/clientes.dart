@@ -10,7 +10,7 @@ class Clientes {
   String? numInt;
   int? municipioId;
   int? clienteId;
-  String? nombreMunicipio;
+  String? municipio;
 
   Clientes({
     this.id,
@@ -24,7 +24,7 @@ class Clientes {
     this.numInt,
     this.municipioId,
     this.clienteId,
-    this.nombreMunicipio,
+    this.municipio,
   });
 
   factory Clientes.fromJson(Map<String, dynamic> json) {
@@ -46,7 +46,7 @@ class Clientes {
       clienteId: (json['clienteId'] is String)
           ? int.tryParse(json['clienteId'] ?? '')
           : json['clienteId'],
-      nombreMunicipio: json['nombreMunicipio'],
+      municipio: json['municipio'],
     );
   }
 
@@ -63,7 +63,7 @@ class Clientes {
       'dirNumInt': numInt,
       'municipioId': municipioId,
       'clienteId': clienteId,
-      'nombreMunicipio': nombreMunicipio,
+      'municipio': municipio,
     };
   }
 }

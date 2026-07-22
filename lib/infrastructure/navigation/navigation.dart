@@ -95,5 +95,15 @@ class Nav {
       page: () => const ClientesScreen(),
       binding: ClientesControllerBinding(),
     ),
+    GetPage(
+      name: Routes.USUARIOS,
+      page: () => const UsuariosScreen(),
+      binding: UsuariosControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.ADD_USUARIO,
+      page: () => const AddUsuarioScreen(),
+      binding: AddUsuarioControllerBinding(),
+    ),
   ];
 }

@@ -132,10 +132,12 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
               style: TextStyle(color: Color(0xff0F172A)),
             ),
             actions: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.more_vert_outlined),
+              SizedBox(
+                height: 50,
+                child: Image.asset(
+                  "assets/logos/digireyShort.png",
+                  opacity: const AlwaysStoppedAnimation(.5),
+                ),
               ),
             ],
           ),
@@ -190,14 +192,29 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                               ),
                             ],
                           ),
-                          title: Text(
-                            state?.nombreComercial ?? "",
-                            style: TextStyle(
-                              color: controller.parseColor(
-                                state?.statusColor?.toString(),
+                          title: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.business_center_outlined,
+                                size: 20,
                               ),
-                              fontWeight: FontWeight.bold,
-                            ),
+                              const SizedBox(width: 8.0),
+                              Expanded(
+                                child: Text(
+                                  state!.nombreComercial ??
+                                      'Sin nombre comercial',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: controller.parseColor(
+                                      state.statusColor?.toString(),
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           subtitle: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

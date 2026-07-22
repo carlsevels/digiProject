@@ -16,7 +16,7 @@ class AddClienteScreen extends GetView<AddClienteController> {
         backgroundColor: Color(0XFFF8FAFC),
         centerTitle: false,
 
-        title: Text("Nuevo Folio"),
+        title: Text("Nuevo Cliente"),
         actions: [
           SizedBox(
             height: 50,

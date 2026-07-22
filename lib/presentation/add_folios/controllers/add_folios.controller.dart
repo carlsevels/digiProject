@@ -50,10 +50,10 @@ class AddFoliosController extends GetxController with StateMixin {
   @override
   void onInit() {
     super.onInit();
-    _onInit();
+    onInitFunction();
   }
 
-  Future<void> _onInit() async {
+  Future<void> onInitFunction() async {
     change(null, status: RxStatus.loading());
     await getClientes();
     await getRefaccion();

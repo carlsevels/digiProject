@@ -1,5 +1,6 @@
 export 'package:bitacora_frontend/presentation/addCliente/add_cliente.screen.dart';
 export 'package:bitacora_frontend/presentation/addRefaccion/add_refaccion.screen.dart';
+export 'package:bitacora_frontend/presentation/addUsuario/add_usuario.screen.dart';
 export 'package:bitacora_frontend/presentation/add_folios/add_folios.screen.dart';
 export 'package:bitacora_frontend/presentation/archivados/archivados.screen.dart';
 export 'package:bitacora_frontend/presentation/clientes/clientes.screen.dart';
@@ -11,3 +12,4 @@ export 'package:bitacora_frontend/presentation/profile/profile.screen.dart';
 export 'package:bitacora_frontend/presentation/refacciones/refacciones.screen.dart';
 export 'package:bitacora_frontend/presentation/searchFolio/search_folio.screen.dart';
 export 'package:bitacora_frontend/presentation/success/success.screen.dart';
+export 'package:bitacora_frontend/presentation/usuarios/usuarios.screen.dart';

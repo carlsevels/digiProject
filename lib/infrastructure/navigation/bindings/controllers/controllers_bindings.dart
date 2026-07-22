@@ -1,6 +1,7 @@
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_cliente.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_folios.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_refaccion.controller.binding.dart'; 
+export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/add_usuario.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/archivados.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/clientes.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/detalles_folio.controller.binding.dart'; 
@@ -11,3 +12,4 @@ export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/refacciones.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/search_folio.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/success.controller.binding.dart'; 
+export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/usuarios.controller.binding.dart'; 

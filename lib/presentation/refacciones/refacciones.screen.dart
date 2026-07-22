@@ -11,7 +11,6 @@ class RefaccionesScreen extends GetView<RefaccionesController> {
     return controller.obx(
       (state) {
         final list = state ?? [];
-
         return Scaffold(
           appBar: AppBar(
             title: SizedBox(

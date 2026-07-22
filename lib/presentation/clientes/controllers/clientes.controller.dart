@@ -41,11 +41,10 @@ class ClientesController extends GetxController
       if (resultSet.isNotEmpty) {
         print("Columnas encontradas: ${resultSet.first.keys}");
         print(
-          "Valor de 'nombreMunicipio' en crudo: ${resultSet.first['nombreMunicipio']}",
+          "Valor de 'nombreMunicipio' en crudo: ${resultSet.first['municipio']}",
         );
       }
 
-      // Verificar si hay algo en las tablas de apoyo
       final dirCount = await AppDatabase.db.execute(
         'SELECT COUNT(*) as total FROM direcciones',
       );

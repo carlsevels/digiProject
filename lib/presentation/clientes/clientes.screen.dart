@@ -12,7 +12,16 @@ class ClientesScreen extends GetView<ClientesController> {
       (state) {
         final list = state ?? [];
         return Scaffold(
-          appBar: AppBar(title: const Text('Clientes'), centerTitle: true),
+          appBar: AppBar(
+            title: SizedBox(
+              width: 120,
+              child: Image.network(
+                fit: BoxFit.contain,
+                "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+              ),
+            ),
+            centerTitle: true,
+          ),
           body: RefreshIndicator(
             color: Colors.white,
             backgroundColor: const Color(0XFF1D6CFF),
@@ -99,9 +108,9 @@ class ClientesScreen extends GetView<ClientesController> {
                     ),
                   ),
                   title: Text(cliente.nombreComercial ?? "Sin nombre"),
-                  subtitle: Text(cliente.nombreMunicipio ?? "Sin ubicación"),
+                  subtitle: Text(cliente.municipio ?? "Sin ubicación"),
                   trailing: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios_sharp, size: 16),
+                    icon: const Icon(Icons.close, size: 16),
                     onPressed: () => _mostrarDialogoEliminar(context, cliente),
                   ),
                 );
@@ -109,7 +118,7 @@ class ClientesScreen extends GetView<ClientesController> {
             ),
           ),
         );
-      }, 
+      },
       onLoading: const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
