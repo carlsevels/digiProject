@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:powersync/sqlite3.dart';
 
 class ClientesController extends GetxController
     with StateMixin<List<Clientes>> {
   //TODO: Implement ClientesController
+  TextEditingController buscadorController = TextEditingController();
 
   final count = 0.obs;
   @override
@@ -36,24 +38,8 @@ class ClientesController extends GetxController
     try {
       final ResultSet resultSet = await AppDatabase.db.execute(
         listClientesQuery(),
+        [buscadorController.text, buscadorController.text, buscadorController.text],
       );
-
-      if (resultSet.isNotEmpty) {
-        print("Columnas encontradas: ${resultSet.first.keys}");
-        print(
-          "Valor de 'nombreMunicipio' en crudo: ${resultSet.first['municipio']}",
-        );
-      }
-
-      final dirCount = await AppDatabase.db.execute(
-        'SELECT COUNT(*) as total FROM direcciones',
-      );
-      final munCount = await AppDatabase.db.execute(
-        'SELECT COUNT(*) as total FROM municipios',
-      );
-
-      print("DEBUG: Filas en direcciones: ${dirCount.first['total']}");
-      print("DEBUG: Filas en municipios: ${munCount.first['total']}");
 
       List<Clientes> listClientes = resultSet.map((element) {
         final map = Map<String, dynamic>.from(element as Map);

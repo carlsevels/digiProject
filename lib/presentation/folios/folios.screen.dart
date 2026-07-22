@@ -169,12 +169,13 @@ class FoliosScreen extends GetView<FoliosController> {
                 //     ),
                 //   ],
                 // ),
-                if (controller.rolName.value == "Admin")
-                  ListTile(
-                    leading: const Icon(Icons.badge_outlined),
-                    title: const Text("Repartidores"),
-                    onTap: null,
-                  ),
+                // PARA FUTUROS CAMBIOS
+                // if (controller.rolName.value == "Admin")
+                //   ListTile(
+                //     leading: const Icon(Icons.badge_outlined),
+                //     title: const Text("Repartidores"),
+                //     onTap: null,
+                //   ),
                 ExpansionTile(
                   title: Text("Refacciones"),
                   leading: const Icon(Icons.precision_manufacturing_outlined),

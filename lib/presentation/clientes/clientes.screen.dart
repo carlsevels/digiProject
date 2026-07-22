@@ -77,8 +77,14 @@ class ClientesScreen extends GetView<ClientesController> {
                     children: [
                       TextFormField(
                         textInputAction: TextInputAction.search,
-                        decoration: const InputDecoration(
-                          suffixIcon: Icon(Icons.search),
+                        controller: controller.buscadorController,
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.search),
+                            onPressed: () {
+                              controller.getClientes();
+                            },
+                          ),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Color(0XFF64748B)),
                           ),
@@ -97,6 +103,7 @@ class ClientesScreen extends GetView<ClientesController> {
                 // Lista de Clientes
                 final cliente = list[index - 2];
                 return ListTile(
+                  titleAlignment: ListTileTitleAlignment.top,
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
                     backgroundColor: const Color(0XFF0F172A),
@@ -107,7 +114,7 @@ class ClientesScreen extends GetView<ClientesController> {
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  title: Text(cliente.nombreComercial ?? "Sin nombre"),
+                  title: Text("${cliente.id} - ${cliente.nombreComercial} - ${cliente.razonSocial}", ),
                   subtitle: Text(cliente.municipio ?? "Sin ubicación"),
                   trailing: IconButton(
                     icon: const Icon(Icons.close, size: 16),
@@ -122,9 +129,124 @@ class ClientesScreen extends GetView<ClientesController> {
       onLoading: const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      onEmpty: const Scaffold(
-        body: Center(child: Text("No hay clientes registrados")),
+      onEmpty: Scaffold(
+        appBar: AppBar(
+          title: SizedBox(
+            width: 120,
+            child: Image.network(
+              fit: BoxFit.contain,
+              "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Center(
+              child: Column(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.business, color: Color(0XFF64748B)),
+                              SizedBox(width: 12),
+                              Text(
+                                "Clientes",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0XFF334155),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton.icon(
+                            onPressed: () => Get.toNamed(Routes.ADD_REFACCION),
+                            icon: const Icon(
+                              Icons.add,
+                              color: Color(0XFF1D6CFF),
+                            ),
+                            label: const Text(
+                              "Agregar",
+                              style: TextStyle(color: Color(0XFF1D6CFF)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      TextFormField(
+                        controller: controller.buscadorController,
+                        textInputAction: TextInputAction.search,
+                        onFieldSubmitted: (value) => controller.getClientes(),
+                        decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () => controller.getClientes(),
+                          ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0XFF64748B)),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0XFF64748B)),
+                          ),
+                          hintText: "Buscar cliente",
+                          hintStyle: const TextStyle(color: Color(0XFF64748B)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: const Color(0XFFEFF6FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.description_outlined,
+                        size: 64,
+                        color: Color(0XFF1D6CFF),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    "No hay clientes",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0XFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      "Todavía no has registrado ningun cliente.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
+
       onError: (error) => Scaffold(
         body: Center(
           child: Text("Error al cargar: $error", textAlign: TextAlign.center),
