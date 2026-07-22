@@ -142,6 +142,8 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
             ],
           ),
           body: RefreshIndicator(
+            color: Colors.white,
+            backgroundColor: const Color(0XFF1D6CFF),
             onRefresh: () async {
               await controller.onInitDetalles();
             },

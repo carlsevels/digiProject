@@ -274,6 +274,8 @@ class FoliosScreen extends GetView<FoliosController> {
         ),
         onError: (error) => Center(child: Text("Error: $error")),
         onEmpty: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: const Color(0XFF1D6CFF),
           onRefresh: () async {
             await controller.getFoliosWithDate();
           },
