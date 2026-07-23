@@ -1,4 +1,9 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
+import 'package:bitacora_frontend/infrastructure/globalWidgets/btnGoogleMaps.dart';
+import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
+import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
+import 'package:bitacora_frontend/infrastructure/globalWidgets/entregaDetalles.dart';
+import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -64,127 +69,14 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Folio: ${state?.folioId} - ${state?.condicionPago} - ${formatFecha(state?.created_at)}",
-                    style: const TextStyle(
-                      color: Color(0XFF64748B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  RepartidorDetalles(state: state),
+                  SizedBox(height: 16.0),
+                  DetallesTrayecto(
+                    state: state,
+                    currentStep: controller.currentStep,
                   ),
-                  const SizedBox(height: 12.0),
-                  Card(
-                    elevation: 4,
-                    color: Colors.white,
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Column(
-                          children: [
-                            Text(
-                              state?.cantidad ?? "",
-                              textScaleFactor: 3.5,
-                              style: const TextStyle(height: 1),
-                            ),
-                            Flexible(
-                              child: Container(
-                                constraints: const BoxConstraints(maxWidth: 35),
-                                child: Text(
-                                  state?.tiporefaccion ?? "",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        title: Text(
-                          state?.nombreComercial ?? "",
-                          style: TextStyle(
-                            color: controller.parseColor(
-                              state?.statusColor?.toString(),
-                            ),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  Flexible(
-                                    child: Text(
-                                      state?.municipio ?? "",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: state?.status != "Por entregar"
-                                    ? controller.parseColor(
-                                        state?.statusColor?.toString(),
-                                      )
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                  color: controller.parseColor(
-                                    state?.statusColor?.toString(),
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                state?.status.toString() ?? "",
-                                style: TextStyle(
-                                  color: state?.status == "Por entregar"
-                                      ? controller.parseColor(
-                                          state?.statusColor?.toString(),
-                                        )
-                                      : Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24.0),
-                  Text(
-                    state?.repartidor ?? "",
-                    style: const TextStyle(
-                      color: Color(0XFF0F172A),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
-                      height: 1.2,
-                    ),
-                  ),
-                  const Text(
-                    "Repartidor",
-                    style: TextStyle(
-                      color: Color(0XFF64748B),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
-                  ),
+                  SizedBox(height: 16.0),
+                  Direccion(state: state),
                   const SizedBox(height: 32.0),
                   ElevatedButton(
                     onPressed: () => Get.toNamed(
