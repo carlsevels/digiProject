@@ -16,7 +16,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
         Get.bottomSheet(
           Container(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(top: 16.0, left: 8, right: 8),
             width: Get.size.width,
             height: Get.size.height / 2,
             decoration: const BoxDecoration(
@@ -41,16 +41,48 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Icon(Icons.route_outlined, color: Color(0xFF64748B)),
                         SizedBox(width: 8.0),
-                        Text(
-                          "Detalles del Trayecto",
-                          style: TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Detalles del Trayecto",
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (controller.historialList.any(
+                              (item) =>
+                                  (item.status ?? '').toLowerCase().contains(
+                                    'pospuso',
+                                  ) ||
+                                  (item.status ?? '').toLowerCase().contains(
+                                    'pendiente',
+                                  ),
+                            ))
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  "+1 día",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -74,8 +106,8 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
 
+                const SizedBox(height: 16),
                 Expanded(
                   child: Obx(() {
                     final historialList = controller.historialList;
@@ -91,7 +123,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
                         final String createdAt = item.created_at ?? '';
 
-                        // Si el nombre del status viene vacío o nulo, mostramos "Por iniciar"
                         final String statusName =
                             (item.status != null && item.status!.isNotEmpty)
                             ? item.status!
@@ -127,11 +158,9 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
                         return _buildTimelineItem(
                           time: createdAt,
-                          statusName:
-                              statusName, // <-- Pasamos el texto del status
+                          statusName: statusName,
                           description: description,
-                          statusColorHex:
-                              colorHex, // <-- Pasamos el color en hexadecimal
+                          statusColorHex: colorHex,
                           isWarning: isWarning,
                           isFirst: index == 0,
                           isLast: isLast,
@@ -322,10 +351,10 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
     bool isFirst = false,
     bool isLast = false,
   }) {
-    // Función auxiliar para convertir HEX / 0X a Color de Flutter
+    // Función auxiliar para convertir HEX a Color de Flutter
     Color parseColor(String? hexColor) {
       if (hexColor == null || hexColor.isEmpty) {
-        return const Color(0xFF22C55E); // Color por defecto (Verde)
+        return const Color(0xFF22C55E);
       }
       try {
         String cleanedHex = hexColor
@@ -342,20 +371,33 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
       }
     }
 
-    // Convertimos la cadena a un objeto Color utilizable
+    // Función auxiliar para formatear la fecha a "hh:mm"
+    String formatTimeToHour(String rawTime) {
+      if (rawTime.isEmpty) return '';
+      try {
+        DateTime parsedDate = DateTime.parse(rawTime);
+        // Extrae hora y minuto con ceros a la izquierda si es necesario
+        String hour = parsedDate.hour.toString().padLeft(2, '0');
+        String minute = parsedDate.minute.toString().padLeft(2, '0');
+        return '$hour:$minute';
+      } catch (e) {
+        return rawTime; // Devuelve el texto original si falla el parseo
+      }
+    }
+
     final Color itemColor = parseColor(statusColorHex);
+    final String formattedTime = formatTimeToHour(time);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Timeline Indicator (Line and Node)
         Column(
           children: [
             Container(
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: itemColor, // Usamos el color ya convertido
+                color: itemColor,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -367,41 +409,36 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
             if (!isLast)
               Container(
                 width: 3,
-                height: 55, // Espacio para la línea vertical
-                color: itemColor.withValues(
-                  alpha: 0.3,
-                ), // Línea con un tono más suave del mismo color
+                height: 55,
+                color: itemColor.withValues(alpha: 0.3),
               ),
           ],
         ),
         const SizedBox(width: 12),
 
-        // Timeline Content
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Nombre del Status
               Text(
                 statusName.isNotEmpty ? statusName : 'Actualización',
                 style: TextStyle(
-                  color: itemColor, // Usamos el color convertido para el texto
+                  color: itemColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
               ),
               const SizedBox(height: 2),
 
-              // 2. Descripción o detalle
               Text(
                 description,
                 style: const TextStyle(color: Color(0xFF334155), fontSize: 14),
               ),
               const SizedBox(height: 4),
 
-              // 3. Fecha / Hora
+              // Hora formateada (hh:mm)
               Text(
-                time,
+                formattedTime,
                 style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
               ),
               const SizedBox(height: 16),
