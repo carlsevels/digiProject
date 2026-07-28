@@ -63,6 +63,7 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
 
       if (ultimoRegistro != null) {
         statusId.value = ultimoRegistro["statusId"] as int;
+        currentStep.value = getStepIndex(statusId.value);
         print("Status actual actualizado a: ${currentStep.value}");
       } else {
         print(
@@ -122,6 +123,33 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
     isSearching.value = !isSearching.value;
     if (!isSearching.value) {
       id.clear();
+    }
+  }
+
+  int getStepIndex(int statusId) {
+    switch (statusId) {
+      // Por iniciar
+      case 1:
+        return 0;
+
+      // Llegada
+      case 2:
+        return 1;
+
+      // Entregado
+      case 3:
+        return 3;
+
+      // Pendiente
+      case 4:
+        return 0;
+
+      // Sitio
+      case 5:
+        return 2;
+
+      default:
+        return 0;
     }
   }
 

@@ -37,11 +37,6 @@ class BtnSliderStatus extends GetView<DetallesFolioController> {
           ),
           action: (sliderController) async {
             sliderController.loading();
-            await controller.changeStatus(
-              controller.statusId.toString(),
-              state?.folioIdHistorial?.toString() ?? "",
-            );
-            sliderController.success();
 
             int? nextStatus = await controller.changeStatus(
               controller.statusId.toString(),

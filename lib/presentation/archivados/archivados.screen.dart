@@ -92,11 +92,11 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Center(
                   child: Column(
                     children: [
                       Column(
@@ -172,74 +172,83 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
               onRefresh: () => controller.getFoliosWithDate(controller.id.text),
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
                 itemCount: state!.isEmpty ? 3 : state.length + 2,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(
-                                  Icons.precision_manufacturing_outlined,
-                                  color: Color(0XFF64748B),
-                                ),
-                                SizedBox(width: 12),
-                                Text(
-                                  "Folios Archivados",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0XFF334155),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.precision_manufacturing_outlined,
+                                    color: Color(0XFF64748B),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                                  SizedBox(width: 12),
+                                  Text(
+                                    "Folios Archivados",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0XFF334155),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     );
                   }
 
                   if (index == 1) {
-                    return Column(
-                      children: [
-                        TextFormField(
-                          controller: controller.id,
-                          textInputAction: TextInputAction.search,
-                          onFieldSubmitted: (value) {
-                            FocusScope.of(context).unfocus();
-                            controller.getFoliosWithDate(controller.id.text);
-                          },
-                          decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.search),
-                              onPressed: () {
-                                FocusScope.of(context).unfocus();
-                                controller.getFoliosWithDate(
-                                  controller.id.text,
-                                );
-                              },
-                            ),
-                            enabledBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0XFF64748B)),
-                            ),
-                            focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0XFF64748B)),
-                            ),
-                            hintText: "Buscar folio",
-                            hintStyle: const TextStyle(
-                              color: Color(0XFF64748B),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: controller.id,
+                            textInputAction: TextInputAction.search,
+                            onFieldSubmitted: (value) {
+                              FocusScope.of(context).unfocus();
+                              controller.getFoliosWithDate(controller.id.text);
+                            },
+                            decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () {
+                                  FocusScope.of(context).unfocus();
+                                  controller.getFoliosWithDate(
+                                    controller.id.text,
+                                  );
+                                },
+                              ),
+                              enabledBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color(0XFF64748B),
+                                ),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Color(0XFF64748B),
+                                ),
+                              ),
+                              hintText: "Buscar folio",
+                              hintStyle: const TextStyle(
+                                color: Color(0XFF64748B),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     );
                   }
 
@@ -415,7 +424,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                       background: Container(
                         color: const Color(0xFF10B981),
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.all(16),
                         child: const Row(
                           children: [
                             Icon(
@@ -461,13 +470,15 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                         ),
                       ),
                       child: ListTile(
+                        style: ListTileStyle.list,
+                        dense: true,
                         isThreeLine: false,
-                        contentPadding: EdgeInsets.zero,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
                         leading: Column(
                           children: [
                             Text(
                               folio.cantidad.toString(),
-                              textScaleFactor: 3.5,
+                              textScaleFactor: 3.2,
                               style: const TextStyle(height: 1),
                             ),
                             Flexible(

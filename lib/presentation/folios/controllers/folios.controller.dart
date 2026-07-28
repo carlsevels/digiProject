@@ -85,7 +85,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
       final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
         fechaHoy,
-        rolUsuario.value,
       ]);
 
       List<Folios> listFolios = getFolios
@@ -94,7 +93,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
                 Folios.fromJson(Map<String, dynamic>.from(element as Map)),
           )
           .toList();
-      print("object: ${jsonEncode(listFolios)}");
+
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {

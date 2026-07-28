@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
+import 'package:bitacora_frontend/presentation/detallesFolio/querys/getHistorialFolio.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,6 +16,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
   int? nextStatus;
+  var historialList = <Folios>[].obs;
 
   @override
   void onInit() {
@@ -101,6 +103,30 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     }
   }
 
+  Future<void> historialFolio(String folioId) async {
+    try {
+      historialList.clear();
+
+      final ResultSet resultSet = await AppDatabase.db.getAll(
+        getHistorialFolio(),
+        [folioId],
+      );
+
+      List<Folios> folio = resultSet
+          .map(
+            (element) =>
+                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
+          )
+          .toList();
+
+      historialList.value = folio;
+      print("FolioId: ${folioId}");
+      print("Folio Historial: ${jsonEncode(historialList)}");
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
   Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
     if (colorStr == null || colorStr.isEmpty) return defaultColor;
 
@@ -162,37 +188,38 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         return SizedBox.shrink();
     }
   }
-
-  Future<int?> changeStatus(String statusId, String folioId) async {
-    switch (statusId) {
-      case "1" || "4":
-        nextStatus = 2;
-        await AppDatabase.db.execute(insertStatusFolio(), [
-          const Uuid().v4(),
-          folioId,
-          2,
-          DateTime.now().toIso8601String(),
-        ]);
-      case "2":
-        nextStatus = 5;
-        await AppDatabase.db.execute(insertStatusFolio(), [
-          const Uuid().v4(),
-          folioId,
-          5,
-          DateTime.now().toIso8601String(),
-        ]);
-      case "5":
-        nextStatus = 3;
-        await AppDatabase.db.execute(insertStatusFolio(), [
-          const Uuid().v4(),
-          folioId,
-          3,
-          DateTime.now().toIso8601String(),
-        ]);
-    }
-    return nextStatus;
+Future<int?> changeStatus(String statusId, String folioId) async {
+  int? nextStatus;
+  
+  if (folioId.isEmpty) {
+    print("Error: folioId vacío en changeStatus");
+    return null;
   }
 
+  switch (statusId) {
+    case "1" || "4":
+      nextStatus = 2;
+      break;
+    case "2":
+      nextStatus = 5;
+      break;
+    case "5":
+      nextStatus = 3;
+      break;
+    default:
+      return null;
+  }
+
+  // Se ejecuta la inserción una sola vez
+  await AppDatabase.db.execute(insertStatusFolio(), [
+    const Uuid().v4(),
+    folioId,
+    nextStatus.toString(),
+    DateTime.now().toIso8601String(),
+  ]);
+
+  return nextStatus;
+}
   Future<void> pedidoPendiente(String folioId) async {
     await AppDatabase.db.execute(insertStatusFolio(), [
       const Uuid().v4(),

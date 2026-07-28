@@ -61,6 +61,8 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
         backgroundColor: const Color(0XFFF8FAFC),
         appBar: buildAppBar(),
         body: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: const Color(0XFF1D6CFF),
           onRefresh: () async => await controller.onInitDetalles(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

@@ -10,83 +10,207 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
   DetallesTrayecto({super.key, required this.state, required this.currentStep});
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      margin: EdgeInsets.zero,
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              child: Row(
-                children: [
-                  Icon(Icons.route_outlined, color: Color(0XFF64748B)),
-                  SizedBox(width: 8.0),
-                  Text(
-                    "Detalles del Trayecto",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Color(0XFF0F172A),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
+    return InkWell(
+      onTap: () async {
+        await controller.historialFolio(state?.id ?? "");
+
+        Get.bottomSheet(
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            width: Get.size.width,
+            height: Get.size.height / 2,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            SizedBox(height: 8.0),
-            Obx(() {
-              final steps = [
-                {"title": "Por iniciar", "icon": Icons.local_shipping_outlined},
-                {"title": "En ruta", "icon": Icons.location_on_outlined},
-                {"title": "En Sitio", "icon": Icons.place_outlined},
-                {"title": "Entregado", "icon": Icons.check_circle_outline},
-              ];
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(steps.length * 2 - 1, (i) {
-                  if (i.isEven) {
-                    final index = i ~/ 2;
-
-                    return Expanded(
-                      child: _step(
-                        colorStatus: int.parse(
-                          state?.statusColor.toString() ?? "0xFF9E9E9E",
-                        ),
-                        title: steps[index]["title"] as String,
-                        icon: steps[index]["icon"] as IconData,
-                        active: currentStep >= index,
-                        completed: currentStep > index,
-                        isLast: index == steps.length - 1,
-                      ),
-                    );
-                  }
-
-                  final leftIndex = i ~/ 2;
-
-                  return Container(
-                    width: 40,
-                    margin: const EdgeInsets.only(top: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 30,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: currentStep > leftIndex
-                          ? Color(
-                              int.parse(
-                                state?.statusColor.toString() ?? "0xFF9E9E9E",
-                              ),
-                            )
-                          : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                  );
-                }),
-              );
-            }),
-          ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.route_outlined, color: Color(0xFF64748B)),
+                        SizedBox(width: 8.0),
+                        Text(
+                          "Detalles del Trayecto",
+                          style: TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22C55E),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Entregado",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child: Obx(() {
+                    final historialList = controller.historialList;
+
+                    if (historialList.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return ListView.builder(
+                      itemCount: historialList.length,
+                      itemBuilder: (context, index) {
+                        final item = historialList[index];
+
+                        final String createdAt = item.created_at ?? '';
+                        final String statusName =
+                            item.status ?? 'Actualización';
+                        final String description =
+                            item.tiporefaccion ??
+                            item.tiporeporte ??
+                            'Sin descripción adicional';
+
+                        // Obtenemos el color dinámico del registro
+                        final String? colorHex = item.statusColor;
+
+                        bool isLast = index == historialList.length - 1;
+                        bool isWarning = statusName.toLowerCase().contains(
+                          'pospuso',
+                        );
+
+                        return _buildTimelineItem(
+                          time: createdAt,
+                          statusName: statusName,
+                          description: description,
+                          // Aquí aplicamos la conversión del color del status de cada item:
+                          statusColorHex: colorHex,
+                          isWarning: isWarning,
+                          isFirst: index == 0,
+                          isLast: isLast,
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          isScrollControlled: true,
+        );
+      },
+      child: Card(
+        color: Colors.white,
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.route_outlined, color: Color(0XFF64748B)),
+                        SizedBox(width: 8.0),
+                        Text(
+                          "Detalles del Trayecto",
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            color: Color(0XFF0F172A),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Icon(Icons.arrow_forward_ios),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.0),
+              Obx(() {
+                final steps = [
+                  {
+                    "title": "Por iniciar",
+                    "icon": Icons.local_shipping_outlined,
+                  },
+                  {"title": "En ruta", "icon": Icons.location_on_outlined},
+                  {"title": "En Sitio", "icon": Icons.place_outlined},
+                  {"title": "Entregado", "icon": Icons.check_circle_outline},
+                ];
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(steps.length * 2 - 1, (i) {
+                    if (i.isEven) {
+                      final index = i ~/ 2;
+
+                      return Expanded(
+                        child: _step(
+                          colorStatus: int.parse(
+                            state?.statusColor.toString() ?? "0xFF9E9E9E",
+                          ),
+                          title: steps[index]["title"] as String,
+                          icon: steps[index]["icon"] as IconData,
+                          active: currentStep >= index,
+                          completed: currentStep > index,
+                          isLast: index == steps.length - 1,
+                        ),
+                      );
+                    }
+
+                    final leftIndex = i ~/ 2;
+
+                    return Container(
+                      width: 40,
+                      margin: const EdgeInsets.only(top: 16),
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: currentStep > leftIndex
+                            ? Color(
+                                int.parse(
+                                  state?.statusColor.toString() ?? "0xFF9E9E9E",
+                                ),
+                              )
+                            : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    );
+                  }),
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -142,6 +266,125 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
             fontSize: 11,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
             color: active ? Colors.black87 : Colors.grey.shade500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color parseColor(String? hexColor) {
+    if (hexColor == null || hexColor.isEmpty) {
+      return const Color(0xFF22C55E); // Color por defecto (Verde)
+    }
+    try {
+      String cleanedHex = hexColor
+          .replaceAll('#', '')
+          .replaceAll('0X', '')
+          .replaceAll('0x', '');
+
+      if (cleanedHex.length == 6) {
+        cleanedHex =
+            'FF$cleanedHex'; // Agrega opacidad completa si solo trae 6 caracteres
+      }
+      return Color(int.parse(cleanedHex, radix: 16));
+    } catch (e) {
+      return const Color(0xFF22C55E); // Fallback si hay error de formato
+    }
+  }
+
+  Widget _buildTimelineItem({
+    required String time,
+    required String statusName,
+    required String description,
+    required String? statusColorHex,
+    bool isWarning = false,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    // Función auxiliar para convertir HEX / 0X a Color de Flutter
+    Color parseColor(String? hexColor) {
+      if (hexColor == null || hexColor.isEmpty) {
+        return const Color(0xFF22C55E); // Color por defecto (Verde)
+      }
+      try {
+        String cleanedHex = hexColor
+            .replaceAll('#', '')
+            .replaceAll('0X', '')
+            .replaceAll('0x', '');
+
+        if (cleanedHex.length == 6) {
+          cleanedHex = 'FF$cleanedHex';
+        }
+        return Color(int.parse(cleanedHex, radix: 16));
+      } catch (e) {
+        return const Color(0xFF22C55E);
+      }
+    }
+
+    // Convertimos la cadena a un objeto Color utilizable
+    final Color itemColor = parseColor(statusColorHex);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Timeline Indicator (Line and Node)
+        Column(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: itemColor, // Usamos el color ya convertido
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isWarning ? Icons.warning_amber_rounded : Icons.circle,
+                color: Colors.white,
+                size: isWarning ? 16 : 10,
+              ),
+            ),
+            if (!isLast)
+              Container(
+                width: 3,
+                height: 55, // Espacio para la línea vertical
+                color: itemColor.withValues(
+                  alpha: 0.3,
+                ), // Línea con un tono más suave del mismo color
+              ),
+          ],
+        ),
+        const SizedBox(width: 12),
+
+        // Timeline Content
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Nombre del Status
+              Text(
+                statusName.isNotEmpty ? statusName : 'Actualización',
+                style: TextStyle(
+                  color: itemColor, // Usamos el color convertido para el texto
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+
+              // 2. Descripción o detalle
+              Text(
+                description,
+                style: const TextStyle(color: Color(0xFF334155), fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+
+              // 3. Fecha / Hora
+              Text(
+                time,
+                style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ],

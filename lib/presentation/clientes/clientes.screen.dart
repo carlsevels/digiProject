@@ -83,17 +83,17 @@ class _ClientesScreenState extends State<ClientesScreen> {
                               ),
                             ],
                           ),
-                          TextButton.icon(
-                            onPressed: () => Get.toNamed(Routes.ADD_CLIENTE),
-                            icon: const Icon(
-                              Icons.add,
-                              color: Color(0XFF1D6CFF),
-                            ),
-                            label: const Text(
-                              "Agregar",
-                              style: TextStyle(color: Color(0XFF1D6CFF)),
-                            ),
-                          ),
+                          // TextButton.icon(
+                          //   onPressed: () => Get.toNamed(Routes.ADD_CLIENTE),
+                          //   icon: const Icon(
+                          //     Icons.add,
+                          //     color: Color(0XFF1D6CFF),
+                          //   ),
+                          //   label: const Text(
+                          //     "Agregar",
+                          //     style: TextStyle(color: Color(0XFF1D6CFF)),
+                          //   ),
+                          // ),
                         ],
                       ),
                       const SizedBox(height: 16),

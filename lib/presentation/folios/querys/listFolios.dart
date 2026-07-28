@@ -61,11 +61,7 @@ LEFT JOIN status st
 
 WHERE
     DATE(f."created_at") = DATE(?)
-    AND (
-        ? = 1
-        OR st.id IS NULL
-        OR st.id <> 3
-    )
+    
     AND f."isArchived" = FALSE
 
 ORDER BY f."created_at" DESC;

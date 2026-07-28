@@ -12,7 +12,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
     return Card(
       color: Colors.white,
       margin: EdgeInsets.zero,
-      elevation: 4,
+      elevation: 0,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Column(
@@ -23,7 +23,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
                   Icon(Icons.local_shipping_outlined, color: Color(0XFF64748B)),
                   SizedBox(width: 8.0),
                   Text(
-                    "Detalles del Entrega",
+                    "Detalles de Entrega",
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       color: Color(0XFF0F172A),

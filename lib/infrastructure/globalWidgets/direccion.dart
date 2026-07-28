@@ -12,7 +12,7 @@ class Direccion extends GetView<DetallesFolioController> {
     return Card(
       color: Colors.white,
       margin: EdgeInsets.zero,
-      elevation: 4,
+      elevation: 0,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Column(
@@ -60,7 +60,7 @@ class Direccion extends GetView<DetallesFolioController> {
                 ),
               ],
             ),
-            const Divider(height: 16),
+            const Divider(height: 16, color: Colors.black12,),
             Row(
               children: [
                 Icon(Icons.map, size: 16, color: Colors.grey[600]),
