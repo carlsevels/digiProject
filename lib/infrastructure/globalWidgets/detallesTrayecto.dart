@@ -60,11 +60,11 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF22C55E),
+                        color: parseColor(state?.statusColor?.toString()),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "Entregado",
+                      child: Text(
+                        state?.status ?? "",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -90,14 +90,34 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                         final item = historialList[index];
 
                         final String createdAt = item.created_at ?? '';
-                        final String statusName =
-                            item.status ?? 'Actualización';
-                        final String description =
-                            item.tiporefaccion ??
-                            item.tiporeporte ??
-                            'Sin descripción adicional';
 
-                        // Obtenemos el color dinámico del registro
+                        // Si el nombre del status viene vacío o nulo, mostramos "Por iniciar"
+                        final String statusName =
+                            (item.status != null && item.status!.isNotEmpty)
+                            ? item.status!
+                            : 'Por iniciar';
+
+                        String description = "";
+                        switch (statusName) {
+                          case "Por entregar":
+                            description = "Por iniciar recorrido";
+                            break;
+                          case "En ruta":
+                            description = "El repartidor inicio el recorrido";
+                            break;
+                          case "Pendiente":
+                            description = "No se realizó la entrega";
+                            break;
+                          case "En sitio":
+                            description =
+                                "El repartidor llegó a sitio para realizar la entrega";
+                            break;
+                          case "Entregado":
+                            description = "El repartidor realizó la entrega";
+                            break;
+                          default:
+                        }
+
                         final String? colorHex = item.statusColor;
 
                         bool isLast = index == historialList.length - 1;
@@ -107,10 +127,11 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
                         return _buildTimelineItem(
                           time: createdAt,
-                          statusName: statusName,
+                          statusName:
+                              statusName, // <-- Pasamos el texto del status
                           description: description,
-                          // Aquí aplicamos la conversión del color del status de cada item:
-                          statusColorHex: colorHex,
+                          statusColorHex:
+                              colorHex, // <-- Pasamos el color en hexadecimal
                           isWarning: isWarning,
                           isFirst: index == 0,
                           isLast: isLast,
