@@ -15,7 +15,7 @@ class Folios {
   String? statusColor;
   String? folioId;
   String? folioIdHistorial;
-  int? isArchived;
+  bool? isArchived;
   String? calle;
   String? colonia;
   String? codigoPostal;
@@ -57,9 +57,20 @@ class Folios {
     cantidad = json['cantidad']?.toString();
     statusId = json['statusid']?.toString();
     tipofolio = json['tipofolio']?.toString();
-    isArchived = json['isArchived'] is bool
-        ? (json['isArchived'] ? 1 : 0)
-        : int.tryParse(json['isArchived']?.toString() ?? '0') ?? 0;
+
+    // Mapeo robusto que soporta bool, int (1/0) y String desde PowerSync/Supabase
+    final rawArchived = json['isArchived'];
+    if (rawArchived is bool) {
+      isArchived = rawArchived;
+    } else if (rawArchived is int) {
+      isArchived = rawArchived == 1; // 1 es true, 0 es false
+    } else if (rawArchived != null) {
+      final str = rawArchived.toString().toLowerCase();
+      isArchived = str == 'true' || str == '1';
+    } else {
+      isArchived = false;
+    }
+
     nombreComercial = json['nombreComercial']?.toString();
     tiporefaccion = json['tipoRefaccion']?.toString();
     tiporeporte = json['tipoReporte']?.toString();

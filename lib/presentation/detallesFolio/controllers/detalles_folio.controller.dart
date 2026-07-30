@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
+import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/getHistorialFolio.dart';
@@ -75,6 +76,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       }
 
       print("Folio: ${jsonEncode(folio)}");
+      print("state!.isArchived: ${folio.isArchived}");
       change(folio, status: RxStatus.success());
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
@@ -188,38 +190,40 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         return SizedBox.shrink();
     }
   }
-Future<int?> changeStatus(String statusId, String folioId) async {
-  int? nextStatus;
-  
-  if (folioId.isEmpty) {
-    print("Error: folioId vacío en changeStatus");
-    return null;
-  }
 
-  switch (statusId) {
-    case "1" || "4":
-      nextStatus = 2;
-      break;
-    case "2":
-      nextStatus = 5;
-      break;
-    case "5":
-      nextStatus = 3;
-      break;
-    default:
+  Future<int?> changeStatus(String statusId, String folioId) async {
+    int? nextStatus;
+
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en changeStatus");
       return null;
+    }
+
+    switch (statusId) {
+      case "1" || "4":
+        nextStatus = 2;
+        break;
+      case "2":
+        nextStatus = 5;
+        break;
+      case "5":
+        nextStatus = 3;
+        break;
+      default:
+        return null;
+    }
+
+    // Se ejecuta la inserción una sola vez
+    await AppDatabase.db.execute(insertStatusFolio(), [
+      const Uuid().v4(),
+      folioId,
+      nextStatus.toString(),
+      DateTime.now().toIso8601String(),
+    ]);
+
+    return nextStatus;
   }
 
-  // Se ejecuta la inserción una sola vez
-  await AppDatabase.db.execute(insertStatusFolio(), [
-    const Uuid().v4(),
-    folioId,
-    nextStatus.toString(),
-    DateTime.now().toIso8601String(),
-  ]);
-
-  return nextStatus;
-}
   Future<void> pedidoPendiente(String folioId) async {
     await AppDatabase.db.execute(insertStatusFolio(), [
       const Uuid().v4(),
@@ -243,6 +247,54 @@ Future<int?> changeStatus(String statusId, String folioId) async {
       }
     } catch (e) {
       print('Error llamada: $e');
+    }
+  }
+
+  Future<void> archivarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute(
+        '''
+        UPDATE folios 
+        SET "isArchived" = true 
+        WHERE "folioId" = ?;
+        ''',
+        [folioId],
+      );
+      await onInitDetalles();
+      return null;
+    } catch (e) {
+      print("Error al archivar folio: $e");
+      return null;
+    }
+  }
+
+  Future<void> restaurarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute(
+        '''
+        UPDATE folios 
+        SET "isArchived" = false 
+        WHERE "folioId" = ?;
+        ''',
+        [folioId],
+      );
+      await onInitDetalles();
+      return null;
+    } catch (e) {
+      print("Error al archivar folio: $e");
+      return null;
+    }
+  }
+
+  Future<void> eliminarFolio(String folioId) async {
+    try {
+      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
+        folioId,
+      ]);
+      Get.toNamed(Routes.FOLIOS);
+    } catch (e) {
+      print("Error de SQL: ${e.toString()}");
+      return null;
     }
   }
 }

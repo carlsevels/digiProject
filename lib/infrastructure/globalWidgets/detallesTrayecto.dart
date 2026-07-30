@@ -13,7 +13,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
     return InkWell(
       onTap: () async {
         await controller.historialFolio(state?.id ?? "");
-
         Get.bottomSheet(
           Container(
             padding: const EdgeInsets.only(top: 16.0, left: 8, right: 8),
@@ -22,6 +21,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              border: BoxBorder.fromBorderSide(BorderSide(color: Colors.grey)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +141,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                             break;
                           case "En sitio":
                             description =
-                                "El repartidor llegó a sitio para realizar la entrega";
+                                "Se llegó a sitio para realizar la entrega";
                             break;
                           case "Entregado":
                             description = "El repartidor realizó la entrega";
@@ -153,7 +153,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
                         bool isLast = index == historialList.length - 1;
                         bool isWarning = statusName.toLowerCase().contains(
-                          'pospuso',
+                          'pendiente',
                         );
 
                         return _buildTimelineItem(
@@ -177,6 +177,10 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
       },
       child: Card(
         color: Colors.white,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: Colors.grey),
+          borderRadius: BorderRadiusGeometry.circular(4),
+        ),
         margin: EdgeInsets.zero,
         elevation: 0,
         child: Padding(
@@ -324,7 +328,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
   Color parseColor(String? hexColor) {
     if (hexColor == null || hexColor.isEmpty) {
-      return const Color(0xFF22C55E); // Color por defecto (Verde)
+      return const Color(0xFF22C55E);
     }
     try {
       String cleanedHex = hexColor
@@ -333,12 +337,11 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
           .replaceAll('0x', '');
 
       if (cleanedHex.length == 6) {
-        cleanedHex =
-            'FF$cleanedHex'; // Agrega opacidad completa si solo trae 6 caracteres
+        cleanedHex = 'FF$cleanedHex';
       }
       return Color(int.parse(cleanedHex, radix: 16));
     } catch (e) {
-      return const Color(0xFF22C55E); // Fallback si hay error de formato
+      return const Color(0xFF22C55E);
     }
   }
 
@@ -351,7 +354,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
     bool isFirst = false,
     bool isLast = false,
   }) {
-    // Función auxiliar para convertir HEX a Color de Flutter
     Color parseColor(String? hexColor) {
       if (hexColor == null || hexColor.isEmpty) {
         return const Color(0xFF22C55E);
@@ -371,17 +373,21 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
       }
     }
 
-    // Función auxiliar para formatear la fecha a "hh:mm"
     String formatTimeToHour(String rawTime) {
       if (rawTime.isEmpty) return '';
       try {
         DateTime parsedDate = DateTime.parse(rawTime);
-        // Extrae hora y minuto con ceros a la izquierda si es necesario
+
+        String day = parsedDate.day.toString().padLeft(2, '0');
+        String month = parsedDate.month.toString().padLeft(2, '0');
+        String year = parsedDate.year.toString();
+
         String hour = parsedDate.hour.toString().padLeft(2, '0');
         String minute = parsedDate.minute.toString().padLeft(2, '0');
-        return '$hour:$minute';
+
+        return '$day-$month-$year $hour:$minute';
       } catch (e) {
-        return rawTime; // Devuelve el texto original si falla el parseo
+        return rawTime;
       }
     }
 
@@ -436,7 +442,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
               ),
               const SizedBox(height: 4),
 
-              // Hora formateada (hh:mm)
               Text(
                 formattedTime,
                 style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),

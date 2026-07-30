@@ -10,6 +10,10 @@ class Direccion extends GetView<DetallesFolioController> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.grey),
+        borderRadius: BorderRadiusGeometry.circular(4),
+      ),
       color: Colors.white,
       margin: EdgeInsets.zero,
       elevation: 0,
@@ -60,7 +64,7 @@ class Direccion extends GetView<DetallesFolioController> {
                 ),
               ],
             ),
-            const Divider(height: 16, color: Colors.black12,),
+            const Divider(height: 16, color: Colors.black12),
             Row(
               children: [
                 Icon(Icons.map, size: 16, color: Colors.grey[600]),

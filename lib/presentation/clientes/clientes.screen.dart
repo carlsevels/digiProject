@@ -40,6 +40,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
       (state) {
         final list = state ?? [];
         return Scaffold(
+          backgroundColor: const Color(0XFFF8FAFC),
           appBar: AppBar(
             title: SizedBox(
               width: 120,
@@ -351,7 +352,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                       "${cliente.id} - ${cliente.nombreComercial} - ${cliente.razonSocial}",
                     ),
                     subtitle: Text(cliente.municipio ?? "Sin ubicación"),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                    //trailing: Icon(Icons.arrow_forward_ios, size: 16),
                   ),
                 );
               },

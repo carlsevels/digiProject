@@ -1,5 +1,4 @@
 import 'package:bitacora_frontend/infrastructure/globalWidgets/appBarWithoutImage.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/btnGoogleMaps.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/btnSlideStatus.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
@@ -66,7 +65,16 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
               ? BtnSliderStatus(state: state)
               : SizedBox.shrink(),
           backgroundColor: Color(0XFFF8FAFC),
-          appBar: AppBarWithoutImage(title: "Detalles de Folio"),
+          appBar: AppBarWithoutImage(
+            title: "Detalles de Folio",
+            state: state,
+            onPressedArchived: () =>
+                controller.archivarFolio(state?.folioId ?? ""),
+            onPressedDeleted: () =>
+                controller.eliminarFolio(state?.folioId ?? ""),
+            onPressedRestaurar: () =>
+                controller.restaurarFolio(state?.folioId ?? ""),
+          ),
           body: RefreshIndicator(
             color: Colors.white,
             backgroundColor: const Color(0XFF1D6CFF),
@@ -83,36 +91,79 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                     Container(
                       width: Get.size.width,
                       height: 30,
-                      child: Marquee(
-                        text:
-                            "Folio: ${state?.folioId} - ${state?.condicionPago} - "
-                            "${_formatFecha(state?.created_at)}",
-                        style: const TextStyle(
-                          color: Color(0XFF64748B),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        scrollAxis: Axis.horizontal,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        blankSpace: 50.0,
-                        velocity: 50.0,
-                        pauseAfterRound: const Duration(seconds: 1),
-                        startPadding: 10.0,
-                        accelerationDuration: const Duration(seconds: 1),
-                        decelerationDuration: const Duration(milliseconds: 500),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Marquee(
+                              text:
+                                  "Folio: ${state?.folioId} - ${state?.condicionPago} - "
+                                  "${_formatFecha(state?.created_at)}",
+                              style: const TextStyle(
+                                color: Color(0XFF64748B),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              scrollAxis: Axis.horizontal,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              blankSpace: 50.0,
+                              velocity: 50.0,
+                              pauseAfterRound: const Duration(seconds: 1),
+                              startPadding: 10.0,
+                              accelerationDuration: const Duration(seconds: 1),
+                              decelerationDuration: const Duration(
+                                milliseconds: 500,
+                              ),
+                            ),
+                          ),
+                          if (state?.isArchived ?? false)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 6.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(20.0),
+                                border: Border.all(
+                                  color: Colors.orange,
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.archive_outlined,
+                                    color: Color(0xFFFEF3C7),
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "ARCHIVADO",
+                                    style: TextStyle(
+                                      color: Color(0xFFFEF3C7),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     RepartidorDetalles(state: state),
-                    Divider(height: 16),
+                    SizedBox(height: 16),
                     DetallesTrayecto(
                       state: state,
                       currentStep: controller.currentStep,
                     ),
-                    Divider(height: 16),
+                    SizedBox(height: 16),
                     DetallesEntrega(state: state),
-                    Divider(height: 16),
+                    SizedBox(height: 16),
                     Direccion(state: state),
-                    Divider(height: 16),
+
                     // BtnGoogleMaps(state: state),
                     // SizedBox(height: 32.0),
                   ],

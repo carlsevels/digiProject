@@ -3,6 +3,7 @@ String folioId() {
 SELECT 
     f.id, 
     f."folioId", 
+    f."isArchived", 
     f.created_at,
     f.cantidad,
     t.nombre as tipofolioid,

@@ -10,6 +10,10 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.grey),
+        borderRadius: BorderRadiusGeometry.circular(4),
+      ),
       color: Colors.white,
       margin: EdgeInsets.zero,
       elevation: 0,

@@ -688,12 +688,14 @@ class FoliosScreen extends GetView<FoliosController> {
                                     color: Color(0XFF64748B),
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    folio.folioId.toString(),
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0XFF64748B),
-                                      fontWeight: FontWeight.w500,
+                                  Flexible(
+                                    child: Text(
+                                      folio.folioId.toString(),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Color(0XFF64748B),
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],

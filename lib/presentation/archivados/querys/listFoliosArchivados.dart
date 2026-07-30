@@ -10,7 +10,8 @@ SELECT
     rp.nombre AS repartidor,
     m.nombre AS municipio,
     st.nombre AS status,
-    st.color AS statuscolor
+    st.color AS statuscolor,
+    f."isArchived"
 FROM folios f
 LEFT JOIN tipos t ON f."tipoFolioId" = t.id
 LEFT JOIN clientes c ON f."clienteId" = c.id
@@ -30,7 +31,7 @@ LEFT JOIN (
     ) h2 ON h1."folioId" = h2."folioId" AND h1.created_at = h2.max_date
 ) h ON f.id = h."folioId"
 LEFT JOIN status st ON h."statusId" = st.id
-WHERE f."isArchived" = 1
+WHERE f."isArchived" = TRUE
   AND (? = 1 OR (st.id != 3 OR st.id IS NULL))
   AND (? = '' OR CAST(f."folioId" AS TEXT) LIKE '%' || ? || '%')
 ''';

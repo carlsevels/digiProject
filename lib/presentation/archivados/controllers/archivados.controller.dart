@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/archivados/querys/listFoliosArchivados.dart';
@@ -74,11 +76,12 @@ class ArchivadosController extends GetxController
                 Folios.fromJson(Map<String, dynamic>.from(element as Map)),
           )
           .toList();
-      if (listFolios.isEmpty) {
-        await getDatos();
+      await getDatos();
 
+      if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {
+        print("listFolios Archivados: ${jsonEncode(listFolios)}");
         change(listFolios, status: RxStatus.success());
       }
     } catch (e) {

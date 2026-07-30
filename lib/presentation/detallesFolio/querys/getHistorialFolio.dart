@@ -9,5 +9,6 @@ SELECT
 FROM historialestados as h
 INNER JOIN status AS s ON h."statusId" = s.id
 WHERE h."folioId" = ?
+ORDER BY h."created_at" DESC
 ''';
 }
