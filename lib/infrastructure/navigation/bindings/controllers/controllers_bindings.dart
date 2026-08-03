@@ -8,6 +8,7 @@ export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/folios.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/home.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/login.controller.binding.dart'; 
+export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/organigrama.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/profile.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/refacciones.controller.binding.dart'; 
 export 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/search_folio.controller.binding.dart'; 

@@ -8,6 +8,7 @@ export 'package:bitacora_frontend/presentation/detallesFolio/detalles_folio.scre
 export 'package:bitacora_frontend/presentation/folios/folios.screen.dart';
 export 'package:bitacora_frontend/presentation/home/home.screen.dart';
 export 'package:bitacora_frontend/presentation/login/login.screen.dart';
+export 'package:bitacora_frontend/presentation/organigrama/organigrama.screen.dart';
 export 'package:bitacora_frontend/presentation/profile/profile.screen.dart';
 export 'package:bitacora_frontend/presentation/refacciones/refacciones.screen.dart';
 export 'package:bitacora_frontend/presentation/searchFolio/search_folio.screen.dart';

@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,15 @@ void main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyYXhpZ3BnZGNrcG5vaXNhY3FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjA1MzMsImV4cCI6MjA5ODQ5NjUzM30.MGW4lO0aYTReI5pT393kMOoW0hgZ4R0OFFwroNpkmoo',
   );
 
-  await AppDatabase.initialize();
+  if (!kIsWeb) {
+    // Esto solo se ejecuta en Android, iOS o Desktop (donde FFI funciona)
+    await AppDatabase.initialize();
+  } else {
+    // TODO: Si estás usando Drift/SQLite en Web, aquí debes inicializar
+    // la versión compatible con WebAssembly (WASM) / IndexedDB.
+    // Si tu app en web solo se comunica directo con Supabase sin base local FFI,
+    // puedes omitir esto o inicializar la versión web de tu DB.
+  }
 
   final supabase = Supabase.instance.client;
   final session = supabase.auth.currentSession;

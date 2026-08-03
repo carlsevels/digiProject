@@ -1,11 +1,10 @@
 // Ejemplo de cómo suele verse la configuración
-import 'dart:convert';
 
 import 'package:powersync/powersync.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:powersync/powersync.dart';
+import 'package:flutter/foundation.dart';
 
 class MyBackendConnector extends PowerSyncBackendConnector {
   PowerSyncDatabase db;
@@ -122,10 +121,18 @@ class AppDatabase {
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
-    final dir = await getApplicationDocumentsDirectory();
-    final path = join(dir.path, 'database.sqlite');
+    String dbPath;
 
-    _db = PowerSyncDatabase(schema: schema, path: path);
+    if (kIsWeb) {
+      // En Web, PowerSync utiliza almacenamiento interno administrado (IndexedDB / OPFS)
+      dbPath = 'database.sqlite';
+    } else {
+      // En Android, iOS y Escritorio (Nativo)
+      final dir = await getApplicationDocumentsDirectory();
+      dbPath = join(dir.path, 'database.sqlite');
+    }
+
+    _db = PowerSyncDatabase(schema: schema, path: dbPath);
     await _db.initialize();
 
     await _db.connect(connector: MyBackendConnector(_db));

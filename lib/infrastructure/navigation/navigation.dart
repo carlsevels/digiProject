@@ -105,5 +105,10 @@ class Nav {
       page: () => const AddUsuarioScreen(),
       binding: AddUsuarioControllerBinding(),
     ),
+    GetPage(
+      name: Routes.ORGANIGRAMA,
+      page: () => OrganigramaScreen(),
+      binding: OrganigramaControllerBinding(),
+    ),
   ];
 }
