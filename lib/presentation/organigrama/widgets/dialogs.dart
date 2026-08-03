@@ -1,3 +1,4 @@
+import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
 import 'package:flutter/material.dart';
 
 /// Dialog for adding or editing nodes
@@ -5,7 +6,7 @@ class NodeDialog extends StatefulWidget {
   final String title;
   final String initialName;
   final String? initialParentId;
-  final List<Map<String, dynamic>> availableParents;
+  final List<Organigrama> availableParents;
   final bool isNewNode;
 
   const NodeDialog({
@@ -61,8 +62,8 @@ class _NodeDialogState extends State<NodeDialog> {
                   child: Text('Root Node'),
                 ),
                 ...widget.availableParents.map((item) => DropdownMenuItem(
-                      value: item['id'] as String,
-                      child: Text(item['name'] as String),
+                      value: item.id as String,
+                      child: Text(item.name as String),
                     )),
               ],
               onChanged: (value) {

@@ -1,3 +1,5 @@
+import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
+import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/presentation/organigrama/models/chart_config.dart';
 import 'package:bitacora_frontend/presentation/organigrama/utils/chart_utils.dart';
 import 'package:bitacora_frontend/presentation/organigrama/widgets/chart_node_widget.dart';
@@ -32,34 +34,32 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
       ),
       body: Row(
         children: [
-          // Left Sidebar
-          ChartOptionsSidebar(
-            config: controller.config,
-            controller: controller.controllerChart,
-            interactiveViewerController: controller.interactiveController,
-            onConfigChanged: (newConfig) {
-              // Check if leaf column count has changed
-              if (controller.config.leafColumnCount !=
-                  newConfig.leafColumnCount) {
-                controller.controllerChart.leafColumns =
-                    newConfig.leafColumnCount;
-                controller.controllerChart.calculatePosition();
-              }
+          // // Left Sidebar
+          // ChartOptionsSidebar(
+          //   config: controller.config,
+          //   controller: controller.controllerChart,
+          //   interactiveViewerController: controller.interactiveController,
+          //   onConfigChanged: (newConfig) {
+          //     // Check if leaf column count has changed
+          //     if (controller.config.leafColumnCount !=
+          //         newConfig.leafColumnCount) {
+          //       controller.controllerChart.leafColumns =
+          //           newConfig.leafColumnCount;
+          //       controller.controllerChart.calculatePosition();
+          //     }
 
-              controller.config = newConfig;
-            },
-            onAddNodePressed: () {
-              _showAddNodeDialog(context);
-            },
-            onResetLayoutPressed: () {
-              controller.controllerChart.calculatePosition();
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Layout reset')));
-            },
-          ),
-
-          // Main Content
+          //     controller.config = newConfig;
+          //   },
+          //   onAddNodePressed: () {
+          //     _showAddNodeDialog(context);
+          //   },
+          //   onResetLayoutPressed: () {
+          //     controller.controllerChart.calculatePosition();
+          //     ScaffoldMessenger.of(
+          //       context,
+          //     ).showSnackBar(const SnackBar(content: Text('Layout reset')));
+          //   },
+          // ),
           Expanded(
             flex: 3,
             child: Container(
@@ -82,78 +82,80 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     );
   }
 
-  /// Build the organization chart
   Widget _buildOrgChart(context) {
     return Stack(
       children: [
-        OrgChart<Map<String, dynamic>>(
-          controller: controller.controllerChart,
-          viewerController: controller.interactiveController,
-          builder: (details) => ChartNodeWidget(
-            details: details,
+        SizedBox.expand(
+          child: OrgChart<Organigrama>(
+            controller: controller.controllerChart,
+            viewerController: controller.interactiveController,
+            builder: (details) => ChartNodeWidget(
+              details: details,
+              cornerRadius: controller.config.cornerRadius,
+            ),
+            optionsBuilder: (item) => _buildOptionsMenu(item),
+            onOptionSelect: (item, value) {
+              _handleOptionSelect(item, value, context);
+            },
+            isDraggable: controller.config.isDraggable,
             cornerRadius: controller.config.cornerRadius,
+            arrowStyle: controller.config.arrowStyle,
+            duration: controller.config.animationDuration,
+            curve: controller.config.animationCurve,
+            lineEndingType: controller.config.lineEndingType,
+            interactionConfig: InteractionConfig(
+              enableRotation: controller.config.enableRotation,
+              constrainBounds: controller.config.constrainBounds,
+              enableFling: controller.config.enableFling,
+              scrollMode: controller.config.enablePan
+                  ? ScrollMode.both
+                  : ScrollMode.none,
+            ),
+            keyboardConfig: KeyboardConfig(
+              enableKeyboardControls: controller.config.enableKeyboardControls,
+              keyboardPanDistance: controller.config.keyboardPanDistance,
+              keyboardZoomFactor: controller.config.keyboardZoomFactor,
+              animateKeyboardTransitions:
+                  controller.config.animateKeyboardTransitions,
+              keyboardAnimationCurve: controller.config.keyboardAnimationCurve,
+              keyboardAnimationDuration:
+                  controller.config.keyboardAnimationDuration,
+              invertArrowKeyDirection: controller.config.invertArrowKeyDirection,
+              enableKeyRepeat: controller.config.enableKeyRepeat,
+              keyRepeatInitialDelay: controller.config.keyRepeatInitialDelay,
+              keyRepeatInterval: controller.config.keyRepeatInterval,
+            ),
+            zoomConfig: ZoomConfig(
+              minScale: controller.config.minScale,
+              maxScale: controller.config.maxScale,
+              enableZoom: controller.config.enableZoom,
+              enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
+              doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
+              enableCtrlScrollToScale: controller.config.enableCtrlScrollToScale,
+            ),
+            focusNode: controller.focusNode,
+            linePaint: controller.config.getLinePaint(context),
+            onDrop: (dragged, target, isTargetSubnode) {
+              if (isTargetSubnode) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Cannot drop a node onto its own child'),
+                  ),
+                );
+                controller.controllerChart.calculatePosition();
+                return;
+              }
+          
+              if (dragged.parent == target.id) {
+                controller.controllerChart.calculatePosition();
+                return;
+              }
+          
+              // Actualizamos la propiedad directamente en el objeto GeneralModel
+              dragged.parent = target.id;
+              controller.controllerChart.updateItem(dragged);
+            },
           ),
-          optionsBuilder: (item) => _buildOptionsMenu(item),
-          onOptionSelect: (item, value) {
-            _handleOptionSelect(item, value, context);
-          },
-          isDraggable: controller.config.isDraggable,
-          cornerRadius: controller.config.cornerRadius,
-          arrowStyle: controller.config.arrowStyle,
-          duration: controller.config.animationDuration,
-          curve: controller.config.animationCurve,
-          lineEndingType: controller.config.lineEndingType,
-          interactionConfig: InteractionConfig(
-            enableRotation: controller.config.enableRotation,
-            constrainBounds: controller.config.constrainBounds,
-            enableFling: controller.config.enableFling,
-            scrollMode: controller.config.enablePan
-                ? ScrollMode.both
-                : ScrollMode.none,
-          ),
-          keyboardConfig: KeyboardConfig(
-            enableKeyboardControls: controller.config.enableKeyboardControls,
-            keyboardPanDistance: controller.config.keyboardPanDistance,
-            keyboardZoomFactor: controller.config.keyboardZoomFactor,
-            animateKeyboardTransitions:
-                controller.config.animateKeyboardTransitions,
-            keyboardAnimationCurve: controller.config.keyboardAnimationCurve,
-            keyboardAnimationDuration:
-                controller.config.keyboardAnimationDuration,
-            invertArrowKeyDirection: controller.config.invertArrowKeyDirection,
-            enableKeyRepeat: controller.config.enableKeyRepeat,
-            keyRepeatInitialDelay: controller.config.keyRepeatInitialDelay,
-            keyRepeatInterval: controller.config.keyRepeatInterval,
-          ),
-          zoomConfig: ZoomConfig(
-            minScale: controller.config.minScale,
-            maxScale: controller.config.maxScale,
-            enableZoom: controller.config.enableZoom,
-            enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
-            doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
-            enableCtrlScrollToScale: controller.config.enableCtrlScrollToScale,
-          ),
-          focusNode: controller.focusNode,
-          linePaint: controller.config.getLinePaint(context),
-          onDrop: (dragged, target, isTargetSubnode) {
-            if (isTargetSubnode) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Cannot drop a node onto its own child'),
-                ),
-              );
-              controller.controllerChart.calculatePosition();
-              return;
-            }
-
-            if (dragged['parent'] == target['id']) {
-              controller.controllerChart.calculatePosition();
-              return;
-            }
-
-            final updatedItem = {...dragged, "parent": target['id']};
-            controller.controllerChart.updateItem(updatedItem);
-          },
         ),
         if (controller.focusNode.hasFocus)
           IgnorePointer(
@@ -233,10 +235,10 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     );
   }
 
-  List<PopupMenuEntry<String>> _buildOptionsMenu(Map<String, dynamic> item) {
+  List<PopupMenuEntry<String>> _buildOptionsMenu(Organigrama item) {
     final List<PopupMenuEntry<String>> options = [];
 
-    if (item['parent'] != null) {
+    if (item.parent != null) {
       options.add(
         PopupMenuItem(
           value: 'remove',
@@ -275,7 +277,7 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     return options;
   }
 
-  void _handleOptionSelect(Map<String, dynamic> item, dynamic value, context) {
+  void _handleOptionSelect(Organigrama item, dynamic value, context) {
     switch (value) {
       case 'remove':
         _removeNode(item, context);
@@ -292,10 +294,10 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  void _removeNode(Map<String, dynamic> item, context) {
+  void _removeNode(Organigrama item, context) {
     try {
       controller.controllerChart.removeItem(
-        item['id'],
+        item.id.toString(),
         ActionOnNodeRemoval.removeDescendants,
       );
     } catch (e) {
@@ -304,40 +306,40 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
   }
 
   /// Edit an existing node
-  void _handleEditNode(Map<String, dynamic> item, context) async {
-    final result = await showDialog<Map<String, dynamic>>(
+  void _handleEditNode(Organigrama item, context) async {
+    final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
         title: 'Edit Node',
-        initialName: item['name'],
+        initialName: item.name ?? "",
         isNewNode: false,
         availableParents: controller.controllerChart.items,
       ),
     );
 
-    if (result != null && result['name'] != null && result['name'].isNotEmpty) {
-      item['name'] = result['name'];
+    if (result != null && result.name != null && result.name!.isNotEmpty) {
+      item.name = result.name;
     }
   }
 
-  void _addChildNode(Map<String, dynamic> item, context) async {
-    final result = await showDialog<Map<String, dynamic>>(
+  void _addChildNode(Organigrama item, context) async {
+    final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
         title: 'Add Child Node',
-        initialParentId: item['id'],
+        initialParentId: item.name,
         isNewNode: true,
         availableParents: controller.controllerChart.items,
       ),
     );
 
-    if (result != null && result['name'] != null && result['name'].isNotEmpty) {
-      final newNode = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'parent': item['id'],
-        'name': result['name'],
-        'color': Colors.blue,
-      };
+    if (result != null && result.name != null && result.name!.isNotEmpty) {
+      final newNode = Organigrama(
+        id: DateTime.now().millisecondsSinceEpoch,
+        parent: item.id,
+        name: result.name,
+        color: "",
+      );
 
       controller.controllerChart.addItem(newNode);
     }
@@ -345,7 +347,7 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
 
   /// Show dialog to add a new node
   void _showAddNodeDialog(context) async {
-    final result = await showDialog<Map<String, dynamic>>(
+    final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
         title: 'Add New Node',
@@ -354,20 +356,20 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
       ),
     );
 
-    if (result != null && result['name'] != null && result['name'].isNotEmpty) {
-      final newNode = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'parent': result['parentId'],
-        'name': result['name'],
-        'color': Colors.blue,
-      };
+    if (result != null && result.name != null && result.name!.isNotEmpty) {
+      final newNode = Organigrama(
+        id: DateTime.now().millisecondsSinceEpoch,
+        parent: result.parent,
+        name: result.name,
+        color: "",
+      );
 
       controller.controllerChart.addItem(newNode);
     }
   }
 
   /// Change the color of a node
-  void _changeNodeColor(Map<String, dynamic> item, context) async {
+  void _changeNodeColor(Organigrama item, context) async {
     final result = await showDialog<Color?>(
       context: context,
       builder: (context) =>
@@ -375,7 +377,7 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     );
 
     if (result != null) {
-      item['color'] = result;
+      item.color = result.toString();
     }
   }
 

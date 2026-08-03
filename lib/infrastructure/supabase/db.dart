@@ -146,58 +146,30 @@ final schema = Schema([
   Table('roles', [
     Column.text('created_at'),
     Column.text('name'),
-    Column.text('color'),
+    Column.text('color')
   ]),
-  Table('municipios', [Column.text('created_at'), Column.text('nombre')]),
-  Table('condicionPago', [Column.text('created_at'), Column.text('nombre')]),
+  Table('municipios', [
+    Column.text('created_at'),
+    Column.text('nombre')
+  ]),
+  Table('condicionPago', [
+    Column.text('created_at'),
+    Column.text('nombre')
+  ]),
   Table('status', [
     Column.text('created_at'),
     Column.text('nombre'),
-    Column.text('color'),
+    Column.text('color')
   ]),
   Table('tipos', [
     Column.text('created_at'),
     Column.text('nombre'),
-    Column.text('color'),
+    Column.text('color')
   ]),
   Table('clientes', [
     Column.text('created_at'),
     Column.text('razonSocial'),
-    Column.text('nombreComercial'),
-  ]),
-  Table('datosPersonales', [
-    Column.text('created_at'),
-    Column.text('nombre'),
-    Column.text('apellidoPaterno'),
-    Column.text('apellidoMaterno'),
-    Column.text('userId'),
-    Column.integer('rolId'),
-  ]),
-  Table('folios', [
-    Column.text('created_at'),
-    Column.integer('tipoFolioId'),
-    Column.integer('clienteId'),
-    Column.text('cantidad'),
-    Column.integer('typeRefaccionId'),
-    Column.integer('condicionDePagoId'),
-    Column.integer('statusId'),
-    Column.text('creadorId'),
-    Column.text('repartidorId'),
-    Column.text('folioId'),
-    Column.integer('isArchived'),
-  ]),
-  Table('historialestados', [
-    Column.text('created_at'),
-    Column.integer('statusId'),
-    Column.text('hora'),
-    Column.text('descripcion'),
-    Column.text('folioId'),
-  ]),
-  Table('comentarios', [
-    Column.text('created_at'),
-    Column.text('userId'),
-    Column.text('folioId'),
-    Column.text('comentario'),
+    Column.text('nombreComercial')
   ]),
   Table('direcciones', [
     Column.text('created_at'),
@@ -207,6 +179,46 @@ final schema = Schema([
     Column.text('numExt'),
     Column.text('numInt'),
     Column.integer('municipioId'),
-    Column.integer('clienteId'),
+    Column.integer('clienteId')
   ]),
+  Table('datosPersonales', [
+    Column.text('created_at'),
+    Column.text('nombre'),
+    Column.text('apellidoPaterno'),
+    Column.text('apellidoMaterno'),
+    Column.text('userId'),
+    Column.integer('rolId')
+  ]),
+  Table('folios', [
+    Column.text('created_at'),
+    Column.integer('tipoFolioId'),
+    Column.integer('clienteId'),
+    Column.text('cantidad'),
+    Column.integer('typeRefaccionId'),
+    Column.integer('condicionDePagoId'),
+    Column.text('creadorId'),
+    Column.text('repartidorId'),
+    Column.text('folioId'),
+    Column.integer('isArchived')
+  ]),
+  Table('historialestados', [
+    Column.text('created_at'),
+    Column.integer('statusId'),
+    Column.text('hora'),
+    Column.text('descripcion'),
+    Column.text('folioId')
+  ]),
+  Table('comentarios', [
+    Column.text('created_at'),
+    Column.text('userId'),
+    Column.text('folioId'),
+    Column.text('comentario')
+  ]),
+  Table('organigrama', [
+    Column.text('created_at'),
+    Column.integer('parent'),
+    Column.text('name'),
+    Column.text('color'),
+    Column.text('employee_id')
+  ])
 ]);

@@ -1,9 +1,9 @@
-import 'dart:math';
+import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
 import 'package:flutter/material.dart';
 import 'package:org_chart/org_chart.dart';
 
 class ChartNodeWidget extends StatelessWidget {
-  final NodeBuilderDetails<Map<String, dynamic>> details;
+  final NodeBuilderDetails<Organigrama> details;
   final double cornerRadius;
 
   const ChartNodeWidget({
@@ -12,102 +12,87 @@ class ChartNodeWidget extends StatelessWidget {
     this.cornerRadius = 8.0,
   });
 
+  Color _parseColor(String? colorStr) {
+    switch (colorStr?.toLowerCase()) {
+      case 'blue':
+        return Colors.blue;
+      case 'orange':
+        return Colors.orange;
+      case 'purple':
+        return Colors.purple;
+      case 'teal':
+        return Colors.teal;
+      case 'indigo':
+        return Colors.indigo;
+      case 'cyan':
+        return Colors.cyan;
+      case 'amber':
+        return Colors.amber;
+      case 'brown':
+        return Colors.brown;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color nodeColor = (details.item['color'] as Color?) ?? Colors.blue;
-    final String positionName = (details.item['name'] ?? 'Puesto').toString();
+    final Organigrama model = details.item;
 
-    // Validamos de forma segura si el empleado existe o es null
-    final dynamic employeeData = details.item['employee'];
-    final bool isOccupied = employeeData != null;
-
+    final Color nodeColor = _parseColor(model.color);
+    final String positionName = model.name ?? 'Puesto';
+final bool isOccupied = model.nombre != null && model.nombre!.isNotEmpty;
     final String displayName = isOccupied
-        ? (employeeData['name'] ?? '').toString()
-        : '';
+        ? '${model.nombre} ${model.apellidoPaterno ?? ''} ${model.apellidoMaterno ?? ''}'.trim()
+        : positionName;
 
-    final String displayPhoto = isOccupied
-        ? (employeeData['photo'] ?? '').toString()
-        : '';
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cornerRadius),
-        side: BorderSide(
-          color: isOccupied
-              ? nodeColor.withAlpha(100)
-              : Colors.grey.withAlpha(100),
-          width: 2,
+    // Usamos Container con restricciones fijas o SizedBox para respetar estrictamente el boxSize del Controller
+    return SizedBox(
+      width: 180,
+      height: 90,
+      child: Card(
+        margin: EdgeInsets.zero, // Importante para que no rompa el layout del chart
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius),
+          side: BorderSide(
+            color: isOccupied ? nodeColor.withAlpha(150) : Colors.grey.withAlpha(100),
+            width: 2,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: () => details.hideNodes(center: false),
-        child: Container(
-          color: details.isBeingDragged
-              ? Colors.green.withAlpha(80)
-              : details.isOverlapped
-              ? Colors.red.withAlpha(80)
-              : null,
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: isOccupied ? nodeColor : Colors.grey[400],
                   shape: BoxShape.circle,
-                  image: displayPhoto.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(displayPhoto),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
                 ),
-                child: displayPhoto.isEmpty
-                    ? Center(
-                        child: Icon(
-                          isOccupied ? Icons.person : Icons.person_add_disabled,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      )
-                    : null,
+                child: Center(
+                  child: Icon(
+                    isOccupied ? Icons.person : Icons.person_add_disabled,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                isOccupied ? displayName : positionName,
+                displayName,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: 10,
                   color: isOccupied ? Colors.black87 : Colors.grey[800],
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (!isOccupied) ...[
-                const SizedBox(height: 2),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.redAccent.withAlpha(30),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'DISPONIBLE',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
