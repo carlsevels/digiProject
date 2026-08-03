@@ -2,9 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:org_chart/org_chart.dart';
 
-
-
-
 class ChartNodeWidget extends StatelessWidget {
   final NodeBuilderDetails<Map<String, dynamic>> details;
   final double cornerRadius;
@@ -18,18 +15,26 @@ class ChartNodeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color nodeColor = (details.item['color'] as Color?) ?? Colors.blue;
-    final bool hasVacancy = details.item['hasVacancy'] ?? true;
+    final String positionName = (details.item['name'] ?? 'Puesto').toString();
 
-    final String displayName = (details.item['name'] ?? '').toString();
-    final String displayPhoto = (details.item['photo'] ?? '').toString();
-    final String positionName = (details.item['position'] ?? 'Puesto').toString();
+    // Validamos de forma segura si el empleado existe o es null
+    final dynamic employeeData = details.item['employee'];
+    final bool isOccupied = employeeData != null;
+
+    final String displayName = isOccupied
+        ? (employeeData['name'] ?? '').toString()
+        : '';
+
+    final String displayPhoto = isOccupied
+        ? (employeeData['photo'] ?? '').toString()
+        : '';
 
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(cornerRadius),
         side: BorderSide(
-          color: hasVacancy
+          color: isOccupied
               ? nodeColor.withAlpha(100)
               : Colors.grey.withAlpha(100),
           width: 2,
@@ -51,7 +56,7 @@ class ChartNodeWidget extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: hasVacancy ? nodeColor : Colors.grey[400],
+                  color: isOccupied ? nodeColor : Colors.grey[400],
                   shape: BoxShape.circle,
                   image: displayPhoto.isNotEmpty
                       ? DecorationImage(
@@ -63,7 +68,7 @@ class ChartNodeWidget extends StatelessWidget {
                 child: displayPhoto.isEmpty
                     ? Center(
                         child: Icon(
-                          hasVacancy ? Icons.person : Icons.person_add_disabled,
+                          isOccupied ? Icons.person : Icons.person_add_disabled,
                           size: 16,
                           color: Colors.white,
                         ),
@@ -72,20 +77,23 @@ class ChartNodeWidget extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                hasVacancy ? displayName : positionName,
+                isOccupied ? displayName : positionName,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
-                  color: hasVacancy ? Colors.black87 : Colors.grey[800],
+                  color: isOccupied ? Colors.black87 : Colors.grey[800],
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (!hasVacancy) ...[
+              if (!isOccupied) ...[
                 const SizedBox(height: 2),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.redAccent.withAlpha(30),
                     borderRadius: BorderRadius.circular(4),

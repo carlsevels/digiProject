@@ -7,156 +7,157 @@ import 'package:org_chart/org_chart.dart';
 class OrganigramaController extends GetxController {
   //TODO: Implement OrganigramaController
 
-  final List<Map<String, dynamic>> simulatedOrgData = [
-    // --- Nivel 1 (Gerencia General - Ocupado) ---
-    {
-      'id': '1',
+final List<Map<String, dynamic>> simulatedOrgData = [
+  // --- Nivel 1 (Gerencia General - Ocupado) ---
+  {
+    'id': '1',
+    'parent': null,
+    'name': 'Gerente General',
+    'color': Colors.blue,
+    'employee': {
       'name': 'Ana Pérez',
-      'parent': null,
       'photo': 'https://randomuser.me/api/portraits/women/44.jpg',
-      'color': Colors.blue,
-      'hasVacancy': true,
-      'position': 'Gerente General',
     },
-
-    // --- Nivel 2 (Directores de Área) ---
-    {
-      'id': '2',
+  },
+  
+  // --- Nivel 2 (Directores de Área) ---
+  {
+    'id': '2',
+    'parent': '1',
+    'name': 'Director Financiero',
+    'color': Colors.orange,
+    'employee': {
       'name': 'Carlos Gómez',
-      'parent': '1',
       'photo': 'https://randomuser.me/api/portraits/men/32.jpg',
-      'color': Colors.orange,
-      'hasVacancy': true,
-      'position': 'Director Financiero',
     },
-    {
-      'id': '3',
+  },
+  {
+    'id': '3',
+    'parent': '1',
+    'name': 'Directora de Tecnología',
+    'color': Colors.purple,
+    'employee': {
       'name': 'Sofía Rodríguez',
-      'parent': '1',
       'photo': 'https://randomuser.me/api/portraits/women/68.jpg',
-      'color': Colors.purple,
-      'hasVacancy': true,
-      'position': 'Directora de Tecnología',
     },
-    {
-      'id': '4',
-      'name': 'Vacante Disponible',
-      'parent': '1',
-      'photo': '',
-      'color': Colors.teal,
-      'hasVacancy': false,
-      'position': 'Director de Operaciones',
-    },
+  },
+  {
+    'id': '4',
+    'parent': '1',
+    'name': 'Director de Operaciones',
+    'color': Colors.teal,
+    'employee': null, // Vacante (Disponible)
+  },
 
-    // --- Nivel 3 (Subgerentes - Reportan a Carlos ID: 2) ---
-    {
-      'id': '5',
+  // --- Nivel 3 (Subgerentes - Reportan a Carlos ID: 2) ---
+  {
+    'id': '5',
+    'parent': '2',
+    'name': 'Subgerente de Contabilidad',
+    'color': Colors.indigo,
+    'employee': {
       'name': 'Lucía Fernández',
-      'parent': '2',
       'photo': 'https://randomuser.me/api/portraits/women/12.jpg',
-      'color': Colors.indigo,
-      'hasVacancy': true,
-      'position': 'Subgerente de Contabilidad',
     },
-    {
-      'id': '6',
-      'name': 'Vacante Disponible',
-      'parent': '2',
-      'photo': '',
-      'color': Colors.indigo,
-      'hasVacancy': false,
-      'position': 'Subgerente de Ventas',
-    },
+  },
+  {
+    'id': '6',
+    'parent': '2',
+    'name': 'Subgerente de Ventas',
+    'color': Colors.indigo,
+    'employee': null, // Vacante (Disponible)
+  },
 
-    // --- Nivel 3 (Subgerentes - Reportan a Sofía ID: 3) ---
-    {
-      'id': '7',
+  // --- Nivel 3 (Subgerentes - Reportan a Sofía ID: 3) ---
+  {
+    'id': '7',
+    'parent': '3',
+    'name': 'Subgerente de Desarrollo',
+    'color': Colors.deepPurple,
+    'employee': {
       'name': 'Valeria Morales',
-      'parent': '3',
       'photo': 'https://randomuser.me/api/portraits/women/28.jpg',
-      'color': Colors.deepPurple,
-      'hasVacancy': true,
-      'position': 'Subgerente de Desarrollo',
     },
-    {
-      'id': '8',
+  },
+  {
+    'id': '8',
+    'parent': '3',
+    'name': 'Subgerente de Infraestructura',
+    'color': Colors.deepPurple,
+    'employee': {
       'name': 'David Castillo',
-      'parent': '3',
       'photo': 'https://randomuser.me/api/portraits/men/18.jpg',
-      'color': Colors.deepPurple,
-      'hasVacancy': true,
-      'position': 'Subgerente de Infraestructura',
     },
-    {
-      'id': '9',
-      'name': 'Vacante Disponible',
-      'parent': '3',
-      'photo': '',
-      'color': Colors.deepPurple,
-      'hasVacancy': false,
-      'position': 'Subgerente de Seguridad TI',
-    },
+  },
+  {
+    'id': '9',
+    'parent': '3',
+    'name': 'Subgerente de Seguridad TI',
+    'color': Colors.deepPurple,
+    'employee': null, // Vacante (Disponible)
+  },
 
-    // --- Nivel 3 (Subgerentes - Reportan a Operaciones ID: 4) ---
-    {
-      'id': '10',
+  // --- Nivel 3 (Subgerentes - Reportan a Operaciones ID: 4) ---
+  {
+    'id': '10',
+    'parent': '4',
+    'name': 'Subgerente de Logística',
+    'color': Colors.cyan,
+    'employee': {
       'name': 'Fernando Herrera',
-      'parent': '4',
       'photo': 'https://randomuser.me/api/portraits/men/78.jpg',
-      'color': Colors.cyan,
-      'hasVacancy': true,
-      'position': 'Subgerente de Logística',
     },
-    {
-      'id': '11',
+  },
+  {
+    'id': '11',
+    'parent': '4',
+    'name': 'Subgerente de Cadena de Suministro',
+    'color': Colors.cyan,
+    'employee': {
       'name': 'Camila Vargas',
-      'parent': '4',
       'photo': 'https://randomuser.me/api/portraits/women/33.jpg',
-      'color': Colors.cyan,
-      'hasVacancy': true,
-      'position': 'Subgerente de Cadena de Suministro',
     },
+  },
 
-    // --- Nivel 4 (Especialistas - Reportan a Lucía ID: 5) ---
-    {
-      'id': '12',
+  // --- Nivel 4 (Especialistas - Reportan a Lucía ID: 5) ---
+  {
+    'id': '12',
+    'parent': '5',
+    'name': 'Espec. Fiscal',
+    'color': Colors.amber,
+    'employee': {
       'name': 'Ricardo Silva',
-      'parent': '5',
       'photo': 'https://randomuser.me/api/portraits/men/88.jpg',
-      'color': Colors.amber,
-      'hasVacancy': true,
-      'position': 'Espec. Fiscal',
     },
-    {
-      'id': '13',
-      'name': 'Vacante Disponible',
-      'parent': '5',
-      'photo': '',
-      'color': Colors.amber,
-      'hasVacancy': false,
-      'position': 'Espec. Marketing',
-    },
+  },
+  {
+    'id': '13',
+    'parent': '5',
+    'name': 'Espec. Marketing',
+    'color': Colors.amber,
+    'employee': null, // Vacante (Disponible)
+  },
 
-    // --- Nivel 4 (Especialistas - Reportan a Valeria ID: 7) ---
-    {
-      'id': '14',
+  // --- Nivel 4 (Especialistas - Reportan a Valeria ID: 7) ---
+  {
+    'id': '14',
+    'parent': '7',
+    'name': 'Ingeniero de Software Senior',
+    'color': Colors.brown,
+    'employee': {
       'name': 'Esteban Paredes',
-      'parent': '7',
       'photo': 'https://randomuser.me/api/portraits/men/22.jpg',
-      'color': Colors.brown,
-      'hasVacancy': true,
-      'position': 'Ingeniero de Software Senior',
     },
-    {
-      'id': '15',
-      'name': 'Vacante Disponible',
-      'parent': '7',
-      'photo': '',
-      'color': Colors.brown,
-      'hasVacancy': false,
-      'position': 'QA Engineer',
-    },
-  ];
+  },
+  {
+    'id': '15',
+    'parent': '7',
+    'name': 'QA Engineer',
+    'color': Colors.brown,
+    'employee': null, // Vacante (Disponible)
+  },
+];
+
   final count = 0.obs;
   @override
   void onInit() {
