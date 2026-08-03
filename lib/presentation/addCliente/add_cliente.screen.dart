@@ -13,7 +13,9 @@ class AddClienteScreen extends GetView<AddClienteController> {
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Color(0XFFF8FAFC),
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         centerTitle: false,
 
         title: Text("Nuevo Cliente"),

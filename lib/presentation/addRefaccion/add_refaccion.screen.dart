@@ -11,8 +11,17 @@ class AddRefaccionScreen extends GetView<AddRefaccionController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AddRefaccionScreen'),
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        title: const Text('Nueva Refaccion'),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset("assets/logos/digiAppShort.jpeg", height: 30),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

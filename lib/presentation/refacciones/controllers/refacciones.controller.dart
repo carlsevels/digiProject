@@ -1,5 +1,6 @@
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
+import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:bitacora_frontend/presentation/refacciones/queries/refacciones.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -9,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class RefaccionesController extends GetxController
     with StateMixin<List<GeneralModel>> {
   final TextEditingController nombreController = TextEditingController();
-
+  RxInt rolUsuario = 0.obs;
   final count = 0.obs;
 
   @override
@@ -19,6 +20,18 @@ class RefaccionesController extends GetxController
   }
 
   Future<void> _onInit() async {
+    final miId = Supabase.instance.client.auth.currentUser?.id;
+    final ResultSet resultSet = await AppDatabase.db.execute(
+      datosPersonalesQuery(),
+      [miId],
+    );
+
+    if (resultSet.isEmpty) {
+      change(null, status: RxStatus.empty());
+      return;
+    }
+
+    rolUsuario.value = resultSet.first['rolId'] as int;
     await getRefacciones();
   }
 

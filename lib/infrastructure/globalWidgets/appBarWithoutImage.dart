@@ -29,7 +29,9 @@ class AppBarWithoutImage extends GetView implements PreferredSizeWidget {
 
     final bool isArchived = state?.isArchived ?? false;
     return AppBar(
-      backgroundColor: const Color(0xFFF8FAFC),
+      scrolledUnderElevation: 0.0,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       title: Text(
         title ?? "",
         style: const TextStyle(color: Color(0xFF0F172A)),

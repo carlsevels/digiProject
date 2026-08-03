@@ -14,11 +14,18 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
     return Scaffold(
       backgroundColor: const Color(0XFFF8FAFC),
       appBar: AppBar(
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         title: SizedBox(
           width: 120,
-          child: Image.network(
-            fit: BoxFit.contain,
-            "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+          child: Obx(
+            () => Image.asset(
+              fit: BoxFit.contain,
+              controller.rolUsuario.value == 1
+                  ? "assets/logos/digiAdmin.jpeg"
+                  : "assets/logos/digiRepartidores.jpeg",
+            ),
           ),
         ),
         centerTitle: true,
@@ -108,7 +115,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                               const Row(
                                 children: [
                                   Icon(
-                                    Icons.precision_manufacturing_outlined,
+                                    Icons.archive_outlined,
                                     color: Color(0XFF64748B),
                                   ),
                                   SizedBox(width: 12),
@@ -186,7 +193,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                               const Row(
                                 children: [
                                   Icon(
-                                    Icons.precision_manufacturing_outlined,
+                                    Icons.archive_outlined,
                                     color: Color(0XFF64748B),
                                   ),
                                   SizedBox(width: 12),

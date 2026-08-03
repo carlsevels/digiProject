@@ -42,11 +42,18 @@ class _ClientesScreenState extends State<ClientesScreen> {
         return Scaffold(
           backgroundColor: const Color(0XFFF8FAFC),
           appBar: AppBar(
+            scrolledUnderElevation: 0.0,
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
             title: SizedBox(
               width: 120,
-              child: Image.network(
-                fit: BoxFit.contain,
-                "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+              child: Obx(
+                () => Image.asset(
+                  fit: BoxFit.contain,
+                  controller.rolUsuario.value == 1
+                      ? "assets/logos/digiAdmin.jpeg"
+                      : "assets/logos/digiRepartidores.jpeg",
+                ),
               ),
             ),
             centerTitle: true,
@@ -365,11 +372,18 @@ class _ClientesScreenState extends State<ClientesScreen> {
       ),
       onEmpty: Scaffold(
         appBar: AppBar(
+          scrolledUnderElevation: 0.0,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
           title: SizedBox(
             width: 120,
-            child: Image.network(
-              fit: BoxFit.contain,
-              "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+            child: Obx(
+              () => Image.asset(
+                fit: BoxFit.contain,
+                controller.rolUsuario.value == 1
+                    ? "assets/logos/digiAdmin.jpeg"
+                    : "assets/logos/digiRepartidores.jpeg",
+              ),
             ),
           ),
           centerTitle: true,

@@ -10,6 +10,9 @@ class AddUsuarioScreen extends GetView<AddUsuarioController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         title: const Text('AddUsuarioScreen'),
         centerTitle: true,
       ),

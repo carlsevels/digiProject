@@ -15,6 +15,9 @@ class ProfileScreen extends GetView<ProfileController> {
     return controller.obx(
       (state) => Scaffold(
         appBar: AppBar(
+          scrolledUnderElevation: 0.0,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
           title: const Text('ProfileScreen'),
           centerTitle: true,
           actions: [EstadoConexionWidget(controller: controller)],

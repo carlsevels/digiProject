@@ -5,6 +5,7 @@ import 'package:bitacora_frontend/infrastructure/models/direcciones.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/direccionCliente.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart';
+import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:powersync/sqlite3.dart';
@@ -14,7 +15,7 @@ class ClientesController extends GetxController
     with StateMixin<List<Clientes>> {
   //TODO: Implement ClientesController
   TextEditingController buscadorController = TextEditingController();
-
+  RxInt rolUsuario = 0.obs;
   final Rx<Direcciones> _direccion = Direcciones().obs;
   Direcciones get direccion => this._direccion.value;
   set direccion(value) => this._direccion.value = value;
@@ -42,6 +43,23 @@ class ClientesController extends GetxController
   }
 
   Future<void> _onInit() async {
+    final miId = Supabase.instance.client.auth.currentUser?.id;
+    if (miId == null) {
+      change(null, status: RxStatus.error("Usuario no autenticado"));
+      return;
+    }
+
+    final ResultSet resultSet = await AppDatabase.db.execute(
+      datosPersonalesQuery(),
+      [miId],
+    );
+
+    if (resultSet.isEmpty) {
+      change(null, status: RxStatus.empty());
+      return;
+    }
+
+    rolUsuario.value = resultSet.first['rolId'] as int;
     getClientes();
   }
 

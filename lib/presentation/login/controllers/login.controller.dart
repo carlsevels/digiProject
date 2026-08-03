@@ -29,41 +29,29 @@ class LoginController extends GetxController with StateMixin {
   void onClose() {
     super.onClose();
   }
-Future<void> signInWithEmail() async {
-  try {
-    Get.dialog(
-      const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
-      barrierDismissible: false,
-    );
 
-    print("1. Intentando login Supabase");
+  Future<void> signInWithEmail() async {
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+        barrierDismissible: false,
+      );
 
-    final AuthResponse res =
-        await Supabase.instance.client.auth.signInWithPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
+      final AuthResponse res = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
 
-    print("2. Usuario Supabase: ${res.user?.id}");
+      if (res.user != null) {
+        await AppDatabase.initialize();
 
-    if (res.user != null) {
+        await AppDatabase.db.waitForFirstSync();
 
-      print("3. Inicializando PowerSync");
+        final miId = res.user!.id;
 
-      await AppDatabase.initialize();
-
-      print("4. Esperando sincronización");
-
-      await AppDatabase.db.waitForFirstSync();
-
-      print("5. Buscando datos personales");
-
-      final miId = res.user!.id;
-
-      final data = await AppDatabase.db.getOptional(
-        '''
+        final data = await AppDatabase.db.getOptional(
+          '''
         SELECT 
           dp."nombre",
           r."name" as "rol_nombre"
@@ -72,46 +60,40 @@ Future<void> signInWithEmail() async {
           ON dp."rolId" = r."id"
         WHERE dp."userId" = ?
         ''',
-        [miId],
-      );
-
-      print("6. Datos encontrados: $data");
-
-      if (data != null) {
-        await UserStorage.guardarRol(
-          data['rol_nombre'] as String,
+          [miId],
         );
 
-        Get.back();
-        Get.offAllNamed(Routes.FOLIOS);
-      } else {
-        Get.back();
+        if (data != null) {
+          await UserStorage.guardarRol(data['rol_nombre'] as String);
 
-        Get.snackbar(
-          "Error",
-          "Usuario autenticado pero sin datos personales",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
+          Get.back();
+          Get.offAllNamed(Routes.FOLIOS);
+        } else {
+          Get.back();
+
+          Get.snackbar(
+            "Error",
+            "Usuario autenticado pero sin datos personales",
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+          );
+        }
       }
+    } catch (e, stack) {
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+
+      print(stack);
+
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
-
-  } catch (e, stack) {
-
-    if (Get.isDialogOpen == true) {
-      Get.back();
-    }
-
-    print("ERROR LOGIN: $e");
-    print(stack);
-
-    Get.snackbar(
-      "Error",
-      e.toString(),
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
   }
-}
+
   void increment() => count.value++;
 }

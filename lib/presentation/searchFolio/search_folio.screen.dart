@@ -17,12 +17,14 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
   Widget build(BuildContext context) {
     // Definición del AppBar común para todos los estados
     PreferredSizeWidget buildAppBar() => AppBar(
+      scrolledUnderElevation: 0.0,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       iconTheme: const IconThemeData(color: Color(0XFF64748B)),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
         child: Container(color: Color(0XFF64748B), height: 1.0),
       ),
-      backgroundColor: const Color(0XFFF8FAFC),
       actions: [
         IconButton(
           onPressed: () {

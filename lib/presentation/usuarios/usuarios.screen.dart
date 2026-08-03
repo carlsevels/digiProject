@@ -10,6 +10,9 @@ class UsuariosScreen extends GetView<UsuariosController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         title: const Text('UsuariosScreen'),
         centerTitle: true,
       ),

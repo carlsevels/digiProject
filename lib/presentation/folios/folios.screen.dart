@@ -20,12 +20,18 @@ class FoliosScreen extends GetView<FoliosController> {
       backgroundColor: const Color(0XFFF8FAFC),
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color(0XFFF8FAFC),
+        scrolledUnderElevation: 0.0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         title: SizedBox(
           width: 120,
-          child: Image.network(
-            fit: BoxFit.contain,
-            "https://lirp.cdn-website.com/d83902d6/dms3rep/multi/opt/logotipo-157w.png",
+          child: Obx(
+            () => Image.asset(
+              fit: BoxFit.contain,
+              controller.rolUsuario.value == 1
+                  ? "assets/logos/digiAdmin.jpeg"
+                  : "assets/logos/digiRepartidores.jpeg",
+            ),
           ),
         ),
         automaticallyImplyActions: false,
@@ -261,8 +267,8 @@ class FoliosScreen extends GetView<FoliosController> {
                   child: SizedBox(
                     width: 120,
                     child: Image.asset(
-                      "assets/logos/digirey.png",
-                      opacity: const AlwaysStoppedAnimation(.5),
+                      fit: BoxFit.contain,
+                      "assets/logos/digiApp.jpeg",
                     ),
                   ),
                 ),
