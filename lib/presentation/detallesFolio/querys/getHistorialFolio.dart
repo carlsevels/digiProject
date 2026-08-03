@@ -1,6 +1,7 @@
 String getHistorialFolio() {
   return '''
 SELECT 
+  h."id",
   h."folioId", 
   h."statusId", 
   h."created_at",

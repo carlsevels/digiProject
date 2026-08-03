@@ -1,13 +1,10 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/btnGoogleMaps.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/entregaDetalles.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'controllers/search_folio.controller.dart';
 
 class SearchFolioScreen extends GetView<SearchFolioController> {
@@ -15,7 +12,6 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
 
   @override
   Widget build(BuildContext context) {
-    // Definición del AppBar común para todos los estados
     PreferredSizeWidget buildAppBar() => AppBar(
       scrolledUnderElevation: 0.0,
       backgroundColor: Colors.white,
@@ -50,15 +46,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
       centerTitle: true,
     );
 
-    String formatFecha(dynamic fecha) {
-      final date = DateTime.tryParse(fecha?.toString() ?? "");
-      return date == null
-          ? ""
-          : DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(date);
-    }
-
     return controller.obx(
-      // ESTADO DE ÉXITO
       (state) => Scaffold(
         backgroundColor: const Color(0XFFF8FAFC),
         appBar: buildAppBar(),
@@ -76,6 +64,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                   RepartidorDetalles(state: state),
                   SizedBox(height: 16.0),
                   DetallesTrayecto(
+                    detallesTrayecto: false,
                     state: state,
                     currentStep: controller.currentStep,
                   ),
@@ -83,10 +72,17 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                   Direccion(state: state),
                   const SizedBox(height: 32.0),
                   ElevatedButton(
-                    onPressed: () => Get.toNamed(
-                      Routes.DETALLES_FOLIO,
-                      arguments: state?.folioId.toString(),
-                    ),
+                    onPressed: () {
+                      final folioId = state?.folioId?.toString();
+                      if (folioId != null && folioId.isNotEmpty) {
+                        Get.toNamed(Routes.DETALLES_FOLIO, arguments: folioId);
+                      } else {
+                        Get.snackbar(
+                          "Aviso",
+                          "El ID del folio no está disponible",
+                        );
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2E6FF3),
                       foregroundColor: Colors.white,
@@ -119,7 +115,6 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
           ),
         ),
       ),
-      // ESTADO VACÍO (Con Scaffold)
       onEmpty: Scaffold(
         backgroundColor: const Color(0XFFF8FAFC),
         appBar: buildAppBar(),
@@ -137,71 +132,16 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
           ),
         ),
       ),
-      // ESTADO DE CARGA
       onLoading: Scaffold(
         appBar: buildAppBar(),
         body: const Center(
           child: CircularProgressIndicator(color: Color(0XFF00BC16)),
         ),
       ),
-      // ESTADO DE ERROR
       onError: (err) => Scaffold(
         appBar: buildAppBar(),
         body: Center(child: Text("Error: $err")),
       ),
-    );
-  }
-
-  Widget _step({
-    required String title,
-    required IconData icon,
-    required bool active,
-    required bool completed,
-    required bool isLast,
-    required int colorStatus,
-  }) {
-    final color = Color(colorStatus);
-    return Column(
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: active ? color : Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: active ? color : Colors.grey.shade300,
-              width: 2,
-            ),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: color.withOpacity(.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Icon(
-            completed ? Icons.check_rounded : icon,
-            size: 20,
-            color: active ? Colors.white : Colors.grey.shade400,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-            color: active ? Colors.black87 : Colors.grey.shade500,
-          ),
-        ),
-      ],
     );
   }
 }

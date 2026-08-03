@@ -22,9 +22,8 @@ class LoginScreen extends GetView<LoginController> {
                 SizedBox(
                   width: Get.size.width,
                   height: Get.size.height / 3.5,
-                  child: Image.asset("assets/logos/digirey.png"),
+                  child: Image.asset("assets/logos/digiApp.jpeg"),
                 ),
-
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

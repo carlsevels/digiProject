@@ -49,7 +49,7 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
     change(null, status: RxStatus.loading());
     try {
       final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        idBuscado,
+        '%$idBuscado%',
       ]);
       if (resultSet.isEmpty) {
         change(null, status: RxStatus.empty());
@@ -64,7 +64,6 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
       if (ultimoRegistro != null) {
         statusId.value = ultimoRegistro["statusId"] as int;
         currentStep.value = getStepIndex(statusId.value);
-        print("Status actual actualizado a: ${currentStep.value}");
       } else {
         print(
           "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
@@ -117,7 +116,6 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
       DateTime.now().toIso8601String(),
     ]);
   }
-
 
   void toggleSearch() {
     isSearching.value = !isSearching.value;

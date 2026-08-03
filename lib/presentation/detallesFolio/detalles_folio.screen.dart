@@ -156,6 +156,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                     RepartidorDetalles(state: state),
                     SizedBox(height: 16),
                     DetallesTrayecto(
+                      detallesTrayecto: true,
                       state: state,
                       currentStep: controller.currentStep,
                     ),
