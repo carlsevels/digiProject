@@ -41,22 +41,24 @@ class ChartNodeWidget extends StatelessWidget {
 
     final Color nodeColor = _parseColor(model.color);
     final String positionName = model.name ?? 'Puesto';
-final bool isOccupied = model.nombre != null && model.nombre!.isNotEmpty;
+    final bool isOccupied = model.nombre != null && model.nombre!.isNotEmpty;
     final String displayName = isOccupied
-        ? '${model.nombre} ${model.apellidoPaterno ?? ''} ${model.apellidoMaterno ?? ''}'.trim()
+        ? '${model.nombre} ${model.apellidoPaterno ?? ''} ${model.apellidoMaterno ?? ''}'
+              .trim()
         : positionName;
 
-    // Usamos Container con restricciones fijas o SizedBox para respetar estrictamente el boxSize del Controller
     return SizedBox(
       width: 180,
       height: 90,
       child: Card(
-        margin: EdgeInsets.zero, // Importante para que no rompa el layout del chart
+        margin: EdgeInsets.zero,
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cornerRadius),
           side: BorderSide(
-            color: isOccupied ? nodeColor.withAlpha(150) : Colors.grey.withAlpha(100),
+            color: isOccupied
+                ? nodeColor.withAlpha(150)
+                : Colors.grey.withAlpha(100),
             width: 2,
           ),
         ),

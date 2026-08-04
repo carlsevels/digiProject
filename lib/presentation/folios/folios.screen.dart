@@ -184,18 +184,12 @@ class FoliosScreen extends GetView<FoliosController> {
                 //     title: const Text("Repartidores"),
                 //     onTap: null,
                 //   ),
-                ExpansionTile(
+                ListTile(
                   title: Text("Organigrama"),
-                  leading: const Icon(Icons.precision_manufacturing_outlined),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.account_tree_outlined),
-                      title: const Text("Visitar"),
-                      onTap: () {
-                        Get.toNamed(Routes.ORGANIGRAMA);
-                      },
-                    ),
-                  ],
+                  leading: const Icon(Icons.account_tree_outlined),
+                  onTap: () {
+                    Get.toNamed(Routes.ORGANIGRAMA);
+                  },
                 ),
                 ExpansionTile(
                   title: Text("Refacciones"),

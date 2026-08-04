@@ -57,14 +57,13 @@ class _NodeDialogState extends State<NodeDialog> {
               decoration: const InputDecoration(labelText: 'Parent Node'),
               initialValue: parentId,
               items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('Root Node'),
+                const DropdownMenuItem(value: null, child: Text('Root Node')),
+                ...widget.availableParents.map(
+                  (item) => DropdownMenuItem(
+                    value: item.id.toString(),
+                    child: Text(item.name ?? ""),
+                  ),
                 ),
-                ...widget.availableParents.map((item) => DropdownMenuItem(
-                      value: item.id as String,
-                      child: Text(item.name as String),
-                    )),
               ],
               onChanged: (value) {
                 setState(() {
@@ -99,10 +98,7 @@ class _NodeDialogState extends State<NodeDialog> {
 class ColorPickerDialog extends StatelessWidget {
   final List<Color> colorOptions;
 
-  const ColorPickerDialog({
-    super.key,
-    required this.colorOptions,
-  });
+  const ColorPickerDialog({super.key, required this.colorOptions});
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +117,7 @@ class ColorPickerDialog extends StatelessWidget {
           itemBuilder: (context, index) {
             return InkWell(
               onTap: () => Navigator.pop(context, colorOptions[index]),
-              child: CircleAvatar(
-                backgroundColor: colorOptions[index],
-              ),
+              child: CircleAvatar(backgroundColor: colorOptions[index]),
             );
           },
         ),
@@ -145,30 +139,42 @@ class InstructionsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Instructions'),
+      title: const Text('Instrucciones'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _instructionItem(
-              context, 'Tap a node to hide/unhide its children if any'),
+            context,
+            'Toca un nodo para ocultar/mostrar sus hijos (si tiene)',
+          ),
           _instructionItem(
-              context, 'Right-click/long press a node for more options'),
-          _instructionItem(context, 'Drag nodes to rearrange (if enabled)'),
-          _instructionItem(context, 'Use the sidebar to customize the chart'),
-          _instructionItem(context, 'Pinch to zoom (if enabled)'),
+            context,
+            'Haz clic derecho / mantén presionado un nodo para más opciones',
+          ),
+          _instructionItem(
+            context,
+            'Arrastra los nodos para reorganizarlos (si está habilitado)',
+          ),
+          _instructionItem(
+            context,
+            'Usa la barra lateral para personalizar el gráfico',
+          ),
+          _instructionItem(
+            context,
+            'Pellizca para hacer zoom (si está habilitado)',
+          ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Got it'),
+          child: const Text('Entendido'),
         ),
       ],
     );
   }
 
-  /// Helper method to build an instruction item
   Widget _instructionItem(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),

@@ -1,16 +1,9 @@
 import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
-import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
-import 'package:bitacora_frontend/presentation/organigrama/models/chart_config.dart';
-import 'package:bitacora_frontend/presentation/organigrama/utils/chart_utils.dart';
 import 'package:bitacora_frontend/presentation/organigrama/widgets/chart_node_widget.dart';
-import 'package:bitacora_frontend/presentation/organigrama/widgets/chart_options_sidebar.dart';
 import 'package:bitacora_frontend/presentation/organigrama/widgets/dialogs.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
-
 import 'controllers/organigrama.controller.dart';
-import 'package:flutter/material.dart';
 import 'package:org_chart/org_chart.dart';
 
 class OrganigramaScreen extends GetView<OrganigramaController> {
@@ -20,21 +13,21 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Org Chart Example'),
+        title: const Text('Organigrama'),
         elevation: 2,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              _showInstructions(context);
-            },
-            tooltip: 'Instructions',
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.info_outline),
+        //     onPressed: () {
+        //       _showInstructions(context);
+        //     },
+        //     tooltip: 'Instructions',
+        //   ),
+        // ],
       ),
       body: Row(
         children: [
-          // // Left Sidebar
+          // Left Sidebar
           // ChartOptionsSidebar(
           //   config: controller.config,
           //   controller: controller.controllerChart,
@@ -120,7 +113,8 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
               keyboardAnimationCurve: controller.config.keyboardAnimationCurve,
               keyboardAnimationDuration:
                   controller.config.keyboardAnimationDuration,
-              invertArrowKeyDirection: controller.config.invertArrowKeyDirection,
+              invertArrowKeyDirection:
+                  controller.config.invertArrowKeyDirection,
               enableKeyRepeat: controller.config.enableKeyRepeat,
               keyRepeatInitialDelay: controller.config.keyRepeatInitialDelay,
               keyRepeatInterval: controller.config.keyRepeatInterval,
@@ -131,29 +125,40 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
               enableZoom: controller.config.enableZoom,
               enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
               doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
-              enableCtrlScrollToScale: controller.config.enableCtrlScrollToScale,
+              enableCtrlScrollToScale:
+                  controller.config.enableCtrlScrollToScale,
             ),
             focusNode: controller.focusNode,
             linePaint: controller.config.getLinePaint(context),
-            onDrop: (dragged, target, isTargetSubnode) {
-              if (isTargetSubnode) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Cannot drop a node onto its own child'),
-                  ),
+            onDrop: (dragged, target, isTargetSubnode) async {
+              try {
+                if (isTargetSubnode || dragged.id == target.id) {
+                  print("Validación: Es subnodo o es el mismo ID");
+                  return;
+                }
+
+                if (dragged.parent == target.id) {
+                  print("Validación: Ya tiene ese padre");
+                  return;
+                }
+
+                dragged.parent = target.id;
+
+                await controller.actualizarPosicion(
+                  id: dragged.id.toString(),
+                  newParent: target.id.toString(),
                 );
-                controller.controllerChart.calculatePosition();
-                return;
+                Future.delayed(const Duration(milliseconds: 200), () {
+                  try {
+                    controller.controllerChart.updateItem(dragged);
+                  } catch (eChart) {
+                    print("ERROR EN CHART: $eChart");
+                  }
+                });
+              } catch (e, stackTrace) {
+                print("💥 ERROR FATAL EN ONDROP: $e");
+                print(stackTrace);
               }
-          
-              if (dragged.parent == target.id) {
-                controller.controllerChart.calculatePosition();
-                return;
-              }
-          
-              // Actualizamos la propiedad directamente en el objeto GeneralModel
-              dragged.parent = target.id;
-              controller.controllerChart.updateItem(dragged);
             },
           ),
         ),
@@ -327,7 +332,7 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
       context: context,
       builder: (context) => NodeDialog(
         title: 'Add Child Node',
-        initialParentId: item.name,
+        initialParentId: item.id.toString(),
         isNewNode: true,
         availableParents: controller.controllerChart.items,
       ),

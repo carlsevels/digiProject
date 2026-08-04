@@ -1,4 +1,3 @@
-
 import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/organigrama/models/chart_config.dart';
@@ -6,24 +5,32 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:org_chart/org_chart.dart';
 import 'package:powersync/sqlite3.dart';
+
 class OrganigramaController extends GetxController {
   final isLoading = true.obs;
 
-  // Inicializamos el chart inmediatamente con una lista vacía para evitar errores de tipo 'late'
-  late final OrgChartController<Organigrama> controllerChart = OrgChartController<Organigrama>(
-    items: [],
-    idProvider: (item) => item.id.toString(),
-    toProvider: (item) => item.parent?.toString(),
-    toSetter: (item, newId) {
-      item.parent = newId != null ? int.tryParse(newId) : null;
-      return item;
-    },
-    boxSize: const Size(180, 90),
-    spacing: ChartConfig().nodeSpacing,
-    runSpacing: ChartConfig().levelSpacing,
-    leafColumns: ChartConfig().leafColumnCount,
-  );
-
+  late final OrgChartController<Organigrama> controllerChart =
+      OrgChartController<Organigrama>(
+        items: [],
+        idProvider: (item) => item.id.toString(),
+        toProvider: (item) => item.parent?.toString(),
+        toSetter: (item, newId) {
+          try {
+            if (newId != null && newId.isNotEmpty && newId != 'null') {
+              item.parent = int.tryParse(newId);
+            } else {
+              item.parent = null;
+            }
+          } catch (e) {
+            print("Error en toSetter: $e");
+          }
+          return item;
+        },
+        boxSize: const Size(180, 90),
+        spacing: ChartConfig().nodeSpacing,
+        runSpacing: ChartConfig().levelSpacing,
+        leafColumns: ChartConfig().leafColumnCount,
+      );
   final CustomInteractiveViewerController interactiveController =
       CustomInteractiveViewerController();
 
@@ -33,11 +40,11 @@ class OrganigramaController extends GetxController {
   final count = 0.obs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     focusNode = FocusNode()..addListener(() {});
     config = ChartConfig();
-    getOrganigrama();
+    await getOrganigrama();
   }
 
   Future<void> getOrganigrama() async {
@@ -69,10 +76,10 @@ class OrganigramaController extends GetxController {
       for (var item in loadedItems) {
         controllerChart.addItem(item);
       }
-      
+
       controllerChart.calculatePosition();
       isLoading.value = false;
-      
+
       print("Organigrama cargado con éxito: ${loadedItems.length} registros");
     } catch (e) {
       isLoading.value = false;
@@ -100,6 +107,23 @@ class OrganigramaController extends GetxController {
     focusNode.dispose();
     interactiveController.dispose();
     super.dispose();
+  }
+
+  Future<void> actualizarPosicion({String? id, String? newParent}) async {
+    try {
+      await AppDatabase.db.execute(
+        '''
+        UPDATE organigrama 
+        SET "parent" = ?
+        WHERE "id" = ?;
+        ''',
+        [newParent, id],
+      );
+      return null;
+    } catch (e) {
+      print("Error al archivar folio: $e");
+      return null;
+    }
   }
 
   void increment() => count.value++;
