@@ -5,7 +5,6 @@ import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:confetti/confetti.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 
 class SuccessController extends GetxController with StateMixin<Folios> {
   late ConfettiController confettiController;
@@ -22,11 +21,11 @@ class SuccessController extends GetxController with StateMixin<Folios> {
     final String? id = Get.arguments?.toString();
     await getDetailsFolio(id ?? "");
   }
-
-  Future<void> getDetailsFolio(String idBuscado) async {
+Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute(folioId(), [
         idBuscado,
       ]);
       if (resultSet.isEmpty) {
@@ -58,7 +57,6 @@ class SuccessController extends GetxController with StateMixin<Folios> {
       change(null, status: RxStatus.error(e.toString()));
     }
   }
-
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
       final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(

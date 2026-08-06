@@ -7,7 +7,6 @@ import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.que
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ArchivadosController extends GetxController
@@ -44,7 +43,8 @@ class ArchivadosController extends GetxController
         return;
       }
 
-      final ResultSet resultSet = await AppDatabase.db.execute(
+      // CAMBIO AQUÍ: Usar dynamic o var en lugar de ResultSet estricto
+      final dynamic resultSet = await AppDatabase.db.execute(
         datosPersonalesQuery(),
         [miId],
       );

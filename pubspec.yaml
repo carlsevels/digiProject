@@ -36,7 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.7.3
   supabase_flutter: ^2.16.0
-  powersync: ^2.3.3
+  powersync: ^1.18.0
+  sqlite3_flutter_libs: ^0.5.2
   connectivity_plus: ^7.2.0
   path_provider: ^2.1.6
   get_storage: ^2.1.1

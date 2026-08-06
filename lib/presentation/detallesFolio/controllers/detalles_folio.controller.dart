@@ -1,14 +1,16 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
+import 'package:bitacora_frontend/infrastructure/models/historial_folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/getHistorialFolio.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,6 +20,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   RxInt statusId = 0.obs;
   int? nextStatus;
   var historialList = <Folios>[].obs;
+  var historialListWeb = <HistorialEstado>[].obs;
 
   @override
   void onInit() {
@@ -52,31 +55,52 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        idBuscado,
-      ]);
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+      Map<String, dynamic>? dataMap;
+
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from(
+              'vista_folios_completos',
+            ) // O la vista/tabla que uses para buscar
+            .select()
+            .or('id.eq.$idBuscado,folioId.eq.$idBuscado')
+            .limit(1)
+            .maybeSingle();
+
+        if (response == null) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+        dataMap = Map<String, dynamic>.from(response);
+      } else {
+        final List<dynamic> resultSet = await AppDatabase.db.execute(
+          folioId(),
+          [idBuscado],
+        );
+
+        if (resultSet.isEmpty) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+        dataMap = Map<String, dynamic>.from(resultSet.first);
       }
-      final folio = Folios.fromJson(resultSet.first);
+
+      final folio = Folios.fromJson(dataMap);
 
       final ultimoRegistro = await getUltimoStatus(
-        folio.folioIdHistorial ?? "",
+        folio.folioIdHistorial ?? folio.id ?? "",
       );
 
       if (ultimoRegistro != null) {
         statusId.value = ultimoRegistro["statusId"] as int;
         currentStep.value = getStepIndex(statusId.value);
-        print("Status actual actualizado a: ${currentStep.value}");
+        print("actual actualizado a: ${currentStep.value}");
       } else {
         print(
           "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
         );
       }
 
-      print("Folio: ${jsonEncode(folio)}");
-      print("state!.isArchived: ${folio.isArchived}");
       change(folio, status: RxStatus.success());
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
@@ -85,20 +109,32 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
 
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
-      final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM historialestados 
-      WHERE "folioId" = ? 
-      ORDER BY "created_at" DESC 
-      LIMIT 1
-      ''',
-        [folioId],
-      );
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('historialestados')
+            .select()
+            .eq('folioId', folioId)
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
 
-      if (result.isNotEmpty) {
-        return result.first;
+        return response != null ? Map<String, dynamic>.from(response) : null;
+      } else {
+        final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
+          '''
+          SELECT * FROM historialestados 
+          WHERE "folioId" = ? 
+          ORDER BY "created_at" DESC 
+          LIMIT 1
+          ''',
+          [folioId],
+        );
+
+        if (result.isNotEmpty) {
+          return result.first;
+        }
+        return null;
       }
-      return null;
     } catch (e) {
       print("Error al obtener el último status: $e");
       return null;
@@ -108,24 +144,33 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   Future<void> historialFolio(String folioId) async {
     try {
       historialList.clear();
+      List<HistorialEstado> listaProcesada = [];
+      List<dynamic> resultSet = [];
+      if (kIsWeb) {
+        final resultSet = await Supabase.instance.client
+            .from('historialestados')
+            .select('*, status:statusId(nombre, color)')
+            .eq('folioId', folioId)
+            .order('created_at', ascending: false);
 
-      final ResultSet resultSet = await AppDatabase.db.getAll(
-        getHistorialFolio(),
-        [folioId],
-      );
+        listaProcesada = (resultSet as List).map((element) {
+          return HistorialEstado.fromJson(Map<String, dynamic>.from(element));
+        }).toList();
+        historialListWeb.assignAll(listaProcesada);
+      } else {
+        resultSet = await AppDatabase.db.getAll(getHistorialFolio(), [folioId]);
+        List<Folios> folio = resultSet.map((element) {
+          final Map<String, dynamic> mapData = Map<String, dynamic>.from(
+            element as Map,
+          );
+          return Folios.fromJson(mapData);
+        }).toList();
+        historialList.value = folio;
+      }
 
-      List<Folios> folio = resultSet
-          .map(
-            (element) =>
-                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
-          .toList();
-
-      historialList.value = folio;
-      print("FolioId: ${folioId}");
-      print("Folio Historial: ${jsonEncode(historialList)}");
+      update();
     } catch (e) {
-      print("Error: $e");
+      print("Error en historialFolio: $e");
     }
   }
 

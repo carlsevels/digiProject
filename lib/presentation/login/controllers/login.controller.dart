@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class LoginController extends GetxController with StateMixin {
   //TODO: Implement LoginController
@@ -44,40 +45,45 @@ class LoginController extends GetxController with StateMixin {
           );
 
       if (res.user != null) {
-        await AppDatabase.initialize();
-
-        await AppDatabase.db.waitForFirstSync();
-
         final miId = res.user!.id;
 
-        final data = await AppDatabase.db.getOptional(
-          '''
-        SELECT 
-          dp."nombre",
-          r."name" as "rol_nombre"
-        FROM "datosPersonales" dp
-        INNER JOIN "roles" r 
-          ON dp."rolId" = r."id"
-        WHERE dp."userId" = ?
-        ''',
-          [miId],
-        );
+        if (!kIsWeb) {
+          await AppDatabase.initialize();
+          await AppDatabase.db.waitForFirstSync();
 
-        if (data != null) {
-          await UserStorage.guardarRol(data['rol_nombre'] as String);
-
-          Get.back();
-          Get.offAllNamed(Routes.FOLIOS);
-        } else {
-          Get.back();
-
-          Get.snackbar(
-            "Error",
-            "Usuario autenticado pero sin datos personales",
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
+          final data = await AppDatabase.db.getOptional(
+            '''
+          SELECT 
+            dp."nombre",
+            r."name" as "rol_nombre"
+          FROM "datosPersonales" dp
+          INNER JOIN "roles" r 
+            ON dp."rolId" = r."id"
+          WHERE dp."userId" = ?
+          ''',
+            [miId],
           );
+
+          if (data != null) {
+            await UserStorage.guardarRol(data['rol_nombre'] as String);
+          }
+        } else {
+          print("Ejecutando en Web: Omitiendo PowerSync.");
+
+          final response = await Supabase.instance.client
+              .from('datosPersonales')
+              .select('nombre, roles(name)')
+              .eq('userId', miId)
+              .maybeSingle();
+
+          if (response != null && response['roles'] != null) {
+            final rolNombre = response['roles']['name'];
+            await UserStorage.guardarRol(rolNombre);
+          }
         }
+
+        Get.back(); // Cierra el diálogo de carga
+        Get.offAllNamed(Routes.FOLIOS);
       }
     } catch (e, stack) {
       if (Get.isDialogOpen == true) {

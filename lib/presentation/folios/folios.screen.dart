@@ -2,21 +2,353 @@ import 'dart:ui';
 
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/direccionDialog.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/empty_folio_web.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
+import 'package:bitacora_frontend/presentation/folios/responsive/movil.dart';
+import 'package:bitacora_frontend/presentation/folios/responsive/web.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/folios.controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class FoliosScreen extends GetView<FoliosController> {
+class FoliosScreen extends StatefulWidget {
   const FoliosScreen({super.key});
 
   @override
+  State<FoliosScreen> createState() => _FoliosScreenState();
+}
+
+class _FoliosScreenState extends State<FoliosScreen> {
+  // Estado para controlar si el menú web está visible u oculto
+  bool _isWebMenuVisible = true;
+
+  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<FoliosController>();
     final screenWidth = MediaQuery.of(context).size.width;
-    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
+    final Widget mainBody = controller.obx(
+      onLoading: Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: SizedBox(
+                  width: 120,
+                  child: Image.asset(
+                    fit: BoxFit.contain,
+                    "assets/logos/digiApp.jpeg",
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+      onError: (error) => Center(child: Text("Error: $error")),
+      onEmpty: RefreshIndicator(
+        color: Colors.white,
+        backgroundColor: const Color(0XFF1D6CFF),
+        onRefresh: () async {
+          await controller.getFoliosWithDate();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: Get.size.height,
+            child: Center(
+              child: kIsWeb
+                  ? WebFoliosEmptyPage(needDate: true)
+                  : FoliosEmptyPage(needDate: true),
+            ),
+          ),
+        ),
+      ),
+      (state) {
+        if (kIsWeb) {
+          return WebFolioView(state: state!);
+        } else {
+          return MovilFolioView(state: state!);
+        }
+      },
+    );
+
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: const Color(0XFFF8FAFC),
+        body: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              width: _isWebMenuVisible ? 280 : 0,
+              child: _isWebMenuVisible
+                  ? Container(
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xff1565C0), Color(0xff42A5F5)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Obx(
+                                      () => CircleAvatar(
+                                        radius: 26,
+                                        backgroundColor: Colors.white,
+                                        child: Text(
+                                          controller
+                                                      .nameUser
+                                                      .value
+                                                      .isNotEmpty &&
+                                                  controller.nameUser.value !=
+                                                      "Cargando..."
+                                              ? controller.nameUser.value[0]
+                                                    .toUpperCase()
+                                              : "?",
+                                          style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xff1565C0),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Obx(
+                                  () => Text(
+                                    controller.nameUser.value,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Obx(
+                                  () => Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.badge_outlined,
+                                        color: Colors.white70,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        controller.rolName.value,
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Elementos de navegación con Acordeón (ExpansionTile)
+                          Expanded(
+                            child: ListView(
+                              padding: EdgeInsets.zero,
+                              children: [
+                                ExpansionTile(
+                                  title: const Text("Refacciones"),
+                                  leading: const Icon(
+                                    Icons.precision_manufacturing_outlined,
+                                  ),
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.format_list_numbered_outlined,
+                                      ),
+                                      title: const Text("Refacciones"),
+                                      onTap: () {
+                                        Get.toNamed(Routes.REFACCIONES);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                ExpansionTile(
+                                  leading: const Icon(
+                                    Icons.receipt_long_outlined,
+                                  ),
+                                  title: const Text("Folios"),
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(Icons.add),
+                                      title: const Text("Agregar"),
+                                      onTap: () =>
+                                          Get.toNamed(Routes.ADD_FOLIOS),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.archive_outlined,
+                                      ),
+                                      title: const Text("Archivados"),
+                                      onTap: () =>
+                                          Get.toNamed(Routes.ARCHIVADOS),
+                                    ),
+                                  ],
+                                ),
+                                Obx(() {
+                                  if (controller.rolName.value == "Admin") {
+                                    return Column(
+                                      children: [
+                                        ExpansionTile(
+                                          leading: const Icon(
+                                            Icons.business_center_outlined,
+                                          ),
+                                          title: const Text("Clientes"),
+                                          children: [
+                                            ListTile(
+                                              leading: const Icon(
+                                                Icons
+                                                    .format_list_numbered_outlined,
+                                              ),
+                                              title: const Text("Clientes"),
+                                              onTap: () =>
+                                                  Get.toNamed(Routes.CLIENTES),
+                                            ),
+                                          ],
+                                        ),
+                                        const Divider(height: 1),
+                                      ],
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                }),
+                              ],
+                            ),
+                          ),
+                          // Botón de cerrar sesión en la parte inferior del panel
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: ListTile(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              leading: const Icon(
+                                Icons.logout_rounded,
+                                color: Colors.red,
+                              ),
+                              title: const Text(
+                                "Cerrar sesión",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onTap: controller.signOut,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (_isWebMenuVisible)
+              const VerticalDivider(
+                thickness: 1,
+                width: 1,
+                color: Color(0xFFE2E8F0),
+              ),
+
+            Expanded(
+              child: Scaffold(
+                backgroundColor: const Color(0XFFF8FAFC),
+                appBar: AppBar(
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  scrolledUnderElevation: 0.0,
+                  automaticallyImplyLeading: false,
+                  leadingWidth: 120,
+                  leading: Row(
+                    children: [
+                      IconButton(
+                        tooltip: _isWebMenuVisible
+                            ? "Ocultar menú"
+                            : "Mostrar menú",
+                        icon: Icon(
+                          _isWebMenuVisible ? Icons.menu_open : Icons.menu,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isWebMenuVisible = !_isWebMenuVisible;
+                          });
+                        },
+                      ),
+                      SizedBox(
+                        width: 80,
+                        child: Obx(
+                          () => Image.asset(
+                            fit: BoxFit.contain,
+                            controller.rolUsuario.value == 1
+                                ? "assets/logos/digiAdmin.jpeg"
+                                : "assets/logos/digiRepartidores.jpeg",
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    IconButton(
+                      tooltip: "Filtrar por fecha",
+                      onPressed: () {
+                        controller.selectDate(context);
+                      },
+                      icon: const Icon(Icons.filter_list_outlined),
+                    ),
+                    IconButton(
+                      tooltip: "Buscar folio",
+                      onPressed: () {
+                        Get.toNamed(Routes.SEARCH_FOLIO);
+                      },
+                      icon: const Icon(Icons.search_outlined),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                ),
+                body: mainBody,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // --- DISEÑO MÓVIL ORIGINAL CON DRAWER ---
     return Scaffold(
-      key: _scaffoldKey,
+      key: scaffoldKey,
       backgroundColor: const Color(0XFFF8FAFC),
       appBar: AppBar(
         centerTitle: true,
@@ -72,34 +404,35 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ],
       ),
-      drawer: Obx(
-        () => Drawer(
-          backgroundColor: const Color(0XFFF8FAFC),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  height: 220,
-                  width: screenWidth,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xff1565C0), Color(0xff42A5F5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+      drawer: Drawer(
+        backgroundColor: const Color(0XFFF8FAFC),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                height: 220,
+                width: screenWidth,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xff1565C0), Color(0xff42A5F5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: DrawerHeader(
-                    margin: EdgeInsets.zero,
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        CircleAvatar(
+                ),
+                child: DrawerHeader(
+                  margin: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Obx(
+                        () => CircleAvatar(
                           radius: 32,
                           backgroundColor: Colors.white,
                           child: Text(
-                            controller.nameUser.value.isNotEmpty
+                            controller.nameUser.value.isNotEmpty &&
+                                    controller.nameUser.value != "Cargando..."
                                 ? controller.nameUser.value[0].toUpperCase()
                                 : "?",
                             style: const TextStyle(
@@ -109,683 +442,113 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Obx(
-                          () => Text(
-                            controller.nameUser.value,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Obx(
-                          () => Row(
-                            children: [
-                              const Icon(
-                                Icons.badge_outlined,
-                                color: Colors.white70,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                controller.rolName.value,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // PARA FUTUROS CAMBIOS
-                // ListTile(
-                //   leading: const Icon(Icons.account_circle_outlined),
-                //   title: const Text("Perfil"),
-                //   onTap: () => Get.toNamed(Routes.PROFILE),
-                // ),
-                // PARA FUTUROS CAMBIOS
-                // ExpansionTile(
-                //   title: Text("Digirey"),
-                //   leading: SizedBox(
-                //     height: 28.0,
-                //     child: Image.asset(
-                //       "assets/logos/digireyShort.png",
-                //       opacity: const AlwaysStoppedAnimation(.5),
-                //     ),
-                //   ),
-                //   children: [
-                //     ListTile(
-                //       leading: const Icon(Icons.format_list_numbered_outlined),
-                //       title: const Text("Usuarios"),
-                //       onTap: () {
-                //         Get.toNamed(Routes.USUARIOS);
-                //       },
-                //     ),
-                //     ListTile(
-                //       leading: const Icon(Icons.add),
-                //       title: const Text("Registrar"),
-                //       onTap: () {
-                //         Get.toNamed(Routes.ADD_USUARIO);
-                //       },
-                //     ),
-                //   ],
-                // ),
-                // PARA FUTUROS CAMBIOS
-                // if (controller.rolName.value == "Admin")
-                //   ListTile(
-                //     leading: const Icon(Icons.badge_outlined),
-                //     title: const Text("Repartidores"),
-                //     onTap: null,
-                //   ),
-                ListTile(
-                  title: Text("Organigrama"),
-                  leading: const Icon(Icons.account_tree_outlined),
-                  onTap: () {
-                    Get.toNamed(Routes.ORGANIGRAMA);
-                  },
-                ),
-                ExpansionTile(
-                  title: Text("Refacciones"),
-                  leading: const Icon(Icons.precision_manufacturing_outlined),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.format_list_numbered_outlined),
-                      title: const Text("Refacciones"),
-                      onTap: () {
-                        Get.toNamed(Routes.REFACCIONES);
-                      },
-                    ),
-                  ],
-                ),
-                ExpansionTile(
-                  leading: const Icon(Icons.receipt_long_outlined),
-                  title: const Text("Folios"),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text("Agregar"),
-                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.archive_outlined),
-                      title: const Text("Archivados"),
-                      onTap: () => Get.toNamed(Routes.ARCHIVADOS),
-                    ),
-                  ],
-                ),
-                if (controller.rolName.value == "Admin")
-                  ExpansionTile(
-                    leading: const Icon(Icons.business_center_outlined),
-                    title: const Text("Clientes"),
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.format_list_numbered_outlined),
-                        title: const Text("Clientes"),
-                        onTap: () => Get.toNamed(Routes.CLIENTES),
                       ),
-                      // ListTile(
-                      //   leading: Icon(Icons.person_add_alt_1_outlined),
-                      //   title: const Text("Agregar Cliente"),
-                      //   onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
-                      // ),
-                    ],
-                  ),
-                if (controller.rolName.value == "Admin")
-                  const Divider(height: 1),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  leading: const Icon(Icons.logout_rounded, color: Colors.red),
-                  title: const Text(
-                    "Cerrar sesión",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  onTap: controller.signOut,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: controller.obx(
-        onLoading: Container(
-          color: Colors.white,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeInOut,
-                  builder: (context, value, child) =>
-                      Transform.scale(scale: value, child: child),
-                  child: SizedBox(
-                    width: 120,
-                    child: Image.asset(
-                      fit: BoxFit.contain,
-                      "assets/logos/digiApp.jpeg",
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ],
-            ),
-          ),
-        ),
-        onError: (error) => Center(child: Text("Error: $error")),
-        onEmpty: RefreshIndicator(
-          color: Colors.white,
-          backgroundColor: const Color(0XFF1D6CFF),
-          onRefresh: () async {
-            await controller.getFoliosWithDate();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: Get.size.height,
-              child: Center(child: FoliosEmptyPage(needDate: true)),
-            ),
-          ),
-        ),
-        (state) {
-          return RefreshIndicator(
-            color: Colors.white,
-            backgroundColor: const Color(0XFF1D6CFF),
-            onRefresh: () => controller.getFoliosWithDate(),
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: state!.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const SizedBox(height: 16),
+                      Obx(
+                        () => Text(
+                          controller.nameUser.value,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Obx(
+                        () => Row(
                           children: [
-                            Obx(
-                              () => Text(
-                                controller.obtenerEtiquetaFecha(
-                                  DateTime.tryParse(
-                                        controller.fechaSeleccionada.value,
-                                      ) ??
-                                      DateTime.now(),
-                                ),
-                                textScaler: const TextScaler.linear(1.8),
-                              ),
+                            const Icon(
+                              Icons.badge_outlined,
+                              color: Colors.white70,
+                              size: 18,
                             ),
-                            TextButton.icon(
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(50, 30),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
-                                ),
-                              ),
-                              onPressed: () {
-                                Get.toNamed(Routes.ADD_FOLIOS);
-                              },
-                              icon: const Icon(
-                                Icons.add,
-                                color: Color(0XFF1D6CFF),
-                              ),
-                              label: const Text(
-                                "Agregar Folio",
-                                style: TextStyle(color: Color(0XFF1D6CFF)),
+                            const SizedBox(width: 6),
+                            Text(
+                              controller.rolName.value,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+              ExpansionTile(
+                title: const Text("Refacciones"),
+                leading: const Icon(Icons.precision_manufacturing_outlined),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.format_list_numbered_outlined),
+                    title: const Text("Refacciones"),
+                    onTap: () {
+                      Get.toNamed(Routes.REFACCIONES);
+                    },
+                  ),
+                ],
+              ),
+              ExpansionTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: const Text("Folios"),
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text("Agregar"),
+                    onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.archive_outlined),
+                    title: const Text("Archivados"),
+                    onTap: () => Get.toNamed(Routes.ARCHIVADOS),
+                  ),
+                ],
+              ),
+              Obx(() {
+                if (controller.rolName.value == "Admin") {
+                  return Column(
+                    children: [
+                      ExpansionTile(
+                        leading: const Icon(Icons.business_center_outlined),
+                        title: const Text("Clientes"),
+                        children: [
+                          ListTile(
+                            leading: const Icon(
+                              Icons.format_list_numbered_outlined,
+                            ),
+                            title: const Text("Clientes"),
+                            onTap: () => Get.toNamed(Routes.CLIENTES),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 1),
                     ],
                   );
                 }
-                final folio = state[index - 1];
-                return InkWell(
-                  onLongPress: () {
-                    direccionDialog(folio: folio);
-                  },
-                  onTap: () {
-                    if (folio.folioId != null) {
-                      Get.toNamed(
-                        Routes.DETALLES_FOLIO,
-                        arguments: folio.folioId.toString(),
-                      );
-                    }
-                  },
-                  child: Dismissible(
-                    key: ValueKey(folio.id),
-                    direction: controller.rolName == "Reparto"
-                        ? DismissDirection.startToEnd
-                        : DismissDirection.horizontal,
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        // Resultado de la confirmación
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFE8F0FE),
-                                      child: Icon(
-                                        Icons.archive_outlined,
-                                        size: 40,
-                                        color: Color(0xFF1A73E8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Archivar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.archivarFolio(
-                                              folio.folioId ?? "",
-                                            );
-                                            Navigator.pop(context, true);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.orange,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Archivar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        return confirmacion ?? false;
-                      }
-                      if (direction == DismissDirection.endToStart) {
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFFEECEC),
-                                      child: Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 40,
-                                        color: Color(0xFFD9534F),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Eliminar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(
-                                            context,
-                                            false,
-                                          ), // Retorna false (no eliminar)
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.eliminarFolio(
-                                              folio.folioId ?? "",
-                                            );
-                                            Navigator.pop(
-                                              context,
-                                              true,
-                                            ); // Retorna true (sí eliminar)
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFFD9534F,
-                                            ),
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Eliminar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        return confirmacion ?? false;
-                      }
-                      return true;
-                    },
-                    background: Container(
-                      color: Colors.orange,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.archive_outlined,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Archivar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Eliminar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.delete_outline,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ],
-                      ),
-                    ),
-                    child: ListTile(
-                      style: ListTileStyle.list,
-                      dense: true,
-                      isThreeLine: false,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      leading: Column(
-                        children: [
-                          Text(
-                            folio.cantidad.toString(),
-                            textScaleFactor: 3.2,
-                            style: const TextStyle(height: 1),
-                          ),
-                          Flexible(
-                            child: Container(
-                              constraints: const BoxConstraints(maxWidth: 35),
-                              child: Text(
-                                folio.tiporefaccion.toString(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.business_center_outlined, size: 20),
-                          const SizedBox(width: 8.0),
-                          Expanded(
-                            child: Text(
-                              folio.nombreComercial ?? 'Sin nombre comercial',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                if (folio.municipio != null &&
-                                    folio.municipio!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.municipio!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    " - ",
-                                    style: TextStyle(color: Color(0XFF64748B)),
-                                  ),
-                                ],
-
-                                if (folio.condicionPago != null &&
-                                    folio.condicionPago!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.payments_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.condicionPago!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  if (folio.folioId != null &&
-                                      folio.folioId
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty)
-                                    const Text(
-                                      " - ",
-                                      style: TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                ],
-
-                                if (folio.folioId != null &&
-                                    folio.folioId
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.confirmation_number_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.folioId.toString(),
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: folio.status != "Por entregar"
-                                  ? Color(
-                                      int.parse(folio.statusColor.toString()),
-                                    )
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: Color(
-                                  int.parse(folio.statusColor.toString()),
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              folio.status.toString(),
-                              style: TextStyle(
-                                color: folio.status == "Por entregar"
-                                    ? Color(
-                                        int.parse(folio.statusColor.toString()),
-                                      )
-                                    : Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                return const SizedBox.shrink();
+              }),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text(
+                  "Cerrar sesión",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.w600,
                   ),
-                );
-              },
-            ),
-          );
-        },
+                ),
+                onTap: controller.signOut,
+              ),
+            ],
+          ),
+        ),
       ),
-    );
-  }
-}
-
-class DatePickerExample extends StatefulWidget {
-  const DatePickerExample({super.key});
-  @override
-  State<DatePickerExample> createState() => _DatePickerExampleState();
-}
-
-class _DatePickerExampleState extends State<DatePickerExample> {
-  DateTime? selectedDate;
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2021, 7, 25),
-      firstDate: DateTime(2021),
-      lastDate: DateTime(2022),
-    );
-    setState(() {
-      selectedDate = pickedDate;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        IconButton(onPressed: _selectDate, icon: const Icon(Icons.filter_list)),
-      ],
+      body: mainBody,
     );
   }
 }

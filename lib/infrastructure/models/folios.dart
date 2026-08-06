@@ -72,7 +72,10 @@ class Folios {
     }
 
     nombreComercial = json['nombreComercial']?.toString();
-    tiporefaccion = json['tipoRefaccion']?.toString();
+    
+    // Acepta ambas variantes (con mayúscula o minúscula) desde el JSON
+    tiporefaccion = (json['tipoRefaccion'] ?? json['tiporefaccion'])?.toString();
+    
     tiporeporte = json['tipoReporte']?.toString();
     condicionPago = json['condicionPago']?.toString();
     status = json['status']?.toString();

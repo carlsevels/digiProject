@@ -4,7 +4,6 @@ import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFoli
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:uuid/uuid.dart';
 
 class SearchFolioController extends GetxController with StateMixin<Folios> {
@@ -48,7 +47,8 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute(folioId(), [
         '%$idBuscado%',
       ]);
       if (resultSet.isEmpty) {

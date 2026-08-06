@@ -4,7 +4,6 @@ import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.que
 import 'package:bitacora_frontend/presentation/refacciones/queries/refacciones.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RefaccionesController extends GetxController
@@ -21,7 +20,8 @@ class RefaccionesController extends GetxController
 
   Future<void> _onInit() async {
     final miId = Supabase.instance.client.auth.currentUser?.id;
-    final ResultSet resultSet = await AppDatabase.db.execute(
+
+    final dynamic resultSet = await AppDatabase.db.execute(
       datosPersonalesQuery(),
       [miId],
     );
@@ -49,7 +49,8 @@ class RefaccionesController extends GetxController
     change(null, status: RxStatus.loading());
 
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute(
         listRefacciones(nombreController.text),
       );
 

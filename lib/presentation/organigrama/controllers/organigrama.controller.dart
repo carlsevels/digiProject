@@ -4,7 +4,6 @@ import 'package:bitacora_frontend/presentation/organigrama/models/chart_config.d
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:org_chart/org_chart.dart';
-import 'package:powersync/sqlite3.dart';
 
 class OrganigramaController extends GetxController {
   final isLoading = true.obs;
@@ -46,10 +45,10 @@ class OrganigramaController extends GetxController {
     config = ChartConfig();
     await getOrganigrama();
   }
-
-  Future<void> getOrganigrama() async {
+Future<void> getOrganigrama() async {
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute('''
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute('''
         SELECT 
             o.id,
             o.parent,
@@ -86,7 +85,6 @@ class OrganigramaController extends GetxController {
       print("Error al cargar organigrama local: $e");
     }
   }
-
   final List<Color> colorOptions = [
     Colors.blue,
     Colors.red,

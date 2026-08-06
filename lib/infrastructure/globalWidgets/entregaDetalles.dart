@@ -1,5 +1,6 @@
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/controllers/detalles_folio.controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -47,7 +48,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
                 children: [
                   Text(
                     state?.cantidad ?? "",
-                    textScaleFactor: 3.5,
+                    textScaleFactor: kIsWeb ? 3 : 3.5,
                     style: TextStyle(height: 1),
                   ),
                   Flexible(

@@ -8,7 +8,6 @@ import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart
 import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientesController extends GetxController
@@ -49,7 +48,8 @@ class ClientesController extends GetxController
       return;
     }
 
-    final ResultSet resultSet = await AppDatabase.db.execute(
+    // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+    final dynamic resultSet = await AppDatabase.db.execute(
       datosPersonalesQuery(),
       [miId],
     );
@@ -70,7 +70,9 @@ class ClientesController extends GetxController
 
     try {
       final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
+      
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute(
         listClientesQuery(),
         [searchText, searchText, searchText, _limit, _page * _limit],
       );
@@ -102,7 +104,9 @@ class ClientesController extends GetxController
 
     try {
       final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
+      
+      // CAMBIO AQUÍ: ResultSet cambiado a dynamic
+      final dynamic resultSet = await AppDatabase.db.execute(
         listClientesQuery(),
         [searchText, searchText, searchText, _limit, _page * _limit],
       );
