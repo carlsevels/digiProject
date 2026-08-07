@@ -24,6 +24,11 @@ class LayoutInternoController extends GetxController
     getDatos();
   }
 
+  void toggleMenu() {
+    isWebMenuVisible.value = !isWebMenuVisible.value;
+    update(); 
+  }
+
   void cambiarRuta(String route, int index) {
     if (Get.currentRoute != route) {
       if (index == 0) {

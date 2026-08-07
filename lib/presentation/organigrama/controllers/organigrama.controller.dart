@@ -16,8 +16,6 @@ class OrganigramaController extends GetxController with StateMixin {
   RxInt rolUsuario = 0.obs;
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
-
-  // Variables observables para los contadores del panel izquierdo
   var totalPlantilla = 0.obs;
   var totalVacantes = 0.obs;
   var totalAsignados = 0.obs;
@@ -110,7 +108,6 @@ class OrganigramaController extends GetxController with StateMixin {
             (s) => s.hasSynced == true,
           );
         }
-
         resultado = await AppDatabase.db.getOptional(
           '''
           SELECT dp.*, r."name" as "nombre_rol" 
