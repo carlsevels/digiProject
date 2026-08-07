@@ -303,7 +303,7 @@ class WebFolioView extends GetView<FoliosController> {
                       horizontal: 20,
                       vertical: 14,
                     ),
-                    color: const Color(0xFFF8FAFC),
+                    color:  Colors.white,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 
-import 'package:bitacora_frontend/infrastructure/layout/layout.dart';
-import 'package:bitacora_frontend/infrastructure/layout/layoutInterno.dart';
-import 'package:bitacora_frontend/infrastructure/navigation/bindings/controllers/layoutInterno.controller.binding.dart';
-
 import '../../config.dart';
 import '../../presentation/screens.dart';
 import 'bindings/controllers/controllers_bindings.dart';
@@ -32,7 +28,7 @@ class Nav {
   static List<GetPage> routes = [
     GetPage(
       name: Routes.HOME,
-      page: () => Layout(child: const HomeScreen()),
+      page: () => HomeScreen(),
       binding: HomeControllerBinding(),
     ),
     GetPage(

@@ -1,3 +1,4 @@
+import 'package:bitacora_frontend/infrastructure/layout/layout.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -31,7 +32,7 @@ void main() async {
 
 class Main extends StatelessWidget {
   final String initialRoute;
-  Main(this.initialRoute);
+  const Main(this.initialRoute, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +41,10 @@ class Main extends StatelessWidget {
       getPages: Nav.routes,
       locale: const Locale('es', 'ES'),
       debugShowCheckedModeBanner: false,
+      navigatorKey: Get.key,
+      builder: (context, child) {
+        return Layout(child: child!);
+      },
     );
   }
 }

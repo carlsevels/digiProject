@@ -3,40 +3,25 @@ import 'package:bitacora_frontend/infrastructure/storage/user.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 class LoginController extends GetxController with StateMixin {
-  //TODO: Implement LoginController
   RxBool showPassword = false.obs;
+  RxBool isLoading = false.obs; // Indicador de carga seguro
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  final count = 0.obs;
   @override
   void onInit() {
     change(null, status: RxStatus.success());
     super.onInit();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   Future<void> signInWithEmail() async {
     try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator(color: Colors.white)),
-        barrierDismissible: false,
-      );
+      isLoading.value = true;
 
       final AuthResponse res = await Supabase.instance.client.auth
           .signInWithPassword(
@@ -82,24 +67,22 @@ class LoginController extends GetxController with StateMixin {
           }
         }
 
-        Get.back(); // Cierra el diálogo de carga
+        isLoading.value = false;
         Get.offAllNamed(Routes.FOLIOS);
       }
     } catch (e, stack) {
-      if (Get.isDialogOpen == true) {
-        Get.back();
-      }
-
+      isLoading.value = false;
       print(stack);
+      print("Error en login: $e");
 
-      Get.snackbar(
-        "Error",
-        e.toString(),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      if (Get.context != null) {
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
   void increment() => count.value++;
+  final count = 0.obs;
 }

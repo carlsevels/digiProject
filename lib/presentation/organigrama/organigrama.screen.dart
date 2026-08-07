@@ -1,81 +1,301 @@
 import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
 import 'package:bitacora_frontend/presentation/organigrama/widgets/chart_node_widget.dart';
 import 'package:bitacora_frontend/presentation/organigrama/widgets/dialogs.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/organigrama.controller.dart';
 import 'package:org_chart/org_chart.dart';
 
-class OrganigramaScreen extends GetView<OrganigramaController> {
-  OrganigramaScreen({super.key});
+class OrganigramaScreen extends StatefulWidget {
+  const OrganigramaScreen({super.key});
+
+  @override
+  State<OrganigramaScreen> createState() => _OrganigramaScreenState();
+}
+
+class _OrganigramaScreenState extends State<OrganigramaScreen> {
+  bool _isWebMenuVisible = true;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Organigrama'),
-        elevation: 2,
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.info_outline),
-        //     onPressed: () {
-        //       _showInstructions(context);
-        //     },
-        //     tooltip: 'Instructions',
-        //   ),
-        // ],
-      ),
-      body: Row(
-        children: [
-          // Left Sidebar
-          // ChartOptionsSidebar(
-          //   config: controller.config,
-          //   controller: controller.controllerChart,
-          //   interactiveViewerController: controller.interactiveController,
-          //   onConfigChanged: (newConfig) {
-          //     // Check if leaf column count has changed
-          //     if (controller.config.leafColumnCount !=
-          //         newConfig.leafColumnCount) {
-          //       controller.controllerChart.leafColumns =
-          //           newConfig.leafColumnCount;
-          //       controller.controllerChart.calculatePosition();
-          //     }
+    final controller = Get.find<OrganigramaController>();
+    final colorScheme = Theme.of(context).colorScheme;
 
-          //     controller.config = newConfig;
-          //   },
-          //   onAddNodePressed: () {
-          //     _showAddNodeDialog(context);
-          //   },
-          //   onResetLayoutPressed: () {
-          //     controller.controllerChart.calculatePosition();
-          //     ScaffoldMessenger.of(
-          //       context,
-          //     ).showSnackBar(const SnackBar(content: Text('Layout reset')));
-          //   },
-          // ),
-          Expanded(
-            flex: 3,
-            child: Container(
+    final Widget mainBody = controller.obx(
+      (state) => Scaffold(
+        body: Row(
+          children: [
+            Container(
+              width: 320,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    Theme.of(context).colorScheme.surface,
-                  ],
+                color: Colors.white,
+                border: Border(
+                  right: BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
                 ),
               ),
-              child: _buildOrgChart(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Panel de Control RH",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Gestión de plantilla y jerarquías",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+
+                  // Tarjetas de Métricas de Personal (Plantilla, Vacantes y Empleados)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildMetricCard(
+                                context,
+                                title: "Plantilla",
+                                value:
+                                    "${controller.controllerChart.items.length}",
+                                icon: Icons.group_outlined,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildMetricCard(
+                                context,
+                                title: "Vacantes",
+                                value:
+                                    "${controller.controllerChart.items.where((i) => i.employee_id == null || i.employee_id.toString().trim().isEmpty).length}",
+                                icon: Icons.person_off_outlined,
+                                color: Colors.amber.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _buildMetricCard(
+                            context,
+                            title: "Empleados Asignados",
+                            value:
+                                "${controller.controllerChart.items.where((i) => i.employee_id != null && i.employee_id.toString().trim().isNotEmpty).length}",
+                            icon: Icons.how_to_reg_outlined,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Text(
+                      "Acciones Rápidas",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            leading: const Icon(Icons.add_circle_outline),
+                            title: const Text('Crear Nueva Plaza'),
+                            subtitle: const Text(
+                              'Añadir puesto al organigrama',
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            onTap: () =>
+                                _showAddNodeDialog(context, controller),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            leading: const Icon(Icons.refresh_outlined),
+                            title: const Text('Restablecer Vista'),
+                            subtitle: const Text('Centrar organigrama'),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            onTap: () {
+                              controller.controllerChart.calculatePosition();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Vista de organigrama restablecida',
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.4,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            size: 20,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "Arrastra un puesto sobre otro para reorganizar la línea de reporte.",
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+
+            // --- LIENZO PRINCIPAL ---
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      ),
+                      colorScheme.surface,
+                    ],
+                  ),
+                ),
+                child: _buildOrgChart(context, controller),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: const Color(0XFFF8FAFC),
+        body: Row(
+          children: [
+            if (_isWebMenuVisible)
+              const VerticalDivider(
+                thickness: 1,
+                width: 1,
+                color: Color(0xFFE2E8F0),
+              ),
+
+            Expanded(
+              child: Scaffold(
+                backgroundColor: const Color(0XFFF8FAFC),
+                body: mainBody,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return mainBody;
+  }
+
+  Widget _buildMetricCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOrgChart(context) {
+  Widget _buildOrgChart(context, OrganigramaController controller) {
     return Stack(
       children: [
         SizedBox.expand(
@@ -86,9 +306,10 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
               details: details,
               cornerRadius: controller.config.cornerRadius,
             ),
-            optionsBuilder: (item) => _buildOptionsMenu(item),
+            optionsBuilder: (item) =>
+                _buildOptionsMenu(item, context, controller),
             onOptionSelect: (item, value) {
-              _handleOptionSelect(item, value, context);
+              _handleOptionSelect(item, value, context, controller);
             },
             isDraggable: controller.config.isDraggable,
             cornerRadius: controller.config.cornerRadius,
@@ -133,12 +354,10 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
             onDrop: (dragged, target, isTargetSubnode) async {
               try {
                 if (isTargetSubnode || dragged.id == target.id) {
-                  print("Validación: Es subnodo o es el mismo ID");
                   return;
                 }
 
                 if (dragged.parent == target.id) {
-                  print("Validación: Ya tiene ese padre");
                   return;
                 }
 
@@ -240,41 +459,45 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     );
   }
 
-  List<PopupMenuEntry<String>> _buildOptionsMenu(Organigrama item) {
+  List<PopupMenuEntry<String>> _buildOptionsMenu(
+    Organigrama item,
+    context,
+    OrganigramaController controller,
+  ) {
     final List<PopupMenuEntry<String>> options = [];
 
     if (item.parent != null) {
       options.add(
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'remove',
-          child: const ListTile(
-            leading: Icon(Icons.delete_outline),
-            title: Text('Remove Node'),
+          child: ListTile(
+            leading: Icon(Icons.delete_outline, color: Colors.red),
+            title: Text('Eliminar Plaza', style: TextStyle(color: Colors.red)),
           ),
         ),
       );
     }
 
     options.addAll([
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'edit',
-        child: const ListTile(
+        child: ListTile(
           leading: Icon(Icons.edit_outlined),
-          title: Text('Edit Node'),
+          title: Text('Editar Puesto'),
         ),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'add',
-        child: const ListTile(
-          leading: Icon(Icons.add_circle_outline),
-          title: Text('Add Child'),
+        child: ListTile(
+          leading: Icon(Icons.person_add_outlined),
+          title: Text('Añadir Subordinado'),
         ),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'color',
-        child: const ListTile(
+        child: ListTile(
           leading: Icon(Icons.color_lens_outlined),
-          title: Text('Change Color'),
+          title: Text('Cambiar Color de Área'),
         ),
       ),
     ]);
@@ -282,24 +505,33 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     return options;
   }
 
-  void _handleOptionSelect(Organigrama item, dynamic value, context) {
+  void _handleOptionSelect(
+    Organigrama item,
+    dynamic value,
+    context,
+    OrganigramaController controller,
+  ) {
     switch (value) {
       case 'remove':
-        _removeNode(item, context);
+        _removeNode(item, context, controller);
         break;
       case 'edit':
-        _handleEditNode(item, context);
+        _handleEditNode(item, context, controller);
         break;
       case 'add':
-        _addChildNode(item, context);
+        _addChildNode(item, context, controller);
         break;
       case 'color':
-        _changeNodeColor(item, context);
+        _changeNodeColor(item, context, controller);
         break;
     }
   }
 
-  void _removeNode(Organigrama item, context) {
+  void _removeNode(
+    Organigrama item,
+    context,
+    OrganigramaController controller,
+  ) {
     try {
       controller.controllerChart.removeItem(
         item.id.toString(),
@@ -310,8 +542,11 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  /// Edit an existing node
-  void _handleEditNode(Organigrama item, context) async {
+  void _handleEditNode(
+    Organigrama item,
+    context,
+    OrganigramaController controller,
+  ) async {
     final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
@@ -327,7 +562,11 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  void _addChildNode(Organigrama item, context) async {
+  void _addChildNode(
+    Organigrama item,
+    context,
+    OrganigramaController controller,
+  ) async {
     final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
@@ -350,8 +589,7 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  /// Show dialog to add a new node
-  void _showAddNodeDialog(context) async {
+  void _showAddNodeDialog(context, OrganigramaController controller) async {
     final result = await showDialog<Organigrama>(
       context: context,
       builder: (context) => NodeDialog(
@@ -373,8 +611,11 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  /// Change the color of a node
-  void _changeNodeColor(Organigrama item, context) async {
+  void _changeNodeColor(
+    Organigrama item,
+    context,
+    OrganigramaController controller,
+  ) async {
     final result = await showDialog<Color?>(
       context: context,
       builder: (context) =>
@@ -386,7 +627,6 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     }
   }
 
-  /// Show the instructions dialog
   void _showInstructions(context) {
     showDialog(
       context: context,
@@ -394,7 +634,6 @@ class OrganigramaScreen extends GetView<OrganigramaController> {
     );
   }
 
-  /// Show an error dialog
   void _showError(String message, context) {
     showDialog(
       context: context,
