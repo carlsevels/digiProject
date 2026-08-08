@@ -206,6 +206,25 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
+      confirmText: "Aceptar",
+      cancelText: "Cancelar",
+      helpText: "Buscar fecha",
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1D6CFF),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF1E293B),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: Color(0xFF1D6CFF)),
+            ),
+          ),
+          child: child!,
+        );
+      },
       context: context,
       initialDate: selectedDate ?? DateTime.now(),
       firstDate: DateTime(2025),

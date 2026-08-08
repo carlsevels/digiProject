@@ -34,17 +34,18 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     super.onClose();
   }
 
-  Future<void> onInitDetalles() async {
-    final String id = Get.arguments?.toString() ?? "";
+  Future<void> onInitDetalles({String? customId}) async {
+    final String idBuscado =
+        Get.arguments?.toString() ?? customId!;
 
-    if (id.isEmpty) {
-      print("Error: El ID recibido es nulo o vacío");
-      change(null, status: RxStatus.error("ID no válido"));
+    if (idBuscado.isEmpty) {
+      print("Aviso: No se recibió ningún ID para cargar los detalles.");
+      change(null, status: RxStatus.empty());
       return;
     }
-    print("FolioId: $id");
+    print("FolioId: $idBuscado");
 
-    await getDetailsFolio(id);
+    await getDetailsFolio(idBuscado);
   }
 
   @override

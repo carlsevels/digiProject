@@ -1,4 +1,7 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
+import 'package:bitacora_frontend/presentation/refacciones/responsive/movil_refacciones.dart';
+import 'package:bitacora_frontend/presentation/refacciones/responsive/web_refacciones.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/refacciones.controller.dart';
@@ -10,220 +13,81 @@ class RefaccionesScreen extends GetView<RefaccionesController> {
   Widget build(BuildContext context) {
     return controller.obx(
       (state) {
-        final list = state ?? [];
         return Scaffold(
           appBar: AppBar(
+            iconTheme: const IconThemeData(color: Color(0XFF64748B)),
+            centerTitle: false,
             scrolledUnderElevation: 0.0,
             backgroundColor: Colors.white,
             surfaceTintColor: Colors.white,
-            title: SizedBox(
-              width: 120,
-              child: Obx(
-                () => Image.asset(
-                  fit: BoxFit.contain,
-                  controller.rolUsuario.value == 1
-                      ? "assets/logos/digiAdmin.jpeg"
-                      : "assets/logos/digiRepartidores.jpeg",
+            automaticallyImplyLeading: false,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1.0),
+              child: Container(color: Colors.grey.shade200, height: 1.0),
+            ),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff1565C0).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.precision_manufacturing_outlined,
+                    color: Color(0xff1565C0),
+                    size: 20,
+                  ),
                 ),
-              ),
-            ),
-            centerTitle: true,
-          ),
-          body: RefreshIndicator(
-            color: Colors.white,
-            backgroundColor: const Color(0XFF1D6CFF),
-            onRefresh: () => controller.getRefacciones(),
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              itemCount: list.isEmpty ? 3 : list.length + 2,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(
-                                Icons.precision_manufacturing_outlined,
-                                color: Color(0XFF64748B),
-                              ),
-                              SizedBox(width: 12),
-                              Text(
-                                "Refacciones",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0XFF334155),
-                                ),
-                              ),
-                            ],
-                          ),
-                          TextButton.icon(
-                            onPressed: () => Get.toNamed(Routes.ADD_REFACCION),
-                            icon: const Icon(
-                              Icons.add,
-                              color: Color(0XFF1D6CFF),
-                            ),
-                            label: const Text(
-                              "Agregar",
-                              style: TextStyle(color: Color(0XFF1D6CFF)),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }
-
-                if (index == 1) {
-                  return Column(
-                    children: [
-                      TextFormField(
-                        controller: controller.nombreController,
-                        textInputAction: TextInputAction.search,
-                        onFieldSubmitted: (value) {
-                          FocusScope.of(context).unfocus();
-                          controller.getRefacciones();
-                        },
-                        decoration: InputDecoration(
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () {
-                              FocusScope.of(context).unfocus();
-                              controller.getRefacciones();
-                            },
-                          ),
-                          enabledBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0XFF64748B)),
-                          ),
-                          focusedBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0XFF64748B)),
-                          ),
-                          hintText: "Buscar refaccion",
-                          hintStyle: const TextStyle(color: Color(0XFF64748B)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }
-
-                final refaccion = list[index - 2];
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0XFF0F172A),
-                    child: Text(
-                      refaccion.nombre!.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                const SizedBox(width: 12),
+                const Text(
+                  "Refacciones",
+                  style: TextStyle(
+                    color: Color(0xff1565C0),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    letterSpacing: 0.5,
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      showDialog<bool>(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (context) => Dialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Color(0xFFFEE2E2),
-                                  child: Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 40,
-                                    color: Color(0xFFDC2626),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                const Text(
-                                  'Eliminar Refacción',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1F2937),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  '¿Estás seguro de eliminar esta refacción? Esta acción no se puede deshacer.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Color(0xFF64748B)),
-                                ),
-                                const SizedBox(height: 24),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
-                                        child: const Text(
-                                          'Cancelar',
-                                          style: TextStyle(
-                                            color: Color(0xFF64748B),
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context, true);
-                                          controller.eliminarRefaccion(
-                                            refaccion.id.toString(),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFFDC2626,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Eliminar',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  title: Text(refaccion.nombre.toString()),
-                );
-              },
+                ),
+              ],
             ),
           ),
+
+          body: kIsWeb ? WebRefaccionesView() : MovilRefaccionesView(),
         );
       },
-      onLoading: const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      onLoading: Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: SizedBox(
+                  width: 120,
+                  child: Image.asset(
+                    fit: BoxFit.contain,
+                    "assets/logos/digiApp.jpeg",
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ),
+        ),
       ),
+
       onEmpty: Scaffold(
         appBar: AppBar(
           scrolledUnderElevation: 0.0,

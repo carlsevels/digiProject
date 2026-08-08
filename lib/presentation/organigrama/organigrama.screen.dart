@@ -23,7 +23,39 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final Widget mainBody = controller.obx(
+      onLoading: Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeInOut,
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: SizedBox(
+                  width: 120,
+                  child: Image.asset(
+                    fit: BoxFit.contain,
+                    "assets/logos/digiApp.jpeg",
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+
       (state) => Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
         body: Row(
           children: [
             Container(
@@ -232,7 +264,7 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
     );
     if (kIsWeb) {
       return Scaffold(
-        backgroundColor: const Color(0XFFF8FAFC),
+        backgroundColor: const Color(0xFFF8FAFC),
         body: Row(
           children: [
             if (_isWebMenuVisible)
@@ -244,7 +276,7 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
 
             Expanded(
               child: Scaffold(
-                backgroundColor: const Color(0XFFF8FAFC),
+                backgroundColor: const Color(0xFFF8FAFC),
                 body: mainBody,
               ),
             ),
@@ -267,7 +299,7 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.4),
@@ -296,166 +328,170 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
   }
 
   Widget _buildOrgChart(context, OrganigramaController controller) {
-    return Stack(
-      children: [
-        SizedBox.expand(
-          child: OrgChart<Organigrama>(
-            controller: controller.controllerChart,
-            viewerController: controller.interactiveController,
-            builder: (details) => ChartNodeWidget(
-              details: details,
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: Stack(
+        children: [
+          SizedBox.expand(
+            child: OrgChart<Organigrama>(
+              controller: controller.controllerChart,
+              builder: (details) => ChartNodeWidget(
+                details: details,
+                cornerRadius: controller.config.cornerRadius,
+              ),
+              optionsBuilder: (item) =>
+                  _buildOptionsMenu(item, context, controller),
+              onOptionSelect: (item, value) {
+                _handleOptionSelect(item, value, context, controller);
+              },
+              isDraggable: controller.config.isDraggable,
               cornerRadius: controller.config.cornerRadius,
-            ),
-            optionsBuilder: (item) =>
-                _buildOptionsMenu(item, context, controller),
-            onOptionSelect: (item, value) {
-              _handleOptionSelect(item, value, context, controller);
-            },
-            isDraggable: controller.config.isDraggable,
-            cornerRadius: controller.config.cornerRadius,
-            arrowStyle: controller.config.arrowStyle,
-            duration: controller.config.animationDuration,
-            curve: controller.config.animationCurve,
-            lineEndingType: controller.config.lineEndingType,
-            interactionConfig: InteractionConfig(
-              enableRotation: controller.config.enableRotation,
-              constrainBounds: controller.config.constrainBounds,
-              enableFling: controller.config.enableFling,
-              scrollMode: controller.config.enablePan
-                  ? ScrollMode.both
-                  : ScrollMode.none,
-            ),
-            keyboardConfig: KeyboardConfig(
-              enableKeyboardControls: controller.config.enableKeyboardControls,
-              keyboardPanDistance: controller.config.keyboardPanDistance,
-              keyboardZoomFactor: controller.config.keyboardZoomFactor,
-              animateKeyboardTransitions:
-                  controller.config.animateKeyboardTransitions,
-              keyboardAnimationCurve: controller.config.keyboardAnimationCurve,
-              keyboardAnimationDuration:
-                  controller.config.keyboardAnimationDuration,
-              invertArrowKeyDirection:
-                  controller.config.invertArrowKeyDirection,
-              enableKeyRepeat: controller.config.enableKeyRepeat,
-              keyRepeatInitialDelay: controller.config.keyRepeatInitialDelay,
-              keyRepeatInterval: controller.config.keyRepeatInterval,
-            ),
-            zoomConfig: ZoomConfig(
-              minScale: controller.config.minScale,
-              maxScale: controller.config.maxScale,
-              enableZoom: controller.config.enableZoom,
-              enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
-              doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
-              enableCtrlScrollToScale:
-                  controller.config.enableCtrlScrollToScale,
-            ),
-            focusNode: controller.focusNode,
-            linePaint: controller.config.getLinePaint(context),
-            onDrop: (dragged, target, isTargetSubnode) async {
-              try {
-                if (isTargetSubnode || dragged.id == target.id) {
-                  return;
-                }
-
-                if (dragged.parent == target.id) {
-                  return;
-                }
-
-                dragged.parent = target.id;
-
-                await controller.actualizarPosicion(
-                  id: dragged.id.toString(),
-                  newParent: target.id.toString(),
-                );
-                Future.delayed(const Duration(milliseconds: 200), () {
-                  try {
-                    controller.controllerChart.updateItem(dragged);
-                  } catch (eChart) {
-                    print("ERROR EN CHART: $eChart");
+              arrowStyle: controller.config.arrowStyle,
+              duration: controller.config.animationDuration,
+              curve: controller.config.animationCurve,
+              lineEndingType: controller.config.lineEndingType,
+              interactionConfig: InteractionConfig(
+                enableRotation: controller.config.enableRotation,
+                constrainBounds: controller.config.constrainBounds,
+                enableFling: controller.config.enableFling,
+                scrollMode: controller.config.enablePan
+                    ? ScrollMode.both
+                    : ScrollMode.none,
+              ),
+              keyboardConfig: KeyboardConfig(
+                enableKeyboardControls:
+                    controller.config.enableKeyboardControls,
+                keyboardPanDistance: controller.config.keyboardPanDistance,
+                keyboardZoomFactor: controller.config.keyboardZoomFactor,
+                animateKeyboardTransitions:
+                    controller.config.animateKeyboardTransitions,
+                keyboardAnimationCurve:
+                    controller.config.keyboardAnimationCurve,
+                keyboardAnimationDuration:
+                    controller.config.keyboardAnimationDuration,
+                invertArrowKeyDirection:
+                    controller.config.invertArrowKeyDirection,
+                enableKeyRepeat: controller.config.enableKeyRepeat,
+                keyRepeatInitialDelay: controller.config.keyRepeatInitialDelay,
+                keyRepeatInterval: controller.config.keyRepeatInterval,
+              ),
+              zoomConfig: ZoomConfig(
+                minScale: controller.config.minScale,
+                maxScale: controller.config.maxScale,
+                enableZoom: controller.config.enableZoom,
+                enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
+                doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
+                enableCtrlScrollToScale:
+                    controller.config.enableCtrlScrollToScale,
+              ),
+              focusNode: controller.focusNode,
+              linePaint: controller.config.getLinePaint(context),
+              onDrop: (dragged, target, isTargetSubnode) async {
+                try {
+                  if (isTargetSubnode || dragged.id == target.id) {
+                    return;
                   }
-                });
-              } catch (e, stackTrace) {
-                print("💥 ERROR FATAL EN ONDROP: $e");
-                print(stackTrace);
-              }
-            },
+
+                  if (dragged.parent == target.id) {
+                    return;
+                  }
+
+                  dragged.parent = target.id;
+
+                  await controller.actualizarPosicion(
+                    id: dragged.id.toString(),
+                    newParent: target.id.toString(),
+                  );
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    try {
+                      controller.controllerChart.updateItem(dragged);
+                    } catch (eChart) {
+                      print("ERROR EN CHART: $eChart");
+                    }
+                  });
+                } catch (e, stackTrace) {
+                  print("💥 ERROR FATAL EN ONDROP: $e");
+                  print(stackTrace);
+                }
+              },
+            ),
           ),
-        ),
-        if (controller.focusNode.hasFocus)
-          IgnorePointer(
-            child: Stack(
-              children: [
-                SizedBox.expand(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
+          if (controller.focusNode.hasFocus)
+            IgnorePointer(
+              child: Stack(
+                children: [
+                  SizedBox.expand(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            spreadRadius: 4,
+                            blurStyle: BlurStyle.outer,
+                          ),
+                        ],
+                        border: Border.all(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          spreadRadius: 4,
-                          blurStyle: BlurStyle.outer,
+                          ).colorScheme.primary.withValues(alpha: 0.6),
+                          width: 2,
                         ),
-                      ],
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.6),
-                        width: 2,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.keyboard,
-                          size: 16,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onPrimaryContainer,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Focus Mode",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.keyboard,
+                            size: 16,
                             color: Theme.of(
                               context,
                             ).colorScheme.onPrimaryContainer,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            "Focus Mode",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

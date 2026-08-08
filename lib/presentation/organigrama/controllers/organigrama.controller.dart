@@ -43,9 +43,6 @@ class OrganigramaController extends GetxController with StateMixin {
         leafColumns: ChartConfig().leafColumnCount,
       );
 
-  final CustomInteractiveViewerController interactiveController =
-      CustomInteractiveViewerController();
-
   late ChartConfig config;
   late final FocusNode focusNode;
 
@@ -155,10 +152,6 @@ class OrganigramaController extends GetxController with StateMixin {
             .from('datosPersonales')
             .select('userId, nombre, apellidoMaterno, apellidoPaterno');
 
-        print(
-          "Total de datos personales descargados en Web: ${dpResponse.length}",
-        );
-
         final Map<String, Map<String, dynamic>> dpMap = {
           for (var item in dpResponse)
             (item['userId']?.toString() ?? ''): Map<String, dynamic>.from(item),
@@ -207,7 +200,6 @@ class OrganigramaController extends GetxController with StateMixin {
         controllerChart.addItem(item);
       }
 
-      // Cálculos actualizados para las tarjetas
       totalPlantilla.value = loadedItems.length;
       totalAsignados.value = loadedItems
           .where(
@@ -226,8 +218,6 @@ class OrganigramaController extends GetxController with StateMixin {
       }
 
       update();
-
-      print("Organigrama cargado con éxito: ${loadedItems.length} registros");
     } catch (e) {
       isLoading.value = false;
       change(null, status: RxStatus.error(e.toString()));
@@ -253,7 +243,6 @@ class OrganigramaController extends GetxController with StateMixin {
   @override
   void dispose() {
     focusNode.dispose();
-    interactiveController.dispose();
     super.dispose();
   }
 
@@ -270,8 +259,6 @@ class OrganigramaController extends GetxController with StateMixin {
             .from('organigrama')
             .update({'parent': parsedParent})
             .eq('id', parsedId!);
-
-        print("Posición actualizada en Supabase correctamente");
       } else {
         await AppDatabase.db.execute(
           '''
@@ -281,7 +268,6 @@ class OrganigramaController extends GetxController with StateMixin {
           ''',
           [parsedParent, parsedId],
         );
-        print("Posición actualizada en Base de Datos Local correctamente");
       }
       return null;
     } catch (e) {

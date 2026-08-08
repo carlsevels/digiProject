@@ -51,14 +51,13 @@ class ChartNodeWidget extends StatelessWidget {
       width: 180,
       height: 90,
       child: Card(
+        color: Colors.white,
         margin: EdgeInsets.zero,
         elevation: 3,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cornerRadius),
           side: BorderSide(
-            color: isOccupied
-                ? nodeColor.withAlpha(150)
-                : Colors.grey.withAlpha(100),
+            color: isOccupied ? nodeColor.withAlpha(150) : Colors.white,
             width: 2,
           ),
         ),
