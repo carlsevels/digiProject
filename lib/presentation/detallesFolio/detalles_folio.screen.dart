@@ -1,9 +1,3 @@
-import 'package:bitacora_frontend/infrastructure/globalWidgets/appBarWithoutImage.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/btnSlideStatus.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/entregaDetalles.dart';
-import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/responsive/detallesFolio_movil.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/responsive/detallesFolio_wev.dart';
 import 'package:flutter/foundation.dart';

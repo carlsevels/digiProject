@@ -206,7 +206,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
-      confirmText: "Aceptar",
+      confirmText: "Aplicar",
       cancelText: "Cancelar",
       helpText: "Buscar fecha",
       builder: (BuildContext context, Widget? child) {

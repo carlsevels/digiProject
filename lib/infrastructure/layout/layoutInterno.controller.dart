@@ -41,16 +41,15 @@ class LayoutInternoController extends GetxController
     }
   }
 
-  Future<void> getDatos() async {
+ Future<void> getDatos() async {
     change(null, status: RxStatus.loading());
     try {
       final miId = Supabase.instance.client.auth.currentUser?.id;
       Map<String, dynamic>? resultado;
 
       if (kIsWeb) {
-        print("--- DIAGNÓSTICO TOTAL ---");
+        print("--- DIAGNÓSTICO TOTAL (WEB) ---");
 
-        // 1. Traemos SOLO los datos personales primero
         final response = await Supabase.instance.client
             .from('datosPersonales')
             .select('*')
@@ -59,25 +58,14 @@ class LayoutInternoController extends GetxController
 
         if (response != null) {
           final dynamic rolIdVal = response['rolId'];
-          print(
-            "ID del rol del usuario en la BD: $rolIdVal (Tipo: ${rolIdVal.runtimeType})",
-          );
-
           String rolNameVal = 'Sin rol';
 
           try {
-            // 2. Traemos TODA la tabla de roles sin filtros para ver qué contiene
             final List<dynamic> allRoles = await Supabase.instance.client
                 .from('roles')
                 .select('*');
 
-            print("Roles encontrados en Supabase: $allRoles");
-
-            // 3. Comparación forzada a String
             for (var r in allRoles) {
-              print(
-                "Comparando rol ID: ${r['id']} contra usuario rolId: $rolIdVal",
-              );
               if (r['id'].toString() == rolIdVal.toString()) {
                 rolNameVal = r['name']?.toString() ?? 'Sin nombre en columna';
                 break;
@@ -87,18 +75,10 @@ class LayoutInternoController extends GetxController
             print("ERROR FATAL AL LEER ROLES: $e");
           }
 
-          print("Nombre de rol final determinado: $rolNameVal");
-
           resultado = {...response, "nombre_rol": rolNameVal};
-          rolName.value = rolNameVal;
-          nameUser.value = response['nombre']?.toString() ?? "Usuario";
-          rolUsuario.value = (rolIdVal is int)
-              ? rolIdVal
-              : int.tryParse(rolIdVal.toString()) ?? 1;
-
-          change(resultado, status: RxStatus.success());
         }
       } else {
+        print("--- DIAGNÓSTICO TOTAL (MÓVIL) ---");
         final status = AppDatabase.db.currentStatus;
         if (status.hasSynced != true) {
           await AppDatabase.db.statusStream.firstWhere(
@@ -117,19 +97,29 @@ class LayoutInternoController extends GetxController
         );
       }
 
+      // ESTA PARTE AHORA SE EJECUTA SIEMPRE (Tanto en Web como en Móvil)
       if (resultado != null) {
         rolName.value = resultado["nombre_rol"]?.toString() ?? "Sin rol";
         nameUser.value = resultado["nombre"]?.toString() ?? "Usuario";
-        rolUsuario.value = (resultado["rolId"] ?? 1) as int;
+        
+        final dynamic rolIdVal = resultado["rolId"];
+        rolUsuario.value = (rolIdVal is int)
+            ? rolIdVal
+            : int.tryParse(rolIdVal.toString()) ?? 1;
+
+        print("rolName.value: ${rolName.value}");
+        print("nameUser.value: ${nameUser.value}");
+        
         change(resultado, status: RxStatus.success());
       } else {
+        print("Resultado nulo en la consulta.");
         change(null, status: RxStatus.success());
       }
     } catch (e) {
+      print("ERROR EN getDatos: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
   }
-
   Future<void> signOutAllDevices() async {
     await Supabase.instance.client.auth.signOut(scope: SignOutScope.global);
     Get.toNamed(Routes.LOGIN);

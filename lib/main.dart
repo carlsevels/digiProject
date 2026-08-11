@@ -43,7 +43,7 @@ class Main extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: Get.key,
       builder: (context, child) {
-        return Layout(child: child!);
+        return Material(child: Layout(child: child ?? const SizedBox.shrink()));
       },
     );
   }

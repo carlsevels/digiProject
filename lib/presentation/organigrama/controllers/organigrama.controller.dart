@@ -37,12 +37,11 @@ class OrganigramaController extends GetxController with StateMixin {
           }
           return item;
         },
-        boxSize: const Size(180, 90),
-        spacing: ChartConfig().nodeSpacing,
-        runSpacing: ChartConfig().levelSpacing,
+        boxSize: const Size(210, 100),
+        spacing: 80,
+        runSpacing: 100,
         leafColumns: ChartConfig().leafColumnCount,
       );
-
   late ChartConfig config;
   late final FocusNode focusNode;
 

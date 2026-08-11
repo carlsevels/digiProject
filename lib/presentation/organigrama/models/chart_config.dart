@@ -96,7 +96,7 @@ class ChartConfig {
   /// Get a Paint object for lines based on current settings
   Paint getLinePaint(BuildContext context) {
     return Paint()
-      ..color = Theme.of(context).colorScheme.primary
+      ..color = Colors.black
       ..strokeWidth = arrowStyle is DashedGraphArrow ? dashThickness : 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

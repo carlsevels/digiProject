@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
+import 'package:bitacora_frontend/infrastructure/models/codeBar.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
@@ -17,10 +18,14 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt condicionPagoId = 0.obs;
   RxInt repartidorId = 2.obs;
   RxInt tipoDocumentoId = 0.obs;
-
+  bool isProcessingBarcode = false;
   //Controllers
   TextEditingController cantidadController = TextEditingController();
   TextEditingController numReporteController = TextEditingController();
+
+  final Rx<BarcodeResponse> _codeBar = BarcodeResponse().obs;
+  BarcodeResponse get codeBar => this._codeBar.value;
+  set codeBar(value) => this._codeBar.value = value;
 
   final RxList<Clientes> _clientesModel = <Clientes>[].obs;
   RxList<Clientes> get clientesModel => this._clientesModel;
@@ -228,6 +233,14 @@ class AddFoliosController extends GetxController with StateMixin {
       Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
     }
     return null;
+  }
+
+  Future<void> navigateToScanner(Widget scanner, context) async {
+    isProcessingBarcode = false;
+
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => scanner));
   }
 
   void increment() => count.value++;

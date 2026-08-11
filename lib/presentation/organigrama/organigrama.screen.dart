@@ -58,186 +58,187 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
         backgroundColor: const Color(0xFFF8FAFC),
         body: Row(
           children: [
-            Container(
-              width: 320,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  right: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    width: 1,
+            if (controller.rolName == "Recursos Humanos")
+              Container(
+                width: 320,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    right: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
                   ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Panel de Control RH",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Gestión de plantilla y jerarquías",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-
-                  // Tarjetas de Métricas de Personal (Plantilla, Vacantes y Empleados)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                title: "Plantilla",
-                                value:
-                                    "${controller.controllerChart.items.length}",
-                                icon: Icons.group_outlined,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildMetricCard(
-                                context,
-                                title: "Vacantes",
-                                value:
-                                    "${controller.controllerChart.items.where((i) => i.employee_id == null || i.employee_id.toString().trim().isEmpty).length}",
-                                icon: Icons.person_off_outlined,
-                                color: Colors.amber.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: _buildMetricCard(
-                            context,
-                            title: "Empleados Asignados",
-                            value:
-                                "${controller.controllerChart.items.where((i) => i.employee_id != null && i.employee_id.toString().trim().isNotEmpty).length}",
-                            icon: Icons.how_to_reg_outlined,
-                            color: Colors.green.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Text(
-                      "Acciones Rápidas",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            leading: const Icon(Icons.add_circle_outline),
-                            title: const Text('Crear Nueva Plaza'),
-                            subtitle: const Text(
-                              'Añadir puesto al organigrama',
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            onTap: () =>
-                                _showAddNodeDialog(context, controller),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            leading: const Icon(Icons.refresh_outlined),
-                            title: const Text('Restablecer Vista'),
-                            subtitle: const Text('Centrar organigrama'),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            onTap: () {
-                              controller.controllerChart.calculatePosition();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Vista de organigrama restablecida',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.lightbulb_outline,
-                            size: 20,
-                            color: colorScheme.primary,
+                          Text(
+                            "Panel de Control RH",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              "Arrastra un puesto sobre otro para reorganizar la línea de reporte.",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Gestión de plantilla y jerarquías",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                    const Divider(height: 1),
+
+                    // Tarjetas de Métricas de Personal (Plantilla, Vacantes y Empleados)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  title: "Plantilla",
+                                  value:
+                                      "${controller.controllerChart.items.length}",
+                                  icon: Icons.group_outlined,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  context,
+                                  title: "Vacantes",
+                                  value:
+                                      "${controller.controllerChart.items.where((i) => i.employee_id == null || i.employee_id.toString().trim().isEmpty).length}",
+                                  icon: Icons.person_off_outlined,
+                                  color: Colors.amber.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildMetricCard(
+                              context,
+                              title: "Empleados Asignados",
+                              value:
+                                  "${controller.controllerChart.items.where((i) => i.employee_id != null && i.employee_id.toString().trim().isNotEmpty).length}",
+                              icon: Icons.how_to_reg_outlined,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Text(
+                        "Acciones Rápidas",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              leading: const Icon(Icons.add_circle_outline),
+                              title: const Text('Crear Nueva Plaza'),
+                              subtitle: const Text(
+                                'Añadir puesto al organigrama',
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              onTap: () =>
+                                  _showAddNodeDialog(context, controller),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              leading: const Icon(Icons.refresh_outlined),
+                              title: const Text('Restablecer Vista'),
+                              subtitle: const Text('Centrar organigrama'),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              onTap: () {
+                                controller.controllerChart.calculatePosition();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Vista de organigrama restablecida',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.4,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.lightbulb_outline,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "Arrastra un puesto sobre otro para reorganizar la línea de reporte.",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
             // --- LIENZO PRINCIPAL ---
             Expanded(
@@ -346,10 +347,14 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
               },
               isDraggable: controller.config.isDraggable,
               cornerRadius: controller.config.cornerRadius,
-              arrowStyle: controller.config.arrowStyle,
+
+              // ❌ ELIMINA ESTA LÍNEA: arrowStyle: SolidGraphArrow(),
+
+              // ✅ Mantiene esto para evitar puntas de flecha
+              lineEndingType: LineEndingType.none,
+
               duration: controller.config.animationDuration,
               curve: controller.config.animationCurve,
-              lineEndingType: controller.config.lineEndingType,
               interactionConfig: InteractionConfig(
                 enableRotation: controller.config.enableRotation,
                 constrainBounds: controller.config.constrainBounds,
@@ -376,8 +381,8 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
                 keyRepeatInterval: controller.config.keyRepeatInterval,
               ),
               zoomConfig: ZoomConfig(
-                minScale: controller.config.minScale,
-                maxScale: controller.config.maxScale,
+                minScale: 0.2,
+                maxScale: 4.0,
                 enableZoom: controller.config.enableZoom,
                 enableDoubleTapZoom: controller.config.enableDoubleTapZoom,
                 doubleTapZoomFactor: controller.config.doubleTapZoomFactor,
@@ -410,7 +415,6 @@ class _OrganigramaScreenState extends State<OrganigramaScreen> {
                     }
                   });
                 } catch (e, stackTrace) {
-                  print("💥 ERROR FATAL EN ONDROP: $e");
                   print(stackTrace);
                 }
               },

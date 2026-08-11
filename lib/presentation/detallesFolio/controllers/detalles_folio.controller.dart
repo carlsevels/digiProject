@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/models/historial_folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
@@ -35,8 +33,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   }
 
   Future<void> onInitDetalles({String? customId}) async {
-    final String idBuscado =
-        Get.arguments?.toString() ?? customId!;
+    final String idBuscado = Get.arguments?.toString() ?? customId!;
 
     if (idBuscado.isEmpty) {
       print("Aviso: No se recibió ningún ID para cargar los detalles.");

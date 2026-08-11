@@ -47,57 +47,92 @@ class ChartNodeWidget extends StatelessWidget {
               .trim()
         : positionName;
 
-    return SizedBox(
-      width: 180,
-      height: 90,
-      child: Card(
-        color: Colors.white,
-        margin: EdgeInsets.zero,
-        elevation: 3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius),
-          side: BorderSide(
-            color: isOccupied ? nodeColor.withAlpha(150) : Colors.white,
-            width: 2,
+    if (positionName == "Área de Sistemas" ||
+        positionName == "Área de Ventas" ||
+        positionName == "Soporte Técnico" ||
+        positionName == "Tecnicos de Campo" ||
+        positionName == "Ingenieros de Campo" ||
+        positionName == "Área de Servicio Técnico") {
+      return SizedBox(
+        width: 180,
+        height: 30,
+        child: Center(
+          child: Text(
+            positionName,
+            textScaleFactor: 2,
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isOccupied ? nodeColor : Colors.grey[400],
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    isOccupied ? Icons.person : Icons.person_add_disabled,
-                    size: 14,
-                    color: Colors.white,
+      );
+    } else {
+      return SizedBox(
+        width: 180,
+        height: 90,
+        child: Card(
+          color: isOccupied ? Colors.green[50] : Colors.red.shade100,
+          margin: EdgeInsets.zero,
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cornerRadius),
+            side: BorderSide(
+              color: isOccupied
+                  ? nodeColor.withAlpha(150)
+                  : Colors.red.shade400,
+              width: 2,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isOccupied ? nodeColor : Colors.grey[400],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isOccupied ? Icons.person : Icons.person_add_disabled,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                displayName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                  color: isOccupied ? Colors.black87 : Colors.grey[800],
+                const SizedBox(height: 4),
+                Column(
+                  children: [
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        color: isOccupied ? Colors.black87 : Colors.grey[800],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isOccupied)
+                      Text(
+                        positionName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: isOccupied ? Colors.black87 : Colors.grey[800],
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 }

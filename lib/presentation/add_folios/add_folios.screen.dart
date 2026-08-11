@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
+import 'package:bitacora_frontend/infrastructure/models/codeBar.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
 import 'package:flutter/material.dart';
+import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 
 import 'package:get/get.dart';
 
@@ -36,14 +38,12 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           backgroundColor: const Color(0XFF1D6CFF),
           onRefresh: () => controller.onInitFunction(),
           child: SingleChildScrollView(
-            physics:
-                const AlwaysScrollableScrollPhysics(), // Obliga a que siempre haya scroll para activar el pull-to-refresh
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Tipo de documento
                   Text(
                     "Tipo de documento",
                     textScaleFactor: 1.2,
@@ -79,20 +79,78 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                     );
                   }),
 
-                  // Campo condicional de número de reporte
                   Obx(() {
                     if (controller.tipoDocumentoId.value != 0) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 8),
-                          InputText(
-                            keyboardType: TextInputType.number,
-                            textController: controller.numReporteController,
-                            title: controller.tipoDocumentoId.value == 1
-                                ? "Numero de Factura"
-                                : "Numero de Folio",
-                            hintText: "Escribe el numero aqui",
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: InputText(
+                                  externalButton: _buildDemoButton(
+                                    context: context,
+                                    scanner: AiBarcodeScanner(
+                                      onDetect: (BarcodeCapture capture) {
+                                        if (controller.isProcessingBarcode)
+                                          return;
+                                        controller.isProcessingBarcode = true;
+
+                                        controller.codeBar = BarcodeResponse(
+                                          name: "barcode",
+                                          data: capture.barcodes
+                                              .map(
+                                                (b) => BarcodeItem(
+                                                  displayValue: b.displayValue,
+                                                  rawValue: b.rawValue,
+                                                  format: b.format.rawValue,
+                                                  type: b.type.index,
+                                                  rawBytes: b.rawBytes,
+                                                  corners: b.corners
+                                                      .map(
+                                                        (c) => CornerPoint(
+                                                          x: c.dx,
+                                                          y: c.dy,
+                                                        ),
+                                                      )
+                                                      .toList(),
+                                                  size: b.size != null
+                                                      ? BarcodeSize(
+                                                          width: b.size!.width,
+                                                          height:
+                                                              b.size!.height,
+                                                        )
+                                                      : null,
+                                                ),
+                                              )
+                                              .toList(),
+                                        );
+
+                                        controller.numReporteController.text =
+                                            controller
+                                                .codeBar
+                                                ?.data
+                                                ?.first
+                                                .displayValue ??
+                                            "";
+
+                                        Get.back();
+                                      },
+                                    ),
+                                  ),
+
+                                  keyboardType: TextInputType.number,
+                                  textController:
+                                      controller.numReporteController,
+                                  title: controller.tipoDocumentoId.value == 1
+                                      ? "Numero de Factura"
+                                      : "Numero de Folio",
+                                  hintText: "Escribe el numero aqui",
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       );
@@ -100,7 +158,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                       return SizedBox.shrink();
                     }
                   }),
-
                   SizedBox(height: 8),
                   Text(
                     "Cliente",
@@ -270,7 +327,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
 
                   SizedBox(height: 24),
 
-                  // Botón de acción principal al final del formulario
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
@@ -292,7 +348,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                     ),
                   ),
 
-                  // Espaciado extra de seguridad abajo para que el botón no quede pegado al borde del celular
                   const SizedBox(height: 40),
                 ],
               ),
@@ -300,6 +355,13 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildDemoButton({required Widget scanner, required dynamic context}) {
+    return IconButton(
+      onPressed: () => controller.navigateToScanner(scanner, context),
+      icon: Icon(Icons.qr_code),
     );
   }
 }

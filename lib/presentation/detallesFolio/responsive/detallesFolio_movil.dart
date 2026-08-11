@@ -19,11 +19,9 @@ class DetallesFolioMovilView extends GetView<DetallesFolioController> {
   Widget build(BuildContext context) {
     String _formatFecha(dynamic fecha) {
       final date = DateTime.tryParse(fecha?.toString() ?? "");
-
       if (date == null) {
         return "";
       }
-
       return DateFormat("d 'de' MMMM 'del' yyyy", 'es').format(date);
     }
 
@@ -156,7 +154,6 @@ class DetallesFolioMovilView extends GetView<DetallesFolioController> {
                 DetallesEntrega(state: state),
                 SizedBox(height: 16),
                 Direccion(state: state),
-
                 // BtnGoogleMaps(state: state),
                 // SizedBox(height: 32.0),
               ],
