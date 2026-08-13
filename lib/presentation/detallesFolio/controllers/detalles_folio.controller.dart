@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
@@ -9,19 +10,25 @@ import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart'
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:powersync/sqlite3.dart';
+import 'package:signature/signature.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetallesFolioController extends GetxController with StateMixin<Folios> {
-  //TODO: Implement DetallesFolioController
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
   int? nextStatus;
   var historialList = <Folios>[].obs;
 
+  // Variables para guardar los datos que recibas
+//  String id = "";
+  String folioIdArgnt = "";
+
   @override
   void onInit() {
     super.onInit();
+    _leerArgumentos();
     onInitDetalles();
   }
 
@@ -31,17 +38,28 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     super.onClose();
   }
 
-  Future<void> onInitDetalles() async {
-    final String id = Get.arguments?.toString() ?? "";
+  void _leerArgumentos() {
+    final args = Get.arguments;
 
-    if (id.isEmpty) {
-      print("Error: El ID recibido es nulo o vacío");
-      change(null, status: RxStatus.error("ID no válido"));
-      return;
+    if (args is Map) {
+     //id = args['id']?.toString() ?? "";
+      folioIdArgnt = args['folioId']?.toString() ?? "";
+    } else if (args is String) {
+     // id = args;
     }
-    print("FolioId: $id");
+  }
 
-    await getDetailsFolio(id);
+  Future<void> onInitDetalles() async {
+    // print("ID recibido: $id");
+    // print("FolioId recibido: $folioIdArgnt");
+
+    // if (id.isEmpty) {
+    //   print("Error: El ID recibido es nulo o vacío");
+    //   change(null, status: RxStatus.error("ID no válido"));
+    //   return;
+    // }
+
+    await getDetailsFolio(folioIdArgnt);
   }
 
   @override
@@ -295,6 +313,86 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     } catch (e) {
       print("Error de SQL: ${e.toString()}");
       return null;
+    }
+  }
+
+  final SignatureController signatureControllerController = SignatureController(
+    penStrokeWidth: 10,
+    strokeCap: StrokeCap.butt,
+    strokeJoin: StrokeJoin.miter,
+    penColor: Colors.red,
+    exportBackgroundColor: Colors.transparent,
+    exportPenColor: Colors.black,
+    onDrawStart: () => log('onDrawStart called!'),
+    onDrawEnd: () => log('onDrawEnd called!'),
+  );
+
+  Future<void> exportSVG(BuildContext context) async {
+    if (signatureControllerController.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(key: Key('snackbarSVG'), content: Text('No content')),
+      );
+      return;
+    }
+
+    String? rawSVGoptimized = signatureControllerController.toRawSVG();
+    if (rawSVGoptimized == null) return;
+
+    try {
+      final bytes = utf8.encode(rawSVGoptimized);
+
+      final fileName = 'firma_${DateTime.now().millisecondsSinceEpoch}.svg';
+      final filePath = 'public/$fileName';
+
+      await Supabase.instance.client.storage
+          .from('firmas')
+          .uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(contentType: 'image/svg+xml'),
+          );
+
+      final imageUrl = Supabase.instance.client.storage
+          .from('firmas')
+          .getPublicUrl(filePath);
+
+      debugPrint('URL pública de la firma: $imageUrl');
+
+      // final targetId = state?.id?.toString() ?? id;
+      // debugPrint('Intentando actualizar el registro con ID: $targetId');
+
+      // if (targetId.isEmpty) {
+      //   debugPrint(
+      //     '❌ Error: El ID está vacío, no se puede actualizar Supabase.',
+      //   );
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Error: ID de folio no válido')),
+      //   );
+      //   return;
+      // }
+
+      // final response = await Supabase.instance.client
+      //     .from('folios')
+      //     .update({'url_firma': imageUrl})
+      //     .eq('id', targetId.trim())
+      //     .select();
+
+      // debugPrint('✅ Respuesta de Supabase al actualizar: $response');
+
+      // if (response == null || (response is List && response.isEmpty)) {
+      //   throw 'No se pudo actualizar el registro. Revisa si el ID existe o si las políticas RLS están bloqueando la actualización.';
+      // }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Firma guardada y sincronizada exitosamente'),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error al guardar la firma: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al subir: $e')));
     }
   }
 }

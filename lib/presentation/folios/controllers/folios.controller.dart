@@ -8,6 +8,7 @@ import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:bitacora_frontend/presentation/folios/querys/listFolios.dart';
+import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -18,16 +19,28 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class FoliosController extends GetxController with StateMixin<List<Folios>> {
   //TODO: Implement FoliosController
   RxInt rolUsuario = 0.obs;
-  DateTime? selectedDate;
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
   final RxString fechaSeleccionada = "".obs;
+
+  final now = DateTime.now();
+  late final EasyDatePickerController controllerEasyDate;
 
   final Rx<DatosPersonales> _datosPersonales = DatosPersonales().obs;
   DatosPersonales get datosPersonales => this._datosPersonales.value;
   set datosPersonales(value) => this._datosPersonales.value = value;
 
+  final Rxn<DateTime> _selectedDate = Rxn<DateTime>(DateTime.now());
+  DateTime? get selectedDate => _selectedDate.value;
+  set selectedDate(DateTime? date) => _selectedDate.value = date;
+
   final count = 0.obs;
+
+  @override
+  void dispose() {
+    controllerEasyDate.dispose();
+    super.dispose();
+  }
 
   @override
   void onInit() {
@@ -39,7 +52,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     selectedDate ??= DateTime.now();
 
     await getDatos();
-
+    controllerEasyDate = EasyDatePickerController();
     await getFoliosWithDate();
   }
 
@@ -79,10 +92,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           .toIso8601String()
           .split('T')[0];
 
-      print(
-        "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
-      );
-
       final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
         fechaHoy,
       ]);
@@ -97,7 +106,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {
-        print("listFolios: ${jsonEncode(listFolios)}");
         change(listFolios, status: RxStatus.success());
       }
     } catch (e) {

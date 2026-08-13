@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bitacora_frontend/infrastructure/models/barcode.dart';
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
@@ -15,12 +16,16 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt clienteId = 0.obs;
   RxInt refaccionId = 0.obs;
   RxInt condicionPagoId = 0.obs;
-  RxInt repartidorId = 2.obs;
+  RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
-
+  RxBool isProcessingBarcode = false.obs;
   //Controllers
   TextEditingController cantidadController = TextEditingController();
   TextEditingController numReporteController = TextEditingController();
+
+  final Rx<BarcodeResponse> _codeBar = BarcodeResponse().obs;
+  BarcodeResponse get codeBar => this._codeBar.value;
+  set codeBar(value) => this._codeBar.value = value;
 
   final RxList<Clientes> _clientesModel = <Clientes>[].obs;
   RxList<Clientes> get clientesModel => this._clientesModel;
@@ -139,6 +144,7 @@ class AddFoliosController extends GetxController with StateMixin {
       return Users.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
 
+    usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
     reparto.assignAll(usersList);
     await AppDatabase.db.execute(
       "DELETE FROM folios WHERE repartidorId IS NULL OR repartidorId = 'null' OR repartidorId = '0';",
@@ -228,6 +234,14 @@ class AddFoliosController extends GetxController with StateMixin {
       Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
     }
     return null;
+  }
+
+  void navigateToScanner(Widget scanner, BuildContext context) {
+    isProcessingBarcode.value = false;
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => scanner));
   }
 
   void increment() => count.value++;

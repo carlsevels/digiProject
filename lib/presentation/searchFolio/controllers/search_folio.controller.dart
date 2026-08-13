@@ -1,3 +1,4 @@
+import 'package:bitacora_frontend/infrastructure/models/barcode.dart';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
@@ -11,7 +12,16 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   //TODO: Implement SearchFolioController
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
+
+  RxString idPrincipal = "".obs;
+
+  RxBool isProcessingBarcode = false.obs;
+
   TextEditingController id = TextEditingController();
+
+  final Rx<BarcodeResponse> _codeBar = BarcodeResponse().obs;
+  BarcodeResponse get codeBar => this._codeBar.value;
+  set codeBar(value) => this._codeBar.value = value;
 
   var isSearching = false.obs;
   var hasData = false.obs;
@@ -41,6 +51,7 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
       return;
     }
     print("FolioId: $id");
+    
 
     await getDetailsFolio(id.text);
   }
@@ -149,6 +160,12 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
       default:
         return 0;
     }
+  }
+
+  Future<void> navigateToScanner(Widget scanner, context) async {
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => scanner));
   }
 
   void increment() => count.value++;

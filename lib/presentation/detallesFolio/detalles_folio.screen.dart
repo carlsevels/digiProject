@@ -5,7 +5,6 @@ import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/entregaDetalles.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:marquee/marquee.dart';
@@ -164,7 +163,59 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                     DetallesEntrega(state: state),
                     SizedBox(height: 16),
                     Direccion(state: state),
-
+                    // Container(
+                    //   width: Get.size.width,
+                    //   height: 400,
+                    //   child: ListView(
+                    //     shrinkWrap: true,
+                    //     children: <Widget>[
+                    //       const SizedBox(
+                    //         height: 300,
+                    //         child: Center(
+                    //           child: Text(
+                    //             'Big container to test scrolling issues',
+                    //           ),
+                    //         ),
+                    //       ),
+                    //       //SIGNATURE CANVAS
+                    //       Padding(
+                    //         padding: const EdgeInsets.all(16.0),
+                    //         child: Signature(
+                    //           placeholder: Text(
+                    //             'Sign here',
+                    //             style: Theme.of(context).textTheme.bodyLarge!
+                    //                 .copyWith(color: Colors.red),
+                    //           ),
+                    //           key: const Key('signature'),
+                    //           controller:
+                    //               controller.signatureControllerController,
+                    //           height: 300,
+                    //           backgroundColor: Colors.grey[300]!,
+                    //         ),
+                    //       ),
+                    //       Text(
+                    //         controller.signatureControllerController.isEmpty
+                    //             ? "Signature pad is empty"
+                    //             : "Signature pad is not empty",
+                    //       ),
+                    //       const SizedBox(
+                    //         height: 300,
+                    //         child: Center(
+                    //           child: Text(
+                    //             'Big container to test scrolling issues',
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    // IconButton(
+                    //   key: const Key('exportSVG'),
+                    //   icon: const Icon(Icons.share),
+                    //   color: Colors.blue,
+                    //   onPressed: () => controller.exportSVG(context),
+                    //   tooltip: 'Export SVG',
+                    // ),
                     // BtnGoogleMaps(state: state),
                     // SizedBox(height: 32.0),
                   ],

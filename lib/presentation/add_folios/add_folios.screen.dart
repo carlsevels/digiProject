@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:bitacora_frontend/infrastructure/models/barcode.dart';
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
 import 'package:flutter/material.dart';
+import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 
 import 'package:get/get.dart';
 
@@ -87,6 +89,44 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         children: [
                           SizedBox(height: 8),
                           InputText(
+                            externalButton: _buildDemoButton(
+                              context: context,
+                              scanner: AiBarcodeScanner(
+                                onDetect: (BarcodeCapture capture) {
+                                  if (controller.isProcessingBarcode.value)
+                                    return;
+                                  controller.isProcessingBarcode.value = true;
+
+                                  final String nuevoCodigo =
+                                      capture.barcodes.first.displayValue ?? "";
+
+                                  if (nuevoCodigo.isNotEmpty) {
+                                    final String textoActual = controller
+                                        .numReporteController
+                                        .text
+                                        .trim();
+
+                                    if (textoActual.isEmpty) {
+                                      controller.numReporteController.text =
+                                          nuevoCodigo;
+                                    } else {
+                                      List<String> codigosList = textoActual
+                                          .split(',')
+                                          .map((e) => e.trim())
+                                          .toList();
+                                      if (!codigosList.contains(nuevoCodigo)) {
+                                        controller.numReporteController.text =
+                                            "$textoActual, $nuevoCodigo";
+                                      }
+                                    }
+                                  }
+
+                                  if (Navigator.of(context).canPop()) {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                              ),
+                            ),
                             keyboardType: TextInputType.number,
                             textController: controller.numReporteController,
                             title: controller.tipoDocumentoId.value == 1
@@ -300,6 +340,14 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           ),
         );
       }),
+    );
+  }
+
+  /// Helper method to create a styled button for the demo list.
+  Widget _buildDemoButton({required context, required Widget scanner}) {
+    return IconButton(
+      onPressed: () => controller.navigateToScanner(scanner, context),
+      icon: Icon(Icons.qr_code),
     );
   }
 }

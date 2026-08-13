@@ -1,12 +1,10 @@
-import 'dart:ui';
-
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/direccionDialog.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/easy_date_timeline.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/folios.controller.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class FoliosScreen extends GetView<FoliosController> {
   const FoliosScreen({super.key});
@@ -17,7 +15,7 @@ class FoliosScreen extends GetView<FoliosController> {
     final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0XFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         scrolledUnderElevation: 0.0,
@@ -306,7 +304,59 @@ class FoliosScreen extends GetView<FoliosController> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
               height: Get.size.height,
-              child: Center(child: FoliosEmptyPage(needDate: true)),
+              child: Center(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Obx(
+                            () => Text(
+                              controller.obtenerEtiquetaFecha(
+                                DateTime.tryParse(
+                                      controller.fechaSeleccionada.value,
+                                    ) ??
+                                    DateTime.now(),
+                              ),
+                              textScaler: const TextScaler.linear(1.8),
+                            ),
+                          ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(50, 30),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Get.toNamed(Routes.ADD_FOLIOS);
+                            },
+                            icon: const Icon(
+                              Icons.add,
+                              color: Color(0XFF1D6CFF),
+                            ),
+                            label: const Text(
+                              "Agregar Folio",
+                              style: TextStyle(color: Color(0XFF1D6CFF)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    EasyDateTimelinePage(),
+                    const SizedBox(height: 32),
+                    FoliosEmptyPage(needDate: true),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -366,6 +416,8 @@ class FoliosScreen extends GetView<FoliosController> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      EasyDateTimelinePage(),
+                      const SizedBox(height: 16),
                     ],
                   );
                 }
@@ -378,7 +430,10 @@ class FoliosScreen extends GetView<FoliosController> {
                     if (folio.folioId != null) {
                       Get.toNamed(
                         Routes.DETALLES_FOLIO,
-                        arguments: folio.folioId.toString(),
+                        arguments: {
+                          'folioId': folio.folioId.toString(),
+                          'id': folio.id ?? "",
+                        },
                       );
                     }
                   },

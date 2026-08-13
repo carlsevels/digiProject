@@ -21,6 +21,7 @@ class Folios {
   String? codigoPostal;
   String? numExt;
   String? numInt;
+  String? urlFirma; // <--- 1. Agrega la propiedad aquí
 
   Folios({
     this.id,
@@ -45,6 +46,7 @@ class Folios {
     this.colonia,
     this.numExt,
     this.numInt,
+    this.urlFirma, // <--- Agrégala en el constructor
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
@@ -58,12 +60,11 @@ class Folios {
     statusId = json['statusid']?.toString();
     tipofolio = json['tipofolio']?.toString();
 
-    // Mapeo robusto que soporta bool, int (1/0) y String desde PowerSync/Supabase
     final rawArchived = json['isArchived'];
     if (rawArchived is bool) {
       isArchived = rawArchived;
     } else if (rawArchived is int) {
-      isArchived = rawArchived == 1; // 1 es true, 0 es false
+      isArchived = rawArchived == 1;
     } else if (rawArchived != null) {
       final str = rawArchived.toString().toLowerCase();
       isArchived = str == 'true' || str == '1';
@@ -83,6 +84,7 @@ class Folios {
     statusColor = json['statuscolor']?.toString();
     folioId = json['folioId']?.toString();
     folioIdHistorial = json['folio_id_historial']?.toString();
+    urlFirma = json['url_firma']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -109,6 +111,7 @@ class Folios {
     data['statuscolor'] = statusColor;
     data['folioId'] = folioId;
     data['folio_id_historial'] = folioIdHistorial;
+    data['url_firma'] = urlFirma;
     return data;
   }
 }

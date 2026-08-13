@@ -1,3 +1,5 @@
+import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
+import 'package:bitacora_frontend/infrastructure/models/barcode.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
@@ -12,21 +14,78 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
 
   @override
   Widget build(BuildContext context) {
-    PreferredSizeWidget buildAppBar() => AppBar(
+    PreferredSizeWidget buildAppBar(String id) => AppBar(
       scrolledUnderElevation: 0.0,
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
       iconTheme: const IconThemeData(color: Color(0XFF64748B)),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: Color(0XFF64748B), height: 1.0),
+        child: Container(color: const Color(0XFF64748B), height: 1.0),
       ),
       actions: [
+        _buildDemoButton(
+          context: context,
+          scanner: AiBarcodeScanner(
+            onDetect: (BarcodeCapture capture) async {
+              final rawValue = capture.barcodes.isNotEmpty
+                  ? capture.barcodes.first.displayValue
+                  : null;
+
+                  print("rawValuerawValue: ${rawValue}");
+
+              if (rawValue == null || rawValue.isEmpty) return;
+
+              if (controller.isProcessingBarcode.value) return;
+              controller.isProcessingBarcode.value = true;
+
+              controller.codeBar = BarcodeResponse(
+                name: "barcode",
+                data: capture.barcodes
+                    .map(
+                      (b) => BarcodeItem(
+                        displayValue: b.displayValue,
+                        rawValue: b.rawValue,
+                        format: b.format.rawValue,
+                        type: b.type.index,
+                        rawBytes: b.rawBytes,
+                        corners: b.corners
+                            .map((c) => CornerPoint(x: c.dx, y: c.dy))
+                            .toList(),
+                        size: b.size != null
+                            ? BarcodeSize(
+                                width: b.size!.width,
+                                height: b.size!.height,
+                              )
+                            : null,
+                      ),
+                    )
+                    .toList(),
+              );
+
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+
+              if (rawValue.isNotEmpty) {
+                Get.toNamed(
+                  Routes.DETALLES_FOLIO,
+                  arguments: {"folioId": rawValue},
+                );
+              } else {
+                Get.snackbar("Aviso", "El ID del folio no está disponible");
+              }
+
+              await Future.delayed(const Duration(milliseconds: 300));
+              controller.isProcessingBarcode.value = false;
+            },
+          ),
+        ),
         IconButton(
           onPressed: () {
             controller.getDetailsFolio(controller.id.text);
           },
-          icon: Icon(Icons.search, color: Color(0XFF64748B)),
+          icon: const Icon(Icons.search, color: Color(0XFF64748B)),
         ),
       ],
       title: TextField(
@@ -49,7 +108,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
     return controller.obx(
       (state) => Scaffold(
         backgroundColor: const Color(0XFFF8FAFC),
-        appBar: buildAppBar(),
+        appBar: buildAppBar(state?.id ?? ""),
         body: RefreshIndicator(
           color: Colors.white,
           backgroundColor: const Color(0XFF1D6CFF),
@@ -62,20 +121,23 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   RepartidorDetalles(state: state),
-                  SizedBox(height: 16.0),
+                  const SizedBox(height: 16.0),
                   DetallesTrayecto(
                     detallesTrayecto: false,
                     state: state,
                     currentStep: controller.currentStep,
                   ),
-                  SizedBox(height: 16.0),
+                  const SizedBox(height: 16.0),
                   Direccion(state: state),
                   const SizedBox(height: 32.0),
                   ElevatedButton(
                     onPressed: () {
                       final folioId = state?.folioId?.toString();
                       if (folioId != null && folioId.isNotEmpty) {
-                        Get.toNamed(Routes.DETALLES_FOLIO, arguments: folioId);
+                        Get.toNamed(
+                          Routes.DETALLES_FOLIO,
+                          arguments: {"folioId": folioId},
+                        );
                       } else {
                         Get.snackbar(
                           "Aviso",
@@ -117,7 +179,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
       ),
       onEmpty: Scaffold(
         backgroundColor: const Color(0XFFF8FAFC),
-        appBar: buildAppBar(),
+        appBar: buildAppBar(controller.idPrincipal.value),
         body: RefreshIndicator(
           onRefresh: () async =>
               await controller.getDetailsFolio(controller.id.text),
@@ -133,15 +195,25 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
         ),
       ),
       onLoading: Scaffold(
-        appBar: buildAppBar(),
+        appBar: buildAppBar(controller.idPrincipal.value),
         body: const Center(
           child: CircularProgressIndicator(color: Color(0XFF00BC16)),
         ),
       ),
       onError: (err) => Scaffold(
-        appBar: buildAppBar(),
+        appBar: buildAppBar(controller.idPrincipal.value),
         body: Center(child: Text("Error: $err")),
       ),
+    );
+  }
+
+  Widget _buildDemoButton({required context, required Widget scanner}) {
+    return IconButton(
+      onPressed: () {
+        controller.isProcessingBarcode.value = false;
+        controller.navigateToScanner(scanner, context);
+      },
+      icon: const Icon(Icons.qr_code),
     );
   }
 }
