@@ -309,7 +309,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
         folioId,
       ]);
-      Get.toNamed(Routes.FOLIOS);
+      Get.offAllNamed(Routes.FOLIOS);
     } catch (e) {
       print("Error de SQL: ${e.toString()}");
       return null;

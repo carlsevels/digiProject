@@ -327,8 +327,7 @@ class FoliosScreen extends GetView<FoliosController> {
                             style: TextButton.styleFrom(
                               minimumSize: const Size(50, 30),
                               padding: EdgeInsets.zero,
-                              tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               shape: const RoundedRectangleBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(4),
@@ -336,7 +335,7 @@ class FoliosScreen extends GetView<FoliosController> {
                               ),
                             ),
                             onPressed: () {
-                              Get.toNamed(Routes.ADD_FOLIOS);
+                              Get.offAllNamed(Routes.ADD_FOLIOS);
                             },
                             icon: const Icon(
                               Icons.add,

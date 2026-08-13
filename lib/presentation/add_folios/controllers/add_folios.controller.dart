@@ -228,7 +228,7 @@ class AddFoliosController extends GetxController with StateMixin {
       tipoDocumentoId.value = 0;
 
       Get.snackbar("Guardado", "Registro exitoso.");
-      Get.toNamed(Routes.FOLIOS);
+      Get.offAllNamed(Routes.FOLIOS);
     } catch (e) {
       print("Error al crear: $e");
       Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
