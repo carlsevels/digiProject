@@ -1,11 +1,9 @@
 import 'dart:ui';
+
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/direccionDialog.dart';
-import 'package:bitacora_frontend/presentation/folios/localWidgets/drawer.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/easy_date_timeline.dart';
-import 'package:bitacora_frontend/presentation/folios/localWidgets/onEmpty.dart';
-import 'package:bitacora_frontend/presentation/folios/localWidgets/onError.dart';
-import 'package:bitacora_frontend/presentation/folios/localWidgets/onLoading.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -71,11 +69,104 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ],
       ),
-      drawer: DrawerView(),
+      //drawer: DrawerView(),
       body: controller.obx(
-        onLoading: OnLoadingView(),
-        onError: (error) => OnErrorView(error: error ?? ""),
-        onEmpty: OnEmptyView(),
+        onLoading: Container(
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.8, end: 1.0),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeInOut,
+                  builder: (context, value, child) =>
+                      Transform.scale(scale: value, child: child),
+                  child: SizedBox(
+                    width: 120,
+                    child: Image.asset(
+                      fit: BoxFit.contain,
+                      "assets/logos/digiApp.jpeg",
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ),
+          ),
+        ),
+        onError: (error) => Center(child: Text("Error: $error")),
+        onEmpty: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: const Color(0XFF1D6CFF),
+          onRefresh: () async {
+            await controller.getFoliosWithDate();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: Get.size.height,
+              child: Center(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Obx(
+                            () => Text(
+                              controller.obtenerEtiquetaFecha(
+                                DateTime.tryParse(
+                                      controller.fechaSeleccionada.value,
+                                    ) ??
+                                    DateTime.now(),
+                              ),
+                              textScaler: const TextScaler.linear(1.8),
+                            ),
+                          ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(50, 30),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Get.toNamed(Routes.ADD_FOLIOS);
+                            },
+                            icon: const Icon(
+                              Icons.add,
+                              color: Color(0XFF1D6CFF),
+                            ),
+                            label: const Text(
+                              "Agregar Folio",
+                              style: TextStyle(color: Color(0XFF1D6CFF)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    EasyDateTimelinePage(),
+                    const SizedBox(height: 32),
+                    FoliosEmptyPage(needDate: true),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         (state) {
           return RefreshIndicator(
             color: Colors.white,

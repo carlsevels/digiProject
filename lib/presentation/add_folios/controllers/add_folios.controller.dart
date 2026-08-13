@@ -19,7 +19,6 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
   RxBool isProcessingBarcode = false.obs;
-  
   //Controllers
   TextEditingController cantidadController = TextEditingController();
   TextEditingController numReporteController = TextEditingController();
@@ -142,9 +141,7 @@ class AddFoliosController extends GetxController with StateMixin {
       return Users.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
 
-    // Corregido: .insert(0, ...) en lugar de .add(...) para consistencia
-    usersList.insert(0, Users(id: 0, nombre: "Seleccionar repartidor..."));
-    
+    usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
     reparto.assignAll(usersList);
     
     await AppDatabase.db.execute(

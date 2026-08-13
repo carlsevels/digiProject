@@ -33,7 +33,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                   ? capture.barcodes.first.displayValue
                   : null;
 
-              print("rawValuerawValue: ${rawValue}");
+                  print("rawValuerawValue: ${rawValue}");
 
               if (rawValue == null || rawValue.isEmpty) return;
 
@@ -67,7 +67,6 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               }
-              Get.lazyPut(() => DetallesFolioController());
               if (rawValue.isNotEmpty) {
                 Get.toNamed(
                   Routes.DETALLES_FOLIO,
