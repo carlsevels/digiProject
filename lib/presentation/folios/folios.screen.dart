@@ -4,6 +4,7 @@ import 'package:bitacora_frontend/presentation/folios/localWidgets/easy_date_tim
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'controllers/folios.controller.dart';
 
 class FoliosScreen extends GetView<FoliosController> {
@@ -360,16 +361,124 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ),
         (state) {
+          // 1. Agrupar los folios por municipio
+          final Map<String, List<dynamic>> foliosPorMunicipio = {};
+          for (var folio in state!) {
+            final municipio =
+                (folio.municipio != null && folio.municipio!.trim().isNotEmpty)
+                ? folio.municipio!
+                : 'Sin Municipio';
+            foliosPorMunicipio.putIfAbsent(municipio, () => []).add(folio);
+          }
+
+          // 2. Sincronizar o inicializar el orden personalizado sin perder los cambios
+          List<String> municipiosDisponibles = foliosPorMunicipio.keys.toList();
+          if (controller.ordenMunicipiosCustom.isEmpty) {
+            controller.ordenMunicipiosCustom.assignAll(municipiosDisponibles);
+          } else {
+            for (var m in municipiosDisponibles) {
+              if (!controller.ordenMunicipiosCustom.contains(m)) {
+                controller.ordenMunicipiosCustom.add(m);
+              }
+            }
+            controller.ordenMunicipiosCustom.removeWhere(
+              (m) => !foliosPorMunicipio.containsKey(m),
+            );
+          }
+
+          // 3. Construir la lista aplanada basada estrictamente en el orden local del controlador
+          final List<dynamic> elementosAplanados = [];
+          for (var municipio in controller.ordenMunicipiosCustom) {
+            if (foliosPorMunicipio.containsKey(municipio)) {
+              final listaFolios = foliosPorMunicipio[municipio]!;
+              elementosAplanados.add({
+                'tipo': 'header',
+                'nombre': municipio,
+                'count': listaFolios.length,
+              });
+              for (var folio in listaFolios) {
+                elementosAplanados.add({'tipo': 'folio', 'data': folio});
+              }
+            }
+          }
+
           return RefreshIndicator(
             color: Colors.white,
             backgroundColor: const Color(0XFF1D6CFF),
             onRefresh: () => controller.getFoliosWithDate(),
-            child: ListView.builder(
+            child: ReorderableListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: state!.length + 1,
+              itemCount: elementosAplanados.length + 1,
+
+              onReorder: (int oldIndex, int newIndex) {
+                if (oldIndex == 0 || newIndex == 0) return;
+
+                int adjustedOld = oldIndex - 1;
+                int adjustedNew = newIndex - 1;
+
+                if (adjustedOld < adjustedNew) {
+                  adjustedNew -= 1;
+                }
+
+                if (elementosAplanados[adjustedOld]['tipo'] == 'header') {
+                  String municipioMovido =
+                      elementosAplanados[adjustedOld]['nombre'];
+                  int oldMunIndex = controller.ordenMunicipiosCustom.indexOf(
+                    municipioMovido,
+                  );
+
+                  String? municipioDestino;
+                  for (
+                    int i = adjustedNew;
+                    i >= 0 && i < elementosAplanados.length;
+                    i--
+                  ) {
+                    if (elementosAplanados[i]['tipo'] == 'header') {
+                      municipioDestino = elementosAplanados[i]['nombre'];
+                      break;
+                    }
+                  }
+
+                  if (municipioDestino == null) {
+                    for (
+                      int i = adjustedNew;
+                      i < elementosAplanados.length;
+                      i++
+                    ) {
+                      if (elementosAplanados[i]['tipo'] == 'header') {
+                        municipioDestino = elementosAplanados[i]['nombre'];
+                        break;
+                      }
+                    }
+                  }
+
+                  if (municipioDestino != null &&
+                      municipioDestino != municipioMovido) {
+                    int newMunIndex = controller.ordenMunicipiosCustom.indexOf(
+                      municipioDestino,
+                    );
+
+                    controller.ordenMunicipiosCustom.removeAt(oldMunIndex);
+                    controller.ordenMunicipiosCustom.insert(
+                      newMunIndex,
+                      municipioMovido,
+                    );
+
+                    final box = GetStorage();
+                    box.write(
+                      'orden_municipios',
+                      controller.ordenMunicipiosCustom.toList(),
+                    );
+
+                    controller.update();
+                  }
+                }
+              },
+
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Column(
+                    key: const ValueKey('header_fijo_fecha'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -420,392 +529,459 @@ class FoliosScreen extends GetView<FoliosController> {
                     ],
                   );
                 }
-                final folio = state[index - 1];
-                return InkWell(
-                  onLongPress: () {
-                    direccionDialog(folio: folio);
-                  },
-                  onTap: () {
-                    if (folio.folioId != null) {
-                      Get.toNamed(
-                        Routes.DETALLES_FOLIO,
-                        arguments: {
-                          'folioId': folio.folioId.toString(),
-                          'id': folio.id ?? "",
-                        },
+
+                final item = elementosAplanados[index - 1];
+                final uniqueKey = item['tipo'] == 'header'
+                    ? ValueKey('mun_${item['nombre']}')
+                    : ValueKey(
+                        'folio_${item['data'].id ?? item['data'].folioId}',
                       );
-                    }
-                  },
-                  child: Dismissible(
-                    key: ValueKey(folio.id),
-                    direction: controller.rolName == "Reparto"
-                        ? DismissDirection.startToEnd
-                        : DismissDirection.horizontal,
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        // Resultado de la confirmación
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFE8F0FE),
-                                      child: Icon(
-                                        Icons.archive_outlined,
-                                        size: 40,
-                                        color: Color(0xFF1A73E8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Archivar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.archivarFolio(
-                                              folio.folioId ?? "",
-                                            );
-                                            Navigator.pop(context, true);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.orange,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Archivar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
 
-                        return confirmacion ?? false;
-                      }
-                      if (direction == DismissDirection.endToStart) {
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFFEECEC),
-                                      child: Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 40,
-                                        color: Color(0xFFD9534F),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Eliminar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(
-                                            context,
-                                            false,
-                                          ), // Retorna false (no eliminar)
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.eliminarFolio(
-                                              folio.folioId ?? "",
-                                            );
-                                            Navigator.pop(
-                                              context,
-                                              true,
-                                            ); // Retorna true (sí eliminar)
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFFD9534F,
-                                            ),
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Eliminar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        return confirmacion ?? false;
-                      }
-                      return true;
-                    },
-                    background: Container(
-                      color: Colors.orange,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.archive_outlined,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Archivar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Eliminar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.delete_outline,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ],
-                      ),
-                    ),
-                    child: ListTile(
-                      style: ListTileStyle.list,
-                      dense: true,
-                      isThreeLine: false,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      leading: Column(
-                        children: [
-                          Text(
-                            folio.cantidad.toString(),
-                            textScaleFactor: 3.2,
-                            style: const TextStyle(height: 1),
-                          ),
-                          Flexible(
-                            child: Container(
-                              constraints: const BoxConstraints(maxWidth: 35),
-                              child: Text(
-                                folio.tiporefaccion.toString(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.business_center_outlined, size: 20),
-                          const SizedBox(width: 8.0),
-                          Expanded(
-                            child: Text(
-                              folio.nombreComercial ?? 'Sin nombre comercial',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Row(
+                if (item['tipo'] == 'header') {
+                  return Container(
+                    key: uniqueKey,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                if (folio.municipio != null &&
-                                    folio.municipio!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.municipio!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    " - ",
-                                    style: TextStyle(color: Color(0XFF64748B)),
-                                  ),
-                                ],
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                size: 15,
+                                color: Color(0XFF1D6CFF),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                item['nombre'].toUpperCase(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  letterSpacing: 0.8,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '(${item['count']})',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Icon(
+                            Icons.drag_handle_rounded,
+                            size: 20,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-                                if (folio.condicionPago != null &&
-                                    folio.condicionPago!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.payments_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
+                final folio = item['data'];
+                return Container(
+                  key: uniqueKey,
+                  child: InkWell(
+                    onLongPress: () {
+                      direccionDialog(folio: folio);
+                    },
+                    onTap: () {
+                      if (folio.folioId != null) {
+                        Get.toNamed(
+                          Routes.DETALLES_FOLIO,
+                          arguments: {
+                            'folioId': folio.folioId.toString(),
+                            'id': folio.id ?? "",
+                          },
+                        );
+                      }
+                    },
+                    child: Dismissible(
+                      key: ValueKey('dismiss_${folio.id ?? folio.folioId}'),
+                      direction: controller.rolName == "Reparto"
+                          ? DismissDirection.startToEnd
+                          : DismissDirection.horizontal,
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          final bool? confirmacion = await showDialog<bool>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Color(0xFFE8F0FE),
+                                        child: Icon(
+                                          Icons.archive_outlined,
+                                          size: 40,
+                                          color: Color(0xFF1A73E8),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'Archivar Folio',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              controller.archivarFolio(
+                                                folio.folioId ?? "",
+                                              );
+                                              Navigator.pop(context, true);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.orange,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Archivar'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.condicionPago!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
+                                ),
+                              );
+                            },
+                          );
+
+                          return confirmacion ?? false;
+                        }
+                        if (direction == DismissDirection.endToStart) {
+                          final bool? confirmacion = await showDialog<bool>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Color(0xFFFEECEC),
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 40,
+                                          color: Color(0xFFD9534F),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'Eliminar Folio',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text(
+                                              'Cancelar',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              controller.eliminarFolio(
+                                                folio.folioId ?? "",
+                                              );
+                                              Navigator.pop(context, true);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFFD9534F,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+
+                          return confirmacion ?? false;
+                        }
+                        return true;
+                      },
+                      background: Container(
+                        color: Colors.orange,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 20),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.archive_outlined,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Archivar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      secondaryBackground: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Eliminar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ],
+                        ),
+                      ),
+                      child: ListTile(
+                        style: ListTileStyle.list,
+                        dense: true,
+                        isThreeLine: false,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
+                        leading: Column(
+                          children: [
+                            Text(
+                              folio.cantidad.toString(),
+                              textScaleFactor: 3.2,
+                              style: const TextStyle(height: 1),
+                            ),
+                            Flexible(
+                              child: Container(
+                                constraints: const BoxConstraints(maxWidth: 35),
+                                child: Text(
+                                  folio.tiporefaccion.toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        title: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.business_center_outlined,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                folio.nombreComercial ?? 'Sin nombre comercial',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  if (folio.municipio != null &&
+                                      folio.municipio!.trim().isNotEmpty) ...[
+                                    const Icon(
+                                      Icons.location_on_outlined,
+                                      size: 16,
+                                      color: Color(0XFF64748B),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        folio.municipio!,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0XFF64748B),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  if (folio.folioId != null &&
-                                      folio.folioId
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty)
                                     const Text(
                                       " - ",
                                       style: TextStyle(
                                         color: Color(0XFF64748B),
                                       ),
                                     ),
-                                ],
-
-                                if (folio.folioId != null &&
-                                    folio.folioId
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.confirmation_number_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.folioId.toString(),
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                        fontWeight: FontWeight.w500,
+                                  ],
+                                  if (folio.condicionPago != null &&
+                                      folio.condicionPago!
+                                          .trim()
+                                          .isNotEmpty) ...[
+                                    const Icon(
+                                      Icons.payments_outlined,
+                                      size: 16,
+                                      color: Color(0XFF64748B),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        folio.condicionPago!,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0XFF64748B),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    if (folio.folioId != null &&
+                                        folio.folioId
+                                            .toString()
+                                            .trim()
+                                            .isNotEmpty)
+                                      const Text(
+                                        " - ",
+                                        style: TextStyle(
+                                          color: Color(0XFF64748B),
+                                        ),
+                                      ),
+                                  ],
+                                  if (folio.folioId != null &&
+                                      folio.folioId
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty) ...[
+                                    const Icon(
+                                      Icons.confirmation_number_outlined,
+                                      size: 16,
+                                      color: Color(0XFF64748B),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        folio.folioId.toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0XFF64748B),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: folio.status != "Por entregar"
-                                  ? Color(
-                                      int.parse(folio.statusColor.toString()),
-                                    )
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: Color(
-                                  int.parse(folio.statusColor.toString()),
-                                ),
                               ),
                             ),
-                            child: Text(
-                              folio.status.toString(),
-                              style: TextStyle(
-                                color: folio.status == "Por entregar"
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: folio.status != "Por entregar"
                                     ? Color(
                                         int.parse(folio.statusColor.toString()),
                                       )
                                     : Colors.white,
-                                fontSize: 12,
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(
+                                  color: Color(
+                                    int.parse(folio.statusColor.toString()),
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                folio.status.toString(),
+                                style: TextStyle(
+                                  color: folio.status == "Por entregar"
+                                      ? Color(
+                                          int.parse(
+                                            folio.statusColor.toString(),
+                                          ),
+                                        )
+                                      : Colors.white,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

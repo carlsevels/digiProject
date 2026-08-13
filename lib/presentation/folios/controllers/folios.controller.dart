@@ -11,6 +11,7 @@ import 'package:bitacora_frontend/presentation/folios/querys/listFolios.dart';
 import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:powersync/sqlite3.dart';
@@ -22,6 +23,8 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
   final RxString fechaSeleccionada = "".obs;
+
+  final RxList<String> ordenMunicipiosCustom = <String>[].obs;
 
   final now = DateTime.now();
   late final EasyDatePickerController controllerEasyDate;
@@ -50,7 +53,14 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
-
+    // En tu onInit() del controlador
+    final box = GetStorage();
+    List<dynamic>? guardado = box.read('orden_municipios');
+    if (guardado != null) {
+      ordenMunicipiosCustom.assignAll(
+        guardado.map((e) => e.toString()).toList(),
+      );
+    }
     await getDatos();
     controllerEasyDate = EasyDatePickerController();
     await getFoliosWithDate();
