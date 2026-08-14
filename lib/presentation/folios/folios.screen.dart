@@ -1,7 +1,11 @@
+import 'dart:ui';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/direccionDialog.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/drawer.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/easy_date_timeline.dart';
-import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/onEmpty.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/onError.dart';
+import 'package:bitacora_frontend/presentation/folios/localWidgets/onLoading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -12,8 +16,8 @@ class FoliosScreen extends GetView<FoliosController> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
@@ -58,428 +62,132 @@ class FoliosScreen extends GetView<FoliosController> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              controller.selectDate(context);
-            },
+            onPressed: () => controller.selectDate(context),
             icon: const Icon(Icons.filter_list_outlined),
           ),
           IconButton(
-            onPressed: () {
-              Get.toNamed(Routes.SEARCH_FOLIO);
-            },
+            onPressed: () => Get.toNamed(Routes.SEARCH_FOLIO),
             icon: const Icon(Icons.search_outlined),
           ),
         ],
       ),
-      drawer: Obx(
-        () => Drawer(
-          backgroundColor: const Color(0XFFF8FAFC),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  height: 220,
-                  width: screenWidth,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xff1565C0), Color(0xff42A5F5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: DrawerHeader(
-                    margin: EdgeInsets.zero,
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Colors.white,
-                          child: Text(
-                            controller.nameUser.value.isNotEmpty
-                                ? controller.nameUser.value[0].toUpperCase()
-                                : "?",
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xff1565C0),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Obx(
-                          () => Text(
-                            controller.nameUser.value,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Obx(
-                          () => Row(
-                            children: [
-                              const Icon(
-                                Icons.badge_outlined,
-                                color: Colors.white70,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                controller.rolName.value,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // PARA FUTUROS CAMBIOS
-                // ListTile(
-                //   leading: const Icon(Icons.account_circle_outlined),
-                //   title: const Text("Perfil"),
-                //   onTap: () => Get.toNamed(Routes.PROFILE),
-                // ),
-                // PARA FUTUROS CAMBIOS
-                // ExpansionTile(
-                //   title: Text("Digirey"),
-                //   leading: SizedBox(
-                //     height: 28.0,
-                //     child: Image.asset(
-                //       "assets/logos/digireyShort.png",
-                //       opacity: const AlwaysStoppedAnimation(.5),
-                //     ),
-                //   ),
-                //   children: [
-                //     ListTile(
-                //       leading: const Icon(Icons.format_list_numbered_outlined),
-                //       title: const Text("Usuarios"),
-                //       onTap: () {
-                //         Get.toNamed(Routes.USUARIOS);
-                //       },
-                //     ),
-                //     ListTile(
-                //       leading: const Icon(Icons.add),
-                //       title: const Text("Registrar"),
-                //       onTap: () {
-                //         Get.toNamed(Routes.ADD_USUARIO);
-                //       },
-                //     ),
-                //   ],
-                // ),
-                // PARA FUTUROS CAMBIOS
-                // if (controller.rolName.value == "Admin")
-                //   ListTile(
-                //     leading: const Icon(Icons.badge_outlined),
-                //     title: const Text("Repartidores"),
-                //     onTap: null,
-                //   ),
-                ExpansionTile(
-                  title: Text("Organigrama"),
-                  leading: const Icon(Icons.precision_manufacturing_outlined),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.account_tree_outlined),
-                      title: const Text("Visitar"),
-                      onTap: () {
-                        Get.toNamed(Routes.ORGANIGRAMA);
-                      },
-                    ),
-                  ],
-                ),
-                ExpansionTile(
-                  title: Text("Refacciones"),
-                  leading: const Icon(Icons.precision_manufacturing_outlined),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.format_list_numbered_outlined),
-                      title: const Text("Refacciones"),
-                      onTap: () {
-                        Get.toNamed(Routes.REFACCIONES);
-                      },
-                    ),
-                  ],
-                ),
-                ExpansionTile(
-                  leading: const Icon(Icons.receipt_long_outlined),
-                  title: const Text("Folios"),
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text("Agregar"),
-                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.archive_outlined),
-                      title: const Text("Archivados"),
-                      onTap: () => Get.toNamed(Routes.ARCHIVADOS),
-                    ),
-                  ],
-                ),
-                if (controller.rolName.value == "Admin")
-                  ExpansionTile(
-                    leading: const Icon(Icons.business_center_outlined),
-                    title: const Text("Clientes"),
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.format_list_numbered_outlined),
-                        title: const Text("Clientes"),
-                        onTap: () => Get.toNamed(Routes.CLIENTES),
-                      ),
-                      // ListTile(
-                      //   leading: Icon(Icons.person_add_alt_1_outlined),
-                      //   title: const Text("Agregar Cliente"),
-                      //   onTap: () => Get.toNamed(Routes.ADD_CLIENTE),
-                      // ),
-                    ],
-                  ),
-                if (controller.rolName.value == "Admin")
-                  const Divider(height: 1),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  leading: const Icon(Icons.logout_rounded, color: Colors.red),
-                  title: const Text(
-                    "Cerrar sesión",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  onTap: controller.signOut,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      drawer: DrawerView(),
       body: controller.obx(
-        onLoading: Container(
-          color: Colors.white,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeInOut,
-                  builder: (context, value, child) =>
-                      Transform.scale(scale: value, child: child),
-                  child: SizedBox(
-                    width: 120,
-                    child: Image.asset(
-                      fit: BoxFit.contain,
-                      "assets/logos/digiApp.jpeg",
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ],
-            ),
-          ),
-        ),
-        onError: (error) => Center(child: Text("Error: $error")),
-        onEmpty: RefreshIndicator(
-          color: Colors.white,
-          backgroundColor: const Color(0XFF1D6CFF),
-          onRefresh: () async {
-            await controller.getFoliosWithDate();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: Get.size.height,
-              child: Center(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Obx(
-                            () => Text(
-                              controller.obtenerEtiquetaFecha(
-                                DateTime.tryParse(
-                                      controller.fechaSeleccionada.value,
-                                    ) ??
-                                    DateTime.now(),
-                              ),
-                              textScaler: const TextScaler.linear(1.8),
-                            ),
-                          ),
-                          TextButton.icon(
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(50, 30),
-                              padding: EdgeInsets.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                            onPressed: () {
-                              Get.offAllNamed(Routes.ADD_FOLIOS);
-                            },
-                            icon: const Icon(
-                              Icons.add,
-                              color: Color(0XFF1D6CFF),
-                            ),
-                            label: const Text(
-                              "Agregar Folio",
-                              style: TextStyle(color: Color(0XFF1D6CFF)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    EasyDateTimelinePage(),
-                    const SizedBox(height: 32),
-                    FoliosEmptyPage(needDate: true),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        onLoading: OnLoadingView(),
+        onError: (error) => OnErrorView(error: error ?? ""),
+        onEmpty: OnEmptyView(),
         (state) {
-          // 1. Agrupar los folios por municipio
-          final Map<String, List<dynamic>> foliosPorMunicipio = {};
-          for (var folio in state!) {
-            final municipio =
-                (folio.municipio != null && folio.municipio!.trim().isNotEmpty)
-                ? folio.municipio!
-                : 'Sin Municipio';
-            foliosPorMunicipio.putIfAbsent(municipio, () => []).add(folio);
-          }
-
-          // 2. Sincronizar o inicializar el orden personalizado sin perder los cambios
-          List<String> municipiosDisponibles = foliosPorMunicipio.keys.toList();
-          if (controller.ordenMunicipiosCustom.isEmpty) {
-            controller.ordenMunicipiosCustom.assignAll(municipiosDisponibles);
-          } else {
-            for (var m in municipiosDisponibles) {
-              if (!controller.ordenMunicipiosCustom.contains(m)) {
-                controller.ordenMunicipiosCustom.add(m);
-              }
-            }
-            controller.ordenMunicipiosCustom.removeWhere(
-              (m) => !foliosPorMunicipio.containsKey(m),
-            );
-          }
-
-          // 3. Construir la lista aplanada basada estrictamente en el orden local del controlador
-          final List<dynamic> elementosAplanados = [];
-          for (var municipio in controller.ordenMunicipiosCustom) {
-            if (foliosPorMunicipio.containsKey(municipio)) {
-              final listaFolios = foliosPorMunicipio[municipio]!;
-              elementosAplanados.add({
-                'tipo': 'header',
-                'nombre': municipio,
-                'count': listaFolios.length,
-              });
-              for (var folio in listaFolios) {
-                elementosAplanados.add({'tipo': 'folio', 'data': folio});
-              }
-            }
-          }
-
           return RefreshIndicator(
             color: Colors.white,
             backgroundColor: const Color(0XFF1D6CFF),
-            onRefresh: () => controller.getFoliosWithDate(),
+            onRefresh: () async => await controller.getFoliosWithDate(),
             child: ReorderableListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: elementosAplanados.length + 1,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              cacheExtent: 500,
+              buildDefaultDragHandles: false,
+              itemCount: controller.elementosAplanados.length + 2,
+
+              proxyDecorator:
+                  (Widget child, int index, Animation<double> animation) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (BuildContext context, Widget? child) {
+                        final animValue = Curves.easeInOut.transform(
+                          animation.value,
+                        );
+                        final elevation = lerpDouble(0, 12, animValue)!;
+                        return Material(
+                          elevation: elevation,
+                          color: Colors.white,
+                          shadowColor: Colors.black38,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0XFF1D6CFF).withOpacity(0.6),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: child,
+                    );
+                  },
 
               onReorder: (int oldIndex, int newIndex) {
-                if (oldIndex == 0 || newIndex == 0) return;
-
-                int adjustedOld = oldIndex - 1;
-                int adjustedNew = newIndex - 1;
-
-                if (adjustedOld < adjustedNew) {
-                  adjustedNew -= 1;
+                if (oldIndex == 0 ||
+                    newIndex == 0 ||
+                    oldIndex > controller.elementosAplanados.length ||
+                    newIndex > controller.elementosAplanados.length) {
+                  return;
                 }
 
-                if (elementosAplanados[adjustedOld]['tipo'] == 'header') {
-                  String municipioMovido =
-                      elementosAplanados[adjustedOld]['nombre'];
-                  int oldMunIndex = controller.ordenMunicipiosCustom.indexOf(
-                    municipioMovido,
-                  );
+                int adjustedOld = oldIndex - 1;
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                int adjustedNew = newIndex - 1;
+                adjustedNew = adjustedNew.clamp(
+                  0,
+                  controller.elementosAplanados.length - 1,
+                );
 
-                  String? municipioDestino;
-                  for (
-                    int i = adjustedNew;
-                    i >= 0 && i < elementosAplanados.length;
-                    i--
-                  ) {
-                    if (elementosAplanados[i]['tipo'] == 'header') {
-                      municipioDestino = elementosAplanados[i]['nombre'];
+                final elementos = controller.elementosAplanados;
+                if (elementos[adjustedOld]['tipo'] != 'header') return;
+
+                final String muniMovido = elementos[adjustedOld]['nombre'];
+                String? muniDestino;
+
+                // Búsqueda inteligente del municipio destino (hacia atrás o adelante)
+                for (int i = adjustedNew; i >= 0; i--) {
+                  if (elementos[i]['tipo'] == 'header') {
+                    muniDestino = elementos[i]['nombre'];
+                    break;
+                  }
+                }
+                if (muniDestino == null) {
+                  for (int i = adjustedNew; i < elementos.length; i++) {
+                    if (elementos[i]['tipo'] == 'header') {
+                      muniDestino = elementos[i]['nombre'];
                       break;
                     }
                   }
+                }
 
-                  if (municipioDestino == null) {
-                    for (
-                      int i = adjustedNew;
-                      i < elementosAplanados.length;
-                      i++
-                    ) {
-                      if (elementosAplanados[i]['tipo'] == 'header') {
-                        municipioDestino = elementosAplanados[i]['nombre'];
-                        break;
-                      }
-                    }
-                  }
+                if (muniDestino != null && muniDestino != muniMovido) {
+                  final int oldMunIdx = controller.ordenMunicipiosCustom
+                      .indexOf(muniMovido);
+                  final int newMunIdx = controller.ordenMunicipiosCustom
+                      .indexOf(muniDestino);
 
-                  if (municipioDestino != null &&
-                      municipioDestino != municipioMovido) {
-                    int newMunIndex = controller.ordenMunicipiosCustom.indexOf(
-                      municipioDestino,
-                    );
-
-                    controller.ordenMunicipiosCustom.removeAt(oldMunIndex);
+                  if (oldMunIdx != -1 && newMunIdx != -1) {
+                    controller.ordenMunicipiosCustom.removeAt(oldMunIdx);
                     controller.ordenMunicipiosCustom.insert(
-                      newMunIndex,
-                      municipioMovido,
+                      newMunIdx,
+                      muniMovido,
                     );
 
-                    final box = GetStorage();
-                    box.write(
+                    GetStorage().write(
                       'orden_municipios',
                       controller.ordenMunicipiosCustom.toList(),
                     );
-
+                    if (state != null) {
+                      controller.actualizarElementosAplanados(state);
+                    }
                     controller.update();
                   }
                 }
               },
-
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
+                // HEADER FIJO
                 if (index == 0) {
                   return Column(
                     key: const ValueKey('header_fijo_fecha'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -498,19 +206,8 @@ class FoliosScreen extends GetView<FoliosController> {
                               ),
                             ),
                             TextButton.icon(
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(50, 30),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
-                                ),
-                              ),
-                              onPressed: () {
-                                Get.toNamed(Routes.ADD_FOLIOS);
-                              },
+                              onPressed: () =>
+                                  Get.offAndToNamed(Routes.ADD_FOLIOS),
                               icon: const Icon(
                                 Icons.add,
                                 color: Color(0XFF1D6CFF),
@@ -530,7 +227,35 @@ class FoliosScreen extends GetView<FoliosController> {
                   );
                 }
 
-                final item = elementosAplanados[index - 1];
+                // FOOTER
+                if (index == controller.elementosAplanados.length + 1) {
+                  return Container(
+                    key: const ValueKey('footer_texto_final'),
+                    padding: const EdgeInsets.symmetric(vertical: 30.0),
+                    alignment: Alignment.center,
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 16,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          "No hay más folios por mostrar",
+                          style: TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final item = controller.elementosAplanados[index - 1];
                 final uniqueKey = item['tipo'] == 'header'
                     ? ValueKey('mun_${item['nombre']}')
                     : ValueKey(
@@ -538,9 +263,11 @@ class FoliosScreen extends GetView<FoliosController> {
                       );
 
                 if (item['tipo'] == 'header') {
-                  return Container(
+                  return ReorderableDelayedDragStartListener(
                     key: uniqueKey,
-                    child: Padding(
+                    index: index,
+                    child: Container(
+                      color: Colors.white,
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -584,279 +311,62 @@ class FoliosScreen extends GetView<FoliosController> {
                   );
                 }
 
+                // FOLIO ITEM
                 final folio = item['data'];
                 return Container(
                   key: uniqueKey,
-                  child: InkWell(
-                    onLongPress: () {
-                      direccionDialog(folio: folio);
-                    },
-                    onTap: () {
-                      if (folio.folioId != null) {
-                        Get.toNamed(
-                          Routes.DETALLES_FOLIO,
-                          arguments: {
-                            'folioId': folio.folioId.toString(),
-                            'id': folio.id ?? "",
-                          },
-                        );
-                      }
-                    },
-                    child: Dismissible(
-                      key: ValueKey('dismiss_${folio.id ?? folio.folioId}'),
-                      direction: controller.rolName == "Reparto"
-                          ? DismissDirection.startToEnd
-                          : DismissDirection.horizontal,
-                      confirmDismiss: (direction) async {
-                        if (direction == DismissDirection.startToEnd) {
-                          final bool? confirmacion = await showDialog<bool>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const CircleAvatar(
-                                        radius: 30,
-                                        backgroundColor: Color(0xFFE8F0FE),
-                                        child: Icon(
-                                          Icons.archive_outlined,
-                                          size: 40,
-                                          color: Color(0xFF1A73E8),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      const Text(
-                                        'Archivar Folio',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 24),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
-                                            child: const Text(
-                                              'Cancelar',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              controller.archivarFolio(
-                                                folio.folioId ?? "",
-                                              );
-                                              Navigator.pop(context, true);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.orange,
-                                              foregroundColor: Colors.white,
-                                            ),
-                                            child: const Text('Archivar'),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-
-                          return confirmacion ?? false;
-                        }
-                        if (direction == DismissDirection.endToStart) {
-                          final bool? confirmacion = await showDialog<bool>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const CircleAvatar(
-                                        radius: 30,
-                                        backgroundColor: Color(0xFFFEECEC),
-                                        child: Icon(
-                                          Icons.delete_outline_rounded,
-                                          size: 40,
-                                          color: Color(0xFFD9534F),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      const Text(
-                                        'Eliminar Folio',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 24),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
-                                            child: const Text(
-                                              'Cancelar',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              controller.eliminarFolio(
-                                                folio.folioId ?? "",
-                                              );
-                                              Navigator.pop(context, true);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(
-                                                0xFFD9534F,
-                                              ),
-                                              foregroundColor: Colors.white,
-                                            ),
-                                            child: const Text('Eliminar'),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-
-                          return confirmacion ?? false;
-                        }
-                        return true;
-                      },
-                      background: Container(
-                        color: Colors.orange,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 20),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.archive_outlined,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Archivar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                  child: Dismissible(
+                    key: ValueKey('dismiss_${folio.id ?? folio.folioId}'),
+                    direction: DismissDirection.startToEnd,
+                    confirmDismiss: (dir) async =>
+                        await controller.mostrarDialogoArchivar(
+                          context,
+                          folio,
+                          () => controller.archivarFolio(folio.folioId ?? ""),
                         ),
+                    background: Container(
+                      color: Colors.orange,
+                      padding: const EdgeInsets.only(left: 20),
+                      alignment: Alignment.centerLeft,
+                      child: const Icon(
+                        Icons.archive_outlined,
+                        color: Colors.white,
+                        size: 30,
                       ),
-                      secondaryBackground: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Eliminar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ],
-                        ),
+                    ),
+                    child: InkWell(
+                      onLongPress: () => direccionDialog(folio: folio),
+                      onTap: () => Get.toNamed(
+                        Routes.DETALLES_FOLIO,
+                        arguments: {
+                          'folioId': folio.folioId.toString(),
+                          'id': folio.id ?? "",
+                        },
                       ),
                       child: ListTile(
-                        style: ListTileStyle.list,
                         dense: true,
-                        isThreeLine: false,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                        ),
                         leading: Column(
                           children: [
                             Text(
                               folio.cantidad.toString(),
-                              textScaleFactor: 3.2,
-                              style: const TextStyle(height: 1),
+                              style: const TextStyle(fontSize: 32, height: 1),
                             ),
-                            Flexible(
-                              child: Container(
-                                constraints: const BoxConstraints(maxWidth: 35),
-                                child: Text(
-                                  folio.tiporefaccion.toString(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
+                            Text(folio.tiporefaccion.toString()),
                           ],
                         ),
                         title: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(
                               Icons.business_center_outlined,
                               size: 20,
                             ),
-                            const SizedBox(width: 8.0),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                folio.nombreComercial ?? 'Sin nombre comercial',
-                                maxLines: 1,
+                                folio.nombreComercial ?? 'Sin nombre',
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
                                 ),
                               ),
                             ),
@@ -865,88 +375,8 @@ class FoliosScreen extends GetView<FoliosController> {
                         subtitle: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  if (folio.municipio != null &&
-                                      folio.municipio!.trim().isNotEmpty) ...[
-                                    const Icon(
-                                      Icons.location_on_outlined,
-                                      size: 16,
-                                      color: Color(0XFF64748B),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        folio.municipio!,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0XFF64748B),
-                                        ),
-                                      ),
-                                    ),
-                                    const Text(
-                                      " - ",
-                                      style: TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ],
-                                  if (folio.condicionPago != null &&
-                                      folio.condicionPago!
-                                          .trim()
-                                          .isNotEmpty) ...[
-                                    const Icon(
-                                      Icons.payments_outlined,
-                                      size: 16,
-                                      color: Color(0XFF64748B),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        folio.condicionPago!,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0XFF64748B),
-                                        ),
-                                      ),
-                                    ),
-                                    if (folio.folioId != null &&
-                                        folio.folioId
-                                            .toString()
-                                            .trim()
-                                            .isNotEmpty)
-                                      const Text(
-                                        " - ",
-                                        style: TextStyle(
-                                          color: Color(0XFF64748B),
-                                        ),
-                                      ),
-                                  ],
-                                  if (folio.folioId != null &&
-                                      folio.folioId
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty) ...[
-                                    const Icon(
-                                      Icons.confirmation_number_outlined,
-                                      size: 16,
-                                      color: Color(0XFF64748B),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        folio.folioId.toString(),
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0XFF64748B),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
+                            Text(
+                              "${folio.municipio ?? ''} - ${folio.folioId ?? ''}",
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -954,28 +384,15 @@ class FoliosScreen extends GetView<FoliosController> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: folio.status != "Por entregar"
-                                    ? Color(
-                                        int.parse(folio.statusColor.toString()),
-                                      )
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                  color: Color(
-                                    int.parse(folio.statusColor.toString()),
-                                  ),
+                                color: Color(
+                                  int.parse(folio.statusColor.toString()),
                                 ),
+                                borderRadius: BorderRadius.circular(50),
                               ),
                               child: Text(
                                 folio.status.toString(),
-                                style: TextStyle(
-                                  color: folio.status == "Por entregar"
-                                      ? Color(
-                                          int.parse(
-                                            folio.statusColor.toString(),
-                                          ),
-                                        )
-                                      : Colors.white,
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 12,
                                 ),
                               ),
@@ -991,37 +408,6 @@ class FoliosScreen extends GetView<FoliosController> {
           );
         },
       ),
-    );
-  }
-}
-
-class DatePickerExample extends StatefulWidget {
-  const DatePickerExample({super.key});
-  @override
-  State<DatePickerExample> createState() => _DatePickerExampleState();
-}
-
-class _DatePickerExampleState extends State<DatePickerExample> {
-  DateTime? selectedDate;
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2021, 7, 25),
-      firstDate: DateTime(2021),
-      lastDate: DateTime(2022),
-    );
-    setState(() {
-      selectedDate = pickedDate;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        IconButton(onPressed: _selectDate, icon: const Icon(Icons.filter_list)),
-      ],
     );
   }
 }

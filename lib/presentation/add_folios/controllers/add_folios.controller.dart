@@ -19,6 +19,7 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
   RxBool isProcessingBarcode = false.obs;
+  
   //Controllers
   TextEditingController cantidadController = TextEditingController();
   TextEditingController numReporteController = TextEditingController();
@@ -52,6 +53,7 @@ class AddFoliosController extends GetxController with StateMixin {
       this._tipoDocumento.value = value;
 
   final count = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -90,7 +92,6 @@ class AddFoliosController extends GetxController with StateMixin {
     );
     listaProcesada.insert(0, defaultItem);
     clientesModel.assignAll(listaProcesada);
-    clientesModel.value = listaProcesada;
   }
 
   Future<void> getTipoDocumento() async {
@@ -106,7 +107,6 @@ class AddFoliosController extends GetxController with StateMixin {
     );
     tipoDocumentoList.insert(0, defaultItem);
     tipoDocumento.assignAll(tipoDocumentoList);
-    tipoDocumento.value = tipoDocumentoList;
   }
 
   Future<void> getRefaccion() async {
@@ -119,7 +119,6 @@ class AddFoliosController extends GetxController with StateMixin {
     final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
     refaccionesList.insert(0, defaultItem);
     refacciones.assignAll(refaccionesList);
-    refacciones.value = refaccionesList;
   }
 
   Future<void> getCondicionPago() async {
@@ -133,7 +132,6 @@ class AddFoliosController extends GetxController with StateMixin {
     );
     condicionDePagoList.insert(0, defaultItem);
     condicionPago.assignAll(condicionDePagoList);
-    condicionPago.value = condicionDePagoList;
   }
 
   Future<void> getUsersReparto() async {
@@ -144,12 +142,14 @@ class AddFoliosController extends GetxController with StateMixin {
       return Users.fromJson(Map<String, dynamic>.from(row as Map));
     }).toList();
 
-    usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
+    // Corregido: .insert(0, ...) en lugar de .add(...) para consistencia
+    usersList.insert(0, Users(id: 0, nombre: "Seleccionar repartidor..."));
+    
     reparto.assignAll(usersList);
+    
     await AppDatabase.db.execute(
       "DELETE FROM folios WHERE repartidorId IS NULL OR repartidorId = 'null' OR repartidorId = '0';",
     );
-    reparto.value = usersList;
   }
 
   Future<Map<String, dynamic>?> postFolio() async {
@@ -205,32 +205,33 @@ class AddFoliosController extends GetxController with StateMixin {
       await AppDatabase.db.writeTransaction((txn) async {
         await txn.execute(
           '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId", isArchived) 
-       VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
           datosEnviados,
         );
 
-        String fechaMonterrey = DateTime.now().toIso8601String();
-
         await txn.execute(
           'INSERT INTO historialestados (id, "folioId", "statusId", "created_at") VALUES (?, ?, ?, ?)',
-          [const Uuid().v4(), idParaPowerSync, 1, fechaMonterrey],
+          [const Uuid().v4(), idParaPowerSync, 1, fechaActual],
         );
-
-        print("datosEnviados: ${jsonEncode(datosEnviados)}");
       });
+
+      final status = AppDatabase.db.currentStatus;
+      print(
+        "PowerSync -> Conectado: ${status.connected}, Sincronizando: ${status.uploading}",
+      );
 
       cantidadController.clear();
       numReporteController.clear();
       clienteId.value = 0;
       refaccionId.value = 0;
       condicionPagoId.value = 0;
-      repartidorId.value = 2;
+      repartidorId.value = 0; // Limpieza correcta al valor por defecto
       tipoDocumentoId.value = 0;
 
-      Get.snackbar("Guardado", "Registro exitoso.");
-      Get.offAllNamed(Routes.FOLIOS);
+      Get.snackbar("Guardado", "Registro exitoso localmente.");
+      Get.offAndToNamed(Routes.FOLIOS);
     } catch (e) {
-      print("Error al crear: $e");
+      print("Error crítico al guardar el registro localmente: $e");
       Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
     }
     return null;

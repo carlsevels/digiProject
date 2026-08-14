@@ -4,6 +4,7 @@ import 'package:bitacora_frontend/infrastructure/models/barcode.dart';
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
+import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/dropdown.dart';
 import 'package:bitacora_frontend/presentation/add_folios/localWidgets/inputText.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,11 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
     return Scaffold(
       backgroundColor: Color(0XFFF8FAFC),
       appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Get.offAndToNamed(Routes.FOLIOS);
+          },
+        ),
         scrolledUnderElevation: 0.0,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -62,9 +68,17 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         uniqueTipoDocumento[c.id!] = c;
                       }
                     }
+
+                    final int? currentValue =
+                        uniqueTipoDocumento.containsKey(
+                          controller.tipoDocumentoId.value,
+                        )
+                        ? controller.tipoDocumentoId.value
+                        : null;
+
                     return DropdownWidget(
                       title: "Tipo de documento",
-                      dropdownValue: controller.tipoDocumentoId.value,
+                      dropdownValue: currentValue,
                       onChanged: (int? value) {
                         if (value != null) {
                           controller.tipoDocumentoId.value = value;
@@ -80,7 +94,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                           .toList(),
                     );
                   }),
-
                   // Campo condicional de número de reporte
                   Obx(() {
                     if (controller.tipoDocumentoId.value != 0) {

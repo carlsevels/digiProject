@@ -4,6 +4,7 @@ import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
+import 'package:bitacora_frontend/presentation/detallesFolio/controllers/detalles_folio.controller.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -32,7 +33,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                   ? capture.barcodes.first.displayValue
                   : null;
 
-                  print("rawValuerawValue: ${rawValue}");
+              print("rawValuerawValue: ${rawValue}");
 
               if (rawValue == null || rawValue.isEmpty) return;
 
@@ -66,7 +67,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               }
-
+              Get.lazyPut(() => DetallesFolioController());
               if (rawValue.isNotEmpty) {
                 Get.toNamed(
                   Routes.DETALLES_FOLIO,
@@ -133,6 +134,7 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
                   ElevatedButton(
                     onPressed: () {
                       final folioId = state?.folioId?.toString();
+                      Get.lazyPut(() => DetallesFolioController());
                       if (folioId != null && folioId.isNotEmpty) {
                         Get.toNamed(
                           Routes.DETALLES_FOLIO,

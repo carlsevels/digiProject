@@ -14,7 +14,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:powersync/sqlite3.dart' hide Row;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FoliosController extends GetxController with StateMixin<List<Folios>> {
@@ -76,6 +76,51 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     super.onClose();
   }
 
+  // Lista observable ya aplanada para que la vista no tenga que procesar nada
+  final RxList<dynamic> elementosAplanados = <dynamic>[].obs;
+
+  // Método rápido para actualizar la estructura solo cuando cambian los datos o el orden
+  void actualizarElementosAplanados(List<dynamic> stateData) {
+    final Map<String, List<dynamic>> foliosPorMunicipio = {};
+    for (var folio in stateData) {
+      final municipio =
+          (folio.municipio != null && folio.municipio!.trim().isNotEmpty)
+          ? folio.municipio!
+          : 'Sin Municipio';
+      foliosPorMunicipio.putIfAbsent(municipio, () => []).add(folio);
+    }
+
+    List<String> municipiosDisponibles = foliosPorMunicipio.keys.toList();
+    if (ordenMunicipiosCustom.isEmpty) {
+      ordenMunicipiosCustom.assignAll(municipiosDisponibles);
+    } else {
+      for (var m in municipiosDisponibles) {
+        if (!ordenMunicipiosCustom.contains(m)) {
+          ordenMunicipiosCustom.add(m);
+        }
+      }
+      ordenMunicipiosCustom.removeWhere(
+        (m) => !foliosPorMunicipio.containsKey(m),
+      );
+    }
+
+    final List<dynamic> tempLista = [];
+    for (var municipio in ordenMunicipiosCustom) {
+      if (foliosPorMunicipio.containsKey(municipio)) {
+        final listaFolios = foliosPorMunicipio[municipio]!;
+        tempLista.add({
+          'tipo': 'header',
+          'nombre': municipio,
+          'count': listaFolios.length,
+        });
+        for (var folio in listaFolios) {
+          tempLista.add({'tipo': 'folio', 'data': folio});
+        }
+      }
+    }
+    elementosAplanados.assignAll(tempLista);
+  }
+
   Future<void> getFoliosWithDate() async {
     change(null, status: RxStatus.loading());
 
@@ -113,6 +158,13 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           )
           .toList();
 
+      actualizarElementosAplanados(listFolios);
+
+      final datosPendientes = await AppDatabase.db.getAll(
+        'SELECT * FROM ps_crud',
+      );
+      print("Datos pendientes: ${jsonEncode(datosPendientes)}");
+
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {
@@ -143,16 +195,12 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> signOut() async {
     try {
-      await AppDatabase.db.disconnect();
-
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/${AppDatabase.db}');
-
-      if (await file.exists()) {
-        await file.delete();
-      }
+      final status = AppDatabase.db.currentStatus;
 
       await Supabase.instance.client.auth.signOut();
+
+      await AppDatabase.db.disconnect();
+
       await Get.deleteAll(force: true);
       Get.offAllNamed(Routes.LOGIN);
     } catch (e) {
@@ -250,6 +298,148 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       print("Error de SQL: ${e.toString()}");
       return null;
     }
+  }
+
+  Future<bool?> mostrarDialogoArchivar(
+    BuildContext context,
+    dynamic folio,
+    Function onConfirm,
+  ) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Color(0xFFE8F0FE),
+                  child: Icon(
+                    Icons.archive_outlined,
+                    size: 40,
+                    color: Color(0xFF1A73E8),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Archivar Folio',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        onConfirm();
+                        Navigator.pop(context, true);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Archivar'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool?> mostrarDialogoEliminar(
+    BuildContext context,
+    dynamic folio,
+    Function onConfirm,
+  ) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Color(0xFFFEECEC),
+                  child: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 40,
+                    color: Color(0xFFD9534F),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Eliminar Folio',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        onConfirm();
+                        Navigator.pop(context, true);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD9534F),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Eliminar'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void increment() => count.value++;

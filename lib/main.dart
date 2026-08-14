@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:powersync/powersync.dart';
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,20 +21,19 @@ void main() async {
   );
 
   if (!kIsWeb) {
-    // Esto solo se ejecuta en Android, iOS o Desktop (donde FFI funciona)
     await AppDatabase.initialize();
   } else {
     // TODO: Si estás usando Drift/SQLite en Web, aquí debes inicializar
     // la versión compatible con WebAssembly (WASM) / IndexedDB.
-    // Si tu app en web solo se comunica directo con Supabase sin base local FFI,
-    // puedes omitir esto o inicializar la versión web de tu DB.
   }
 
   final supabase = Supabase.instance.client;
   final session = supabase.auth.currentSession;
 
   if (session != null) {
-    await AppDatabase.initialize();
+    if (kIsWeb) {
+      await AppDatabase.initialize();
+    }
 
     await AppDatabase.db.connect(connector: MyBackendConnector(AppDatabase.db));
 
@@ -41,6 +41,44 @@ void main() async {
   }
 
   runApp(Main(session != null ? Routes.FOLIOS : Routes.LOGIN));
+}
+
+void setupAuthListener(BuildContext context) {
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+    final AuthChangeEvent event = data.event;
+    final Session? session = data.session;
+
+    if (event == AuthChangeEvent.signedOut || session == null) {
+      print("La sesión caducó o expiró");
+      
+      try {
+        await AppDatabase.db.disconnect();
+      } catch (e) {
+        print("Error al desconectar PowerSync: $e");
+      }
+
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          Routes.LOGIN, 
+          (route) => false,
+        );
+      }
+    }
+  });
+}
+
+void cerrarSesionSinBorrarLocales(BuildContext context) async {
+  try {
+    await AppDatabase.db.disconnect();
+
+    await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+  } catch (e) {
+    print("Error al cerrar sesión de forma segura: $e");
+  }
+
+  if (context.mounted) {
+    Navigator.of(context).pushNamedAndRemoveUntil(Routes.LOGIN, (route) => false);
+  }
 }
 
 class Main extends StatelessWidget {

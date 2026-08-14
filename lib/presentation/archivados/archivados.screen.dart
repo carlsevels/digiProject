@@ -271,7 +271,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                     },
                     child: Dismissible(
                       key: ValueKey(folio.id),
-                      direction: DismissDirection.horizontal,
+                      direction: DismissDirection.startToEnd,
                       confirmDismiss: (direction) async {
                         if (direction == DismissDirection.startToEnd) {
                           return await showDialog<bool>(
@@ -350,81 +350,81 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                               false;
                         }
 
-                        if (direction == DismissDirection.endToStart) {
-                          return await showDialog<bool>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (context) => Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const CircleAvatar(
-                                          radius: 30,
-                                          backgroundColor: Color(0xFFFEECEC),
-                                          child: Icon(
-                                            Icons.delete_outline_rounded,
-                                            size: 40,
-                                            color: Color(0xFFD9534F),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        const Text(
-                                          'Eliminar Folio',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        const Text(
-                                          '¿Estás seguro de eliminar este folio?',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 24),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, false),
-                                              child: const Text(
-                                                'Cancelar',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                controller.eliminarFolio(
-                                                  folio.folioId ?? "",
-                                                );
-                                                Navigator.pop(context, true);
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFFD9534F,
-                                                ),
-                                                foregroundColor: Colors.white,
-                                              ),
-                                              child: const Text('Eliminar'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ) ??
-                              false;
-                        }
+                        // if (direction == DismissDirection.endToStart) {
+                        //   return await showDialog<bool>(
+                        //         context: context,
+                        //         barrierDismissible: false,
+                        //         builder: (context) => Dialog(
+                        //           shape: RoundedRectangleBorder(
+                        //             borderRadius: BorderRadius.circular(20.0),
+                        //           ),
+                        //           child: Padding(
+                        //             padding: const EdgeInsets.all(24.0),
+                        //             child: Column(
+                        //               mainAxisSize: MainAxisSize.min,
+                        //               children: [
+                        //                 const CircleAvatar(
+                        //                   radius: 30,
+                        //                   backgroundColor: Color(0xFFFEECEC),
+                        //                   child: Icon(
+                        //                     Icons.delete_outline_rounded,
+                        //                     size: 40,
+                        //                     color: Color(0xFFD9534F),
+                        //                   ),
+                        //                 ),
+                        //                 const SizedBox(height: 20),
+                        //                 const Text(
+                        //                   'Eliminar Folio',
+                        //                   style: TextStyle(
+                        //                     fontSize: 20,
+                        //                     fontWeight: FontWeight.bold,
+                        //                   ),
+                        //                 ),
+                        //                 const SizedBox(height: 12),
+                        //                 const Text(
+                        //                   '¿Estás seguro de eliminar este folio?',
+                        //                   textAlign: TextAlign.center,
+                        //                 ),
+                        //                 const SizedBox(height: 24),
+                        //                 Row(
+                        //                   mainAxisAlignment:
+                        //                       MainAxisAlignment.end,
+                        //                   children: [
+                        //                     TextButton(
+                        //                       onPressed: () =>
+                        //                           Navigator.pop(context, false),
+                        //                       child: const Text(
+                        //                         'Cancelar',
+                        //                         style: TextStyle(
+                        //                           color: Colors.grey,
+                        //                         ),
+                        //                       ),
+                        //                     ),
+                        //                     const SizedBox(width: 8),
+                        //                     ElevatedButton(
+                        //                       onPressed: () {
+                        //                         controller.eliminarFolio(
+                        //                           folio.folioId ?? "",
+                        //                         );
+                        //                         Navigator.pop(context, true);
+                        //                       },
+                        //                       style: ElevatedButton.styleFrom(
+                        //                         backgroundColor: const Color(
+                        //                           0xFFD9534F,
+                        //                         ),
+                        //                         foregroundColor: Colors.white,
+                        //                       ),
+                        //                       child: const Text('Eliminar'),
+                        //                     ),
+                        //                   ],
+                        //                 ),
+                        //               ],
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ) ??
+                        //       false;
+                        // }
 
                         return true;
                       },
@@ -452,30 +452,30 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                         ),
                       ),
 
-                      secondaryBackground: Container(
-                        color: Colors.redAccent,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Eliminar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ],
-                        ),
-                      ),
+                      // secondaryBackground: Container(
+                      //   color: Colors.redAccent,
+                      //   alignment: Alignment.centerRight,
+                      //   padding: const EdgeInsets.symmetric(horizontal: 20),
+                      //   child: const Row(
+                      //     mainAxisAlignment: MainAxisAlignment.end,
+                      //     children: [
+                      //       Text(
+                      //         'Eliminar',
+                      //         style: TextStyle(
+                      //           color: Colors.white,
+                      //           fontWeight: FontWeight.w700,
+                      //           fontSize: 16,
+                      //         ),
+                      //       ),
+                      //       SizedBox(width: 12),
+                      //       Icon(
+                      //         Icons.delete_outline,
+                      //         color: Colors.white,
+                      //         size: 28,
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
                       child: ListTile(
                         style: ListTileStyle.list,
                         dense: true,
