@@ -52,6 +52,7 @@ dependencies:
   signature: ^6.4.0
   easy_date_timeline: ^2.0.9
   
+  sqlite3: ^3.5.1
   
 dev_dependencies:
   flutter_test:

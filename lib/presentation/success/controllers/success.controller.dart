@@ -4,8 +4,9 @@ import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SuccessController extends GetxController with StateMixin<Folios> {
   late ConfettiController confettiController;
@@ -26,14 +27,30 @@ class SuccessController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        idBuscado,
-      ]);
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+      Folios? folio;
+
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('folios')
+            .select()
+            .eq('folioId', idBuscado)
+            .maybeSingle();
+
+        if (response == null) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+        folio = Folios.fromJson(Map<String, dynamic>.from(response));
+      } else {
+        final resultSet = await AppDatabase.db.execute(folioId(), [
+          idBuscado,
+        ]);
+        if (resultSet.isEmpty) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+        folio = Folios.fromJson(resultSet.first);
       }
-      final folio = Folios.fromJson(resultSet.first);
 
       final ultimoRegistro = await getUltimoStatus(
         folio.folioIdHistorial ?? "",
@@ -61,20 +78,32 @@ class SuccessController extends GetxController with StateMixin<Folios> {
 
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
-      final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM historialestados 
-      WHERE "folioId" = ? 
-      ORDER BY "created_at" DESC 
-      LIMIT 1
-      ''',
-        [folioId],
-      );
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('historialestados')
+            .select()
+            .eq('folioId', folioId)
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
 
-      if (result.isNotEmpty) {
-        return result.first;
+        return response != null ? Map<String, dynamic>.from(response) : null;
+      } else {
+        final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
+          '''
+          SELECT * FROM historialestados 
+          WHERE "folioId" = ? 
+          ORDER BY "created_at" DESC 
+          LIMIT 1
+          ''',
+          [folioId],
+        );
+
+        if (result.isNotEmpty) {
+          return result.first;
+        }
+        return null;
       }
-      return null;
     } catch (e) {
       print("Error al obtener el último status: $e");
       return null;
