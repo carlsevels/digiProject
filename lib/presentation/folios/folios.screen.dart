@@ -370,6 +370,14 @@ class FoliosScreen extends GetView<FoliosController> {
                   );
                 }
                 final folio = state[index - 1];
+
+                // Variables seguras para evitar FormatException por valores nulos
+                final int colorInt =
+                    (folio.statusColor != null &&
+                        folio.statusColor.toString().isNotEmpty)
+                    ? (int.tryParse(folio.statusColor.toString()) ?? 0xFF9E9E9E)
+                    : 0xFF9E9E9E;
+
                 return InkWell(
                   onLongPress: () {
                     direccionDialog(folio: folio);
@@ -389,7 +397,6 @@ class FoliosScreen extends GetView<FoliosController> {
                         : DismissDirection.horizontal,
                     confirmDismiss: (direction) async {
                       if (direction == DismissDirection.startToEnd) {
-                        // Resultado de la confirmación
                         final bool? confirmacion = await showDialog<bool>(
                           context: context,
                           barrierDismissible: false,
@@ -507,10 +514,8 @@ class FoliosScreen extends GetView<FoliosController> {
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(
-                                            context,
-                                            false,
-                                          ), // Retorna false (no eliminar)
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
                                           child: const Text(
                                             'Cancelar',
                                             style: TextStyle(
@@ -524,10 +529,7 @@ class FoliosScreen extends GetView<FoliosController> {
                                             controller.eliminarFolio(
                                               folio.folioId ?? "",
                                             );
-                                            Navigator.pop(
-                                              context,
-                                              true,
-                                            ); // Retorna true (sí eliminar)
+                                            Navigator.pop(context, true);
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(
@@ -599,12 +601,14 @@ class FoliosScreen extends GetView<FoliosController> {
                       style: ListTileStyle.list,
                       dense: true,
                       isThreeLine: false,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                       leading: Column(
                         children: [
                           Text(
                             folio.cantidad.toString(),
-                            textScaleFactor: 3.2,
+                            textScaler: const TextScaler.linear(3.2),
                             style: const TextStyle(height: 1),
                           ),
                           Flexible(
@@ -665,7 +669,6 @@ class FoliosScreen extends GetView<FoliosController> {
                                     style: TextStyle(color: Color(0XFF64748B)),
                                   ),
                                 ],
-
                                 if (folio.condicionPago != null &&
                                     folio.condicionPago!.trim().isNotEmpty) ...[
                                   const Icon(
@@ -695,7 +698,6 @@ class FoliosScreen extends GetView<FoliosController> {
                                       ),
                                     ),
                                 ],
-
                                 if (folio.folioId != null &&
                                     folio.folioId
                                         .toString()
@@ -728,24 +730,16 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                             decoration: BoxDecoration(
                               color: folio.status != "Por entregar"
-                                  ? Color(
-                                      int.parse(folio.statusColor.toString()),
-                                    )
+                                  ? Color(colorInt)
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: Color(
-                                  int.parse(folio.statusColor.toString()),
-                                ),
-                              ),
+                              border: Border.all(color: Color(colorInt)),
                             ),
                             child: Text(
                               folio.status.toString(),
                               style: TextStyle(
                                 color: folio.status == "Por entregar"
-                                    ? Color(
-                                        int.parse(folio.statusColor.toString()),
-                                      )
+                                    ? Color(colorInt)
                                     : Colors.white,
                                 fontSize: 12,
                               ),

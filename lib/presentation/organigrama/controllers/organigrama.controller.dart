@@ -1,11 +1,12 @@
-
 import 'package:bitacora_frontend/infrastructure/models/organigrama.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/organigrama/models/chart_config.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:org_chart/org_chart.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class OrganigramaController extends GetxController {
   final isLoading = true.obs;
 
@@ -42,27 +43,62 @@ class OrganigramaController extends GetxController {
 
   Future<void> getOrganigrama() async {
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute('''
-        SELECT 
-            o.id,
-            o.parent,
-            o.name,
-            o.color,
-            o.created_at,
-            o.employee_id,
-            dp.nombre,
-            dp."apellidoMaterno",
-            dp."apellidoPaterno"
-        FROM organigrama o
-        LEFT JOIN "datosPersonales" as dp ON o.employee_id = dp."userId"
-      ''');
+      List<Organigrama> loadedItems = [];
 
-      final List<Organigrama> loadedItems = resultSet
-          .map(
-            (element) =>
-                Organigrama.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
-          .toList();
+      if (kIsWeb) {
+        final response = await Supabase.instance.client.from('organigrama').select('''
+              id,
+              parent,
+              name,
+              color,
+              created_at,
+              employee_id,
+              datosPersonales:employee_id (
+                nombre,
+                apellidoMaterno,
+                apellidoPaterno
+              )
+            ''');
+
+        loadedItems = (response as List).map((element) {
+          final map = Map<String, dynamic>.from(element as Map);
+          if (map['datosPersonales'] != null) {
+            final dp = map['datosPersonales'];
+            if (dp is List && dp.isNotEmpty) {
+              map['nombre'] = dp[0]['nombre'];
+              map['apellidoMaterno'] = dp[0]['apellidoMaterno'];
+              map['apellidoPaterno'] = dp[0]['apellidoPaterno'];
+            } else if (dp is Map) {
+              map['nombre'] = dp['nombre'];
+              map['apellidoMaterno'] = dp['apellidoMaterno'];
+              map['apellidoPaterno'] = dp['apellidoPaterno'];
+            }
+          }
+          return Organigrama.fromJson(map);
+        }).toList();
+      } else {
+        final resultSet = await AppDatabase.db.execute('''
+          SELECT 
+              o.id,
+              o.parent,
+              o.name,
+              o.color,
+              o.created_at,
+              o.employee_id,
+              dp.nombre,
+              dp."apellidoMaterno",
+              dp."apellidoPaterno"
+          FROM organigrama o
+          LEFT JOIN "datosPersonales" as dp ON o.employee_id = dp."userId"
+        ''');
+
+        loadedItems = resultSet
+            .map(
+              (element) =>
+                  Organigrama.fromJson(Map<String, dynamic>.from(element as Map)),
+            )
+            .toList();
+      }
 
       // Limpiamos y agregamos los elementos al controlador ya existente
       controllerChart.clearItems();
@@ -76,7 +112,7 @@ class OrganigramaController extends GetxController {
       print("Organigrama cargado con éxito: ${loadedItems.length} registros");
     } catch (e) {
       isLoading.value = false;
-      print("Error al cargar organigrama local: $e");
+      print("Error al cargar organigrama: $e");
     }
   }
 

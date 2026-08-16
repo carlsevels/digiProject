@@ -2,9 +2,10 @@ import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class SearchFolioController extends GetxController with StateMixin<Folios> {
@@ -40,7 +41,7 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
       change(null, status: RxStatus.error("ID no válido"));
       return;
     }
-    print("FolioId: $id");
+    print("FolioId: ${id.text}");
 
     await getDetailsFolio(id.text);
   }
@@ -48,50 +49,94 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        '%$idBuscado%',
-      ]);
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+      Folios? folio;
+
+      if (kIsWeb) {
+        final response = await Supabase.instance.client.rpc(
+          'buscar_folios_web',
+          params: {'busqueda': idBuscado},
+        );
+
+        if (response == null ||
+            (response is List && (response.isEmpty || response[0] == null))) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+
+        final data = response[0];
+        if (data == null || (data is List && data.isEmpty)) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+
+        final itemMap = data is List
+            ? Map<String, dynamic>.from(data[0])
+            : Map<String, dynamic>.from(data);
+
+        // Limpiamos el color por si viene como String
+        if (itemMap.containsKey('statuscolor')) {
+          itemMap['statuscolor'] = itemMap['statuscolor']?.toString();
+        }
+
+        folio = Folios.fromJson(itemMap);
+      } else {
+        final resultSet = await AppDatabase.db.execute(folioId(), [
+          '%$idBuscado%',
+        ]);
+        if (resultSet.isEmpty) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+        folio = Folios.fromJson(resultSet.first);
       }
-      final folio = Folios.fromJson(resultSet.first);
 
       final ultimoRegistro = await getUltimoStatus(
         folio.folioIdHistorial ?? "",
       );
 
       if (ultimoRegistro != null) {
-        statusId.value = ultimoRegistro["statusId"] as int;
+        statusId.value =
+            int.tryParse(ultimoRegistro["statusId"].toString()) ?? 0;
         currentStep.value = getStepIndex(statusId.value);
       } else {
-        print(
-          "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
-        );
+        print("ADVERTENCIA: No se encontró historial para: ${folio.folioId}");
       }
 
       change(folio, status: RxStatus.success());
     } catch (e) {
+      print("Error en búsqueda: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
   }
 
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
-      final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM historialestados 
-      WHERE "folioId" = ? 
-      ORDER BY "created_at" DESC 
-      LIMIT 1
-      ''',
-        [folioId],
-      );
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('historialestados')
+            .select()
+            .eq('folioId', folioId)
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
 
-      if (result.isNotEmpty) {
-        return result.first;
+        return response != null ? Map<String, dynamic>.from(response) : null;
+      } else {
+        final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
+          '''
+          SELECT * FROM historialestados 
+          WHERE "folioId" = ? 
+          ORDER BY "created_at" DESC 
+          LIMIT 1
+          ''',
+          [folioId],
+        );
+
+        if (result.isNotEmpty) {
+          return result.first;
+        }
+        return null;
       }
-      return null;
     } catch (e) {
       print("Error al obtener el último status: $e");
       return null;
@@ -109,12 +154,21 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   }
 
   Future<void> pedidoPendiente(String folioId) async {
-    await AppDatabase.db.execute(insertStatusFolio(), [
-      const Uuid().v4(),
-      folioId,
-      4,
-      DateTime.now().toIso8601String(),
-    ]);
+    if (kIsWeb) {
+      await Supabase.instance.client.from('historialestados').insert({
+        'id': const Uuid().v4(),
+        'folioId': folioId,
+        'statusId': 4,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } else {
+      await AppDatabase.db.execute(insertStatusFolio(), [
+        const Uuid().v4(),
+        folioId,
+        4,
+        DateTime.now().toIso8601String(),
+      ]);
+    }
   }
 
   void toggleSearch() {

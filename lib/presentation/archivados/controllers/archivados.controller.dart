@@ -4,10 +4,10 @@ import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/archivados/querys/listFoliosArchivados.dart';
 import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ArchivadosController extends GetxController
@@ -44,39 +44,64 @@ class ArchivadosController extends GetxController
         return;
       }
 
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        datosPersonalesQuery(),
-        [miId],
-      );
+      List<Folios> listFolios = [];
 
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+      if (kIsWeb) {
+        // ==========================================
+        // CONSULTA DIRECTA A SUPABASE (PARA WEB)
+        // ==========================================
+        var query = Supabase.instance.client
+            .from('folios')
+            .select()
+            .eq('isArchived', true);
+
+        if (idBuscado.isNotEmpty) {
+          query = query.ilike('folioId', '%$idBuscado%');
+        }
+
+        final response = await query;
+        listFolios = (response as List)
+            .map((element) => Folios.fromJson(Map<String, dynamic>.from(element)))
+            .toList();
+
+        await getDatos();
+      } else {
+        // ==========================================
+        // CONSULTA LOCAL CON POWERSYNC (MÓVIL)
+        // ==========================================
+        final resultSet = await AppDatabase.db.execute(
+          datosPersonalesQuery(),
+          [miId],
+        );
+
+        if (resultSet.isEmpty) {
+          change(null, status: RxStatus.empty());
+          return;
+        }
+
+        rolUsuario.value = resultSet.first['rolId'] as int;
+
+        final String fechaHoy = (selectedDate ?? DateTime.now())
+            .toIso8601String()
+            .split('T')[0];
+
+        print(
+          "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
+        );
+
+        final getFolios = await AppDatabase.db.getAll(
+          listFoliosArchivadosQuery(),
+          [rolUsuario.value, idBuscado, idBuscado],
+        );
+
+        listFolios = getFolios
+            .map(
+              (element) =>
+                  Folios.fromJson(Map<String, dynamic>.from(element as Map)),
+            )
+            .toList();
+        await getDatos();
       }
-
-      rolUsuario.value = resultSet.first['rolId'] as int;
-
-      // Obtenemos la fecha en formato YYYY-MM-DD
-      final String fechaHoy = (selectedDate ?? DateTime.now())
-          .toIso8601String()
-          .split('T')[0];
-
-      print(
-        "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
-      );
-
-      final getFolios = await AppDatabase.db.getAll(
-        listFoliosArchivadosQuery(),
-        [rolUsuario.value, idBuscado, idBuscado],
-      );
-
-      List<Folios> listFolios = getFolios
-          .map(
-            (element) =>
-                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
-          .toList();
-      await getDatos();
 
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
@@ -94,42 +119,60 @@ class ArchivadosController extends GetxController
     change(null, status: RxStatus.loading());
     try {
       final miId = Supabase.instance.client.auth.currentUser?.id;
-      final status = AppDatabase.db.currentStatus;
-      print("¿Ha terminado la sincronización inicial?: ${status.hasSynced}");
 
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream.firstWhere(
-          (s) => s.hasSynced == true,
-        );
-        print("¡Sincronización completada!");
-      }
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('datosPersonales')
+            .select('*, roles!inner(name)')
+            .eq('userId', miId as Object)
+            .maybeSingle();
 
-      final resultado = await AppDatabase.db.getOptional(
-        '''
-  SELECT dp.*, r."name" as "nombre_rol" 
-  FROM "datosPersonales" dp
-  INNER JOIN "roles" r ON dp."rolId" = r."id"
-  WHERE dp."userId" = ?
-  ''',
-        [miId],
-      );
-      if (resultado != null) {
-        rolName.value = resultado["nombre_rol"];
-        nameUser.value = resultado["nombre"];
-        print("rolName: ${rolName.value}");
-        print("nameUser: ${nameUser.value}");
+        if (response != null) {
+          rolName.value = response["roles"]["name"];
+          nameUser.value = response["nombre"];
+          print("rolName: ${rolName.value}");
+          print("nameUser: ${nameUser.value}");
+        } else {
+          change(null, status: RxStatus.empty());
+        }
       } else {
-        change(null, status: RxStatus.empty());
+        final status = AppDatabase.db.currentStatus;
+        print("¿Ha terminado la sincronización inicial?: ${status.hasSynced}");
+
+        if (status.hasSynced != true) {
+          print("Esperando a que PowerSync sincronice...");
+          await AppDatabase.db.statusStream.firstWhere(
+            (s) => s.hasSynced == true,
+          );
+          print("¡Sincronización completada!");
+        }
+
+        final resultado = await AppDatabase.db.getOptional(
+          '''
+          SELECT dp.*, r."name" as "nombre_rol" 
+          FROM "datosPersonales" dp
+          INNER JOIN "roles" r ON dp."rolId" = r."id"
+          WHERE dp."userId" = ?
+          ''',
+          [miId],
+        );
+        if (resultado != null) {
+          rolName.value = resultado["nombre_rol"];
+          nameUser.value = resultado["nombre"];
+          print("rolName: ${rolName.value}");
+          print("nameUser: ${nameUser.value}");
+        } else {
+          change(null, status: RxStatus.empty());
+        }
       }
     } catch (e) {
       change(null, status: RxStatus.error(e.toString()));
     }
+    return null;
   }
 
   String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {
     final ahora = DateTime.now();
-    // Limpiamos horas para que la comparación sea solo por días
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final fecha = DateTime(
       fechaSeleccionada.year,
@@ -137,7 +180,6 @@ class ArchivadosController extends GetxController
       fechaSeleccionada.day,
     );
 
-    // AQUÍ ESTÁ LA CLAVE: calculamos la diferencia en días como entero
     final int diferencia = hoy.difference(fecha).inDays;
 
     print("DEBUG: Hoy es $hoy, fecha recibida $fecha, diferencia: $diferencia");
@@ -155,27 +197,41 @@ class ArchivadosController extends GetxController
 
   Future<void> archivarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute(
-        '''
-        UPDATE folios 
-        SET "isArchived" = false 
-        WHERE "folioId" = ?;
-        ''',
-        [folioId],
-      );
+      if (kIsWeb) {
+        await Supabase.instance.client
+            .from('folios')
+            .update({"isArchived": false})
+            .eq('folioId', folioId);
+      } else {
+        await AppDatabase.db.execute(
+          '''
+          UPDATE folios 
+          SET "isArchived" = false 
+          WHERE "folioId" = ?;
+          ''',
+          [folioId],
+        );
+      }
       await getFoliosWithDate(id.text);
       return null;
     } catch (e) {
-      print("Error al archivar folio: $e");
+      print("Error al desarchivar folio: $e");
       return null;
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
-        folioId,
-      ]);
+      if (kIsWeb) {
+        await Supabase.instance.client
+            .from('folios')
+            .delete()
+            .eq('folioId', folioId);
+      } else {
+        await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
+          folioId,
+        ]);
+      }
     } catch (e) {
       print("Error de SQL: ${e.toString()}");
       return null;

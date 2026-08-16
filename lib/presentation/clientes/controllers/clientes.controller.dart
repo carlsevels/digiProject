@@ -6,9 +6,9 @@ import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/direccionCliente.dart';
 import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart';
 import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientesController extends GetxController
@@ -49,17 +49,32 @@ class ClientesController extends GetxController
       return;
     }
 
-    final ResultSet resultSet = await AppDatabase.db.execute(
-      datosPersonalesQuery(),
-      [miId],
-    );
+    if (kIsWeb) {
+      final response = await Supabase.instance.client
+          .from('datosPersonales')
+          .select('rolId')
+          .eq('userId', miId)
+          .maybeSingle();
 
-    if (resultSet.isEmpty) {
-      change(null, status: RxStatus.empty());
-      return;
+      if (response == null) {
+        change(null, status: RxStatus.empty());
+        return;
+      }
+      rolUsuario.value = response['rolId'] as int;
+    } else {
+      final resultSet = await AppDatabase.db.execute(
+        datosPersonalesQuery(),
+        [miId],
+      );
+
+      if (resultSet.isEmpty) {
+        change(null, status: RxStatus.empty());
+        return;
+      }
+
+      rolUsuario.value = resultSet.first['rolId'] as int;
     }
 
-    rolUsuario.value = resultSet.first['rolId'] as int;
     getClientes();
   }
 
@@ -70,15 +85,33 @@ class ClientesController extends GetxController
 
     try {
       final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        listClientesQuery(),
-        [searchText, searchText, searchText, _limit, _page * _limit],
-      );
+      List<Clientes> listClientes = [];
 
-      List<Clientes> listClientes = resultSet.map((element) {
-        final map = Map<String, dynamic>.from(element as Map);
-        return Clientes.fromJson(map);
-      }).toList();
+      if (kIsWeb) {
+        var query = Supabase.instance.client
+            .from('clientes')
+            .select();
+
+        if (searchText.isNotEmpty) {
+          query = query.or('nombre.ilike.%$searchText%,apellido.ilike.%$searchText%,email.ilike.%$searchText%');
+        }
+
+        final response = await query.range(_page * _limit, (_page + 1) * _limit - 1);
+        
+        listClientes = (response as List)
+            .map((element) => Clientes.fromJson(Map<String, dynamic>.from(element)))
+            .toList();
+      } else {
+        final resultSet = await AppDatabase.db.execute(
+          listClientesQuery(),
+          [searchText, searchText, searchText, _limit, _page * _limit],
+        );
+
+        listClientes = resultSet.map((element) {
+          final map = Map<String, dynamic>.from(element as Map);
+          return Clientes.fromJson(map);
+        }).toList();
+      }
 
       if (listClientes.length < _limit) {
         _hasMoreData = false;
@@ -102,15 +135,33 @@ class ClientesController extends GetxController
 
     try {
       final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        listClientesQuery(),
-        [searchText, searchText, searchText, _limit, _page * _limit],
-      );
+      List<Clientes> moreClientes = [];
 
-      List<Clientes> moreClientes = resultSet.map((element) {
-        final map = Map<String, dynamic>.from(element as Map);
-        return Clientes.fromJson(map);
-      }).toList();
+      if (kIsWeb) {
+        var query = Supabase.instance.client
+            .from('clientes')
+            .select();
+
+        if (searchText.isNotEmpty) {
+          query = query.or('nombre.ilike.%$searchText%,apellido.ilike.%$searchText%,email.ilike.%$searchText%');
+        }
+
+        final response = await query.range(_page * _limit, (_page + 1) * _limit - 1);
+
+        moreClientes = (response as List)
+            .map((element) => Clientes.fromJson(Map<String, dynamic>.from(element)))
+            .toList();
+      } else {
+        final resultSet = await AppDatabase.db.execute(
+          listClientesQuery(),
+          [searchText, searchText, searchText, _limit, _page * _limit],
+        );
+
+        moreClientes = resultSet.map((element) {
+          final map = Map<String, dynamic>.from(element as Map);
+          return Clientes.fromJson(map);
+        }).toList();
+      }
 
       if (moreClientes.length < _limit) {
         _hasMoreData = false;
@@ -129,27 +180,38 @@ class ClientesController extends GetxController
 
   Future<void> getDireccionCliente(dynamic clienteId) async {
     try {
-      final status = AppDatabase.db.currentStatus;
+      if (kIsWeb) {
+        final response = await Supabase.instance.client
+            .from('direcciones')
+            .select()
+            .eq('clienteId', clienteId)
+            .maybeSingle();
 
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream
-            .firstWhere((s) => s.hasSynced == true)
-            .timeout(
-              const Duration(seconds: 10),
-              onTimeout: () =>
-                  throw Exception('Timeout waiting for PowerSync sync.'),
-            );
+        direccion = response != null
+            ? Direcciones.fromJson(Map<String, dynamic>.from(response))
+            : Direcciones();
+      } else {
+        final status = AppDatabase.db.currentStatus;
+
+        if (status.hasSynced != true) {
+          print("Esperando a que PowerSync sincronice...");
+          await AppDatabase.db.statusStream
+              .firstWhere((s) => s.hasSynced == true)
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () =>
+                    throw Exception('Timeout waiting for PowerSync sync.'),
+              );
+        }
+
+        final resultado = await AppDatabase.db.getOptional(
+          direccionClienteQuery(),
+          [clienteId],
+        );
+        direccion = resultado != null
+            ? Direcciones.fromJson(Map<String, dynamic>.from(resultado))
+            : Direcciones();
       }
-
-      final resultado = await AppDatabase.db.getOptional(
-        direccionClienteQuery(),
-        [clienteId],
-      );
-      print("Direccion: ${jsonEncode(direccion)}");
-      direccion = resultado != null
-          ? Direcciones.fromJson(resultado)
-          : Direcciones();
 
       print("Direccion: ${jsonEncode(direccion)}");
     } catch (e) {
