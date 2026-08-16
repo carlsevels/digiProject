@@ -200,7 +200,6 @@ final schema = Schema([
     Column.text('repartidorId'),
     Column.text('folioId'),
     Column.integer('isArchived'),
-    Column.text('url_firma')
   ]),
   Table('historialestados', [
     Column.text('created_at'),

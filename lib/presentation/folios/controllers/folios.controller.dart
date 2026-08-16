@@ -23,7 +23,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   var rolName = "Cargando...".obs;
   var nameUser = "Cargando...".obs;
   final RxString fechaSeleccionada = "".obs;
-
+  final supabase = Supabase.instance.client;
   final RxList<String> ordenMunicipiosCustom = <String>[].obs;
 
   final now = DateTime.now();
@@ -163,7 +163,35 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       final datosPendientes = await AppDatabase.db.getAll(
         'SELECT * FROM ps_crud',
       );
-      print("Datos pendientes: ${jsonEncode(datosPendientes)}");
+      for (var row in datosPendientes) {
+        try {
+          // El campo 'data' es un string JSON que debemos decodificar
+          final rawData = row['data'] as String;
+          final outerMap = jsonDecode(rawData);
+
+          final String op = outerMap['op']; // Ejemplo: 'PUT'
+          final String type =
+              outerMap['type']; // Ejemplo: 'folios', 'historialestados'
+          final Map<String, dynamic> payload =
+              outerMap['data']; // El objeto a insertar/actualizar
+
+          // 2. Enviar a Supabase según el tipo de tabla
+          if (op == 'PUT' || op == 'POST') {
+            await supabase.from(type).upsert(payload);
+          }
+
+          // 3. Si se envió con éxito, eliminar de la tabla local ps_crud
+          final int idRegistro = row['id'];
+          await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [
+            idRegistro,
+          ]);
+
+          print("Sincronizado con éxito: ID local $idRegistro");
+        } catch (e) {
+          print("Error al sincronizar el registro ${row['id']}: $e");
+          // Opcional: Detener el ciclo o continuar con el siguiente
+        }
+      }
 
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());

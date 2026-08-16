@@ -81,14 +81,25 @@ void cerrarSesionSinBorrarLocales(BuildContext context) async {
   }
 }
 
-class Main extends StatelessWidget {
+class Main extends StatefulWidget {
   final String initialRoute;
   Main(this.initialRoute);
 
   @override
+  State<Main> createState() => _MainState();
+}
+
+class _MainState extends State<Main> {
+  @override
+  void initState() {
+    super.initState();
+    setupAuthListener(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      initialRoute: initialRoute,
+      initialRoute: widget.initialRoute,
       getPages: Nav.routes,
       locale: const Locale('es', 'ES'),
       debugShowCheckedModeBanner: false,
