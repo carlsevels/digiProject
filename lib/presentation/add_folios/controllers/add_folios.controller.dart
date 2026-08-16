@@ -225,7 +225,7 @@ class AddFoliosController extends GetxController with StateMixin {
       clienteId.value = 0;
       refaccionId.value = 0;
       condicionPagoId.value = 0;
-      repartidorId.value = 0; // Limpieza correcta al valor por defecto
+      repartidorId.value = 0; 
       tipoDocumentoId.value = 0;
 
       Get.snackbar("Guardado", "Registro exitoso localmente.");

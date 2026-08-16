@@ -20,6 +20,7 @@ class OnEmptyView extends GetView<FoliosController> {
           height: Get.size.height,
           child: Center(
             child: Column(
+              key: const ValueKey('header_fijo_fecha'),
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -37,19 +38,8 @@ class OnEmptyView extends GetView<FoliosController> {
                           textScaler: const TextScaler.linear(1.8),
                         ),
                       ),
-
                       TextButton.icon(
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(50, 30),
-                          padding: EdgeInsets.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(4)),
-                          ),
-                        ),
-                        onPressed: () {
-                          Get.offAllNamed(Routes.ADD_FOLIOS);
-                        },
+                        onPressed: () => Get.offAndToNamed(Routes.ADD_FOLIOS),
                         icon: const Icon(Icons.add, color: Color(0XFF1D6CFF)),
                         label: const Text(
                           "Agregar Folio",
@@ -59,14 +49,10 @@ class OnEmptyView extends GetView<FoliosController> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 EasyDateTimelinePage(),
-
-                const SizedBox(height: 32),
-
-                FoliosEmptyPage(needDate: true),
+                const SizedBox(height: 16),
+                FoliosEmptyPage(needDate: false)
               ],
             ),
           ),
