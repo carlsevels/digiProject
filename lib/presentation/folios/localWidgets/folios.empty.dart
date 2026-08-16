@@ -4,13 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class FoliosEmptyPage extends GetView<FoliosController> {
-  bool needDate = false;
-  FoliosEmptyPage({super.key, required this.needDate});
+  final bool needDate;
+  const FoliosEmptyPage({super.key, required this.needDate});
 
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xff1D6CFF);
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 800) {
+          return _buildWebView(context, primary);
+        } else {
+          return _buildMobileView(context, primary);
+        }
+      },
+    );
+  }
+
+  Widget _buildMobileView(BuildContext context, Color primary) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 36),
       child: Column(
@@ -23,7 +35,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               shape: BoxShape.circle,
               color: primary.withOpacity(.08),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.assignment_outlined,
               size: 58,
               color: primary,
@@ -39,7 +51,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
                         DateTime.now(),
                   ),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: primary,
@@ -49,7 +61,6 @@ class FoliosEmptyPage extends GetView<FoliosController> {
                 const SizedBox(height: 24),
               ],
             ),
-
           Text(
             "No hay folios",
             textAlign: TextAlign.center,
@@ -60,9 +71,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               letterSpacing: -.6,
             ),
           ),
-
           const SizedBox(height: 14),
-
           Text(
             "Todavía no has registrado ningún folio para el día seleccionado.\nEmpieza creando el primero.",
             textAlign: TextAlign.center,
@@ -72,9 +81,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               color: Colors.grey.shade600,
             ),
           ),
-
           const SizedBox(height: 28),
-
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
@@ -100,9 +107,7 @@ class FoliosEmptyPage extends GetView<FoliosController> {
               ],
             ),
           ),
-
           const SizedBox(height: 48),
-
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -124,6 +129,135 @@ class FoliosEmptyPage extends GetView<FoliosController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // --- NUEVA VERSIÓN WEB ADAPTADA ---
+  Widget _buildWebView(BuildContext context, Color primary) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: primary.withOpacity(.08),
+              ),
+              child: Icon(
+                Icons.assignment_outlined,
+                size: 44,
+                color: primary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (needDate == true)
+              Column(
+                children: [
+                  Text(
+                    controller.obtenerEtiquetaFecha(
+                      DateTime.tryParse(controller.fechaSeleccionada.value) ??
+                          DateTime.now(),
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: primary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            Text(
+              "No hay folios",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade900,
+                letterSpacing: -.6,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Todavía no has registrado ningún folio para el día seleccionado. Empieza creando el primero.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(.08),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: Colors.green.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Todo está al día",
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Get.toNamed(Routes.ADD_FOLIOS);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text(
+                  "Crear nuevo folio",
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
