@@ -196,7 +196,6 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     }
   }
 
-  // Método seguro para parsear colores hexadecimales (elimina '#' y usa radix: 16)
   Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
     if (colorStr == null || colorStr.isEmpty) return defaultColor;
 
@@ -279,40 +278,89 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         return null;
     }
 
-    if (kIsWeb) {
-      await Supabase.instance.client.from('historialestados').insert({
-        'id': const Uuid().v4(),
-        'folioId': folioId,
-        'statusId': nextStatus,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } else {
-      await AppDatabase.db.execute(insertStatusFolio(), [
-        const Uuid().v4(),
-        folioId,
-        nextStatus.toString(),
-        DateTime.now().toIso8601String(),
-      ]);
+    final nuevoHistorial = {
+      'id': const Uuid().v4(),
+      'folioId': folioId,
+      'statusId': nextStatus,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    bool enviadoASupabase = false;
+
+    try {
+      print("🌐 Intentando cambiar estado en Supabase...");
+      await Supabase.instance.client
+          .from('historialestados')
+          .insert(nuevoHistorial);
+      enviadoASupabase = true;
+      print("✅ Estado cambiado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, guardando localmente: $e");
+      enviadoASupabase = false;
+    }
+
+    if (!enviadoASupabase) {
+      try {
+        await AppDatabase.db.execute(insertStatusFolio(), [
+          nuevoHistorial['id'],
+          nuevoHistorial['folioId'],
+          nuevoHistorial['statusId'].toString(),
+          nuevoHistorial['created_at'],
+        ]);
+        print("💾 Cambios guardados localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico guardando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo actualizar el estado localmente.");
+        return null;
+      }
     }
 
     return nextStatus;
   }
 
   Future<void> pedidoPendiente(String folioId) async {
-    if (kIsWeb) {
-      await Supabase.instance.client.from('historialestados').insert({
-        'id': const Uuid().v4(),
-        'folioId': folioId,
-        'statusId': 4,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } else {
-      await AppDatabase.db.execute(insertStatusFolio(), [
-        const Uuid().v4(),
-        folioId,
-        4,
-        DateTime.now().toIso8601String(),
-      ]);
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en pedidoPendiente");
+      return;
+    }
+
+    final nuevoHistorial = {
+      'id': const Uuid().v4(),
+      'folioId': folioId,
+      'statusId': 4,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    bool enviadoASupabase = false;
+
+    try {
+      print("🌐 Intentando registrar pedido pendiente en Supabase...");
+      await Supabase.instance.client
+          .from('historialestados')
+          .insert(nuevoHistorial);
+      enviadoASupabase = true;
+      print("✅ Pedido pendiente registrado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, guardando localmente: $e");
+      enviadoASupabase = false;
+    }
+
+    if (!enviadoASupabase) {
+      try {
+        await AppDatabase.db.execute(insertStatusFolio(), [
+          nuevoHistorial['id'],
+          nuevoHistorial['folioId'],
+          nuevoHistorial['statusId'].toString(),
+          nuevoHistorial['created_at'],
+        ]);
+        print("💾 Pedido pendiente guardado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico guardando localmente: $dbError");
+        Get.snackbar(
+          "Error",
+          "No se pudo guardar el estado pendiente localmente.",
+        );
+      }
     }
   }
 
@@ -334,67 +382,144 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   }
 
   Future<void> archivarFolio(String folioId) async {
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en archivarFolio");
+      return;
+    }
+
+    bool enviadoASupabase = false;
+
+    // 1. Intentar actualizar directamente en Supabase
     try {
-      if (kIsWeb) {
-        await Supabase.instance.client
-            .from('folios')
-            .update({"isArchived": true})
-            .eq('folioId', folioId);
-      } else {
+      print("🌐 Intentando archivar folio en Supabase...");
+      await Supabase.instance.client
+          .from('folios')
+          .update({"isArchived": true})
+          .eq('folioId', folioId);
+
+      enviadoASupabase = true;
+      print("✅ Folio archivado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, archivando localmente: $e");
+      enviadoASupabase = false;
+    }
+
+    // 2. Si falló Supabase, actualizar en la base de datos local (PowerSync/SQLite)
+    if (!enviadoASupabase) {
+      try {
         await AppDatabase.db.execute(
           '''
-          UPDATE folios 
-          SET "isArchived" = true 
-          WHERE "folioId" = ?;
-          ''',
+        UPDATE folios 
+        SET "isArchived" = true 
+        WHERE "folioId" = ?;
+        ''',
           [folioId],
         );
+        print("💾 Folio archivado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico actualizando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo archivar el folio localmente.");
+        return;
       }
+    }
+
+    // Refrescar los detalles en pantalla
+    try {
       await onInitDetalles();
     } catch (e) {
-      print("Error al archivar folio: $e");
+      print("Error al actualizar detalles tras archivar: $e");
     }
   }
 
   Future<void> restaurarFolio(String folioId) async {
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en restaurarFolio");
+      return;
+    }
+
+    bool enviadoASupabase = false;
+
+    // 1. Intentar actualizar directamente en Supabase
     try {
-      if (kIsWeb) {
-        await Supabase.instance.client
-            .from('folios')
-            .update({"isArchived": false})
-            .eq('folioId', folioId);
-      } else {
+      print("🌐 Intentando restaurar folio en Supabase...");
+      await Supabase.instance.client
+          .from('folios')
+          .update({"isArchived": false})
+          .eq('folioId', folioId);
+
+      enviadoASupabase = true;
+      print("✅ Folio restaurado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, restaurando localmente: $e");
+      enviadoASupabase = false;
+    }
+
+    // 2. Si falló Supabase, actualizar en la base de datos local (PowerSync/SQLite)
+    if (!enviadoASupabase) {
+      try {
         await AppDatabase.db.execute(
           '''
-          UPDATE folios 
-          SET "isArchived" = false 
-          WHERE "folioId" = ?;
-          ''',
+        UPDATE folios 
+        SET "isArchived" = false 
+        WHERE "folioId" = ?;
+        ''',
           [folioId],
         );
+        print("💾 Folio restaurado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico actualizando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo restaurar el folio localmente.");
+        return;
       }
+    }
+
+    // Refrescar los detalles en pantalla
+    try {
       await onInitDetalles();
     } catch (e) {
-      print("Error al restaurar folio: $e");
+      print("Error al actualizar detalles tras restaurar: $e");
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en eliminarFolio");
+      return;
+    }
+
+    bool eliminadoEnSupabase = false;
+
+    // 1. Intentar eliminar directamente en Supabase
     try {
-      if (kIsWeb) {
-        await Supabase.instance.client
-            .from('folios')
-            .delete()
-            .eq('folioId', folioId);
-      } else {
+      print("🌐 Intentando eliminar folio en Supabase...");
+      await Supabase.instance.client
+          .from('folios')
+          .delete()
+          .eq('folioId', folioId);
+
+      eliminadoEnSupabase = true;
+      print("✅ Folio eliminado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, eliminando localmente: $e");
+      eliminadoEnSupabase = false;
+    }
+
+    // 2. Si falló Supabase, eliminar en la base de datos local (PowerSync/SQLite)
+    if (!eliminadoEnSupabase) {
+      try {
         await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
           folioId,
         ]);
+        print("💾 Folio eliminado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico eliminando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo eliminar el folio localmente.");
+        return;
       }
-      Get.offAllNamed(Routes.FOLIOS);
-    } catch (e) {
-      print("Error de SQL: ${e.toString()}");
     }
+
+    // Redirigir a la vista de folios
+    Get.offAllNamed(Routes.FOLIOS);
   }
 
   final SignatureController signatureControllerController = SignatureController(

@@ -20,6 +20,7 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt tipoDocumentoId = 0.obs;
   RxBool isProcessingBarcode = false.obs;
   bool isSaving = false;
+  String fechaSeleccionada = '';
 
   //Controllers
   TextEditingController cantidadController = TextEditingController();
@@ -63,6 +64,7 @@ class AddFoliosController extends GetxController with StateMixin {
 
   Future<void> onInitFunction() async {
     change(null, status: RxStatus.loading());
+    fechaSeleccionada = Get.arguments["fecha"];
     await getClientes();
     await getRefaccion();
     await getCondicionPago();
@@ -206,7 +208,7 @@ class AddFoliosController extends GetxController with StateMixin {
         "condicionDePagoId": condicion,
         "repartidorId": repartidorUuid,
         "creadorId": userId,
-        "created_at": fechaActual,
+        "created_at": fechaSeleccionada,
         "folioId": numReporteController.text.trim(),
         "isArchived": false,
       };
@@ -215,7 +217,7 @@ class AddFoliosController extends GetxController with StateMixin {
         "id": historialId,
         "folioId": idFolio,
         "statusId": 1,
-        "created_at": fechaActual,
+        "created_at": fechaSeleccionada,
       };
 
       bool enviadoASupabase = false;

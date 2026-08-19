@@ -69,7 +69,7 @@ class EasyDateTimelinePage extends GetView<FoliosController> {
                     firstDate: DateTime.now().subtract(
                       const Duration(days: 14),
                     ),
-                    lastDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 5)),
                     focusedDate: controller.selectedDate ?? DateTime.now(),
                     headerOptions: const HeaderOptions(
                       headerType: HeaderType.none,

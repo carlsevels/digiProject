@@ -61,7 +61,9 @@ class ArchivadosController extends GetxController
 
         final response = await query;
         listFolios = (response as List)
-            .map((element) => Folios.fromJson(Map<String, dynamic>.from(element)))
+            .map(
+              (element) => Folios.fromJson(Map<String, dynamic>.from(element)),
+            )
             .toList();
 
         await getDatos();
@@ -69,10 +71,9 @@ class ArchivadosController extends GetxController
         // ==========================================
         // CONSULTA LOCAL CON POWERSYNC (MÓVIL)
         // ==========================================
-        final resultSet = await AppDatabase.db.execute(
-          datosPersonalesQuery(),
-          [miId],
-        );
+        final resultSet = await AppDatabase.db.execute(datosPersonalesQuery(), [
+          miId,
+        ]);
 
         if (resultSet.isEmpty) {
           change(null, status: RxStatus.empty());
@@ -196,45 +197,91 @@ class ArchivadosController extends GetxController
   }
 
   Future<void> archivarFolio(String folioId) async {
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en archivarFolio");
+      return;
+    }
+
+    bool enviadoASupabase = false;
+
+    // 1. Intentar actualizar directamente en Supabase
     try {
-      if (kIsWeb) {
-        await Supabase.instance.client
-            .from('folios')
-            .update({"isArchived": false})
-            .eq('folioId', folioId);
-      } else {
+      print("🌐 Intentando desarchivar folio en Supabase...");
+      await Supabase.instance.client
+          .from('folios')
+          .update({"isArchived": false})
+          .eq('folioId', folioId);
+
+      enviadoASupabase = true;
+      print("✅ Folio desarchivado en Supabase.");
+    } catch (e) {
+      print(
+        "⚠️ Sin conexión o error en Supabase, desarchivando localmente: $e",
+      );
+      enviadoASupabase = false;
+    }
+
+    // 2. Si falló Supabase, actualizar en la base de datos local (SQLite/PowerSync)
+    if (!enviadoASupabase) {
+      try {
         await AppDatabase.db.execute(
           '''
-          UPDATE folios 
-          SET "isArchived" = false 
-          WHERE "folioId" = ?;
-          ''',
+        UPDATE folios 
+        SET "isArchived" = false 
+        WHERE "folioId" = ?;
+        ''',
           [folioId],
         );
+        print("💾 Folio desarchivado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico actualizando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo desarchivar el folio localmente.");
+        return;
       }
+    }
+
+    // Refrescar los datos con la fecha actual
+    try {
       await getFoliosWithDate(id.text);
-      return null;
     } catch (e) {
-      print("Error al desarchivar folio: $e");
-      return null;
+      print("Error al actualizar la lista tras desarchivar: $e");
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
+    if (folioId.isEmpty) {
+      print("Error: folioId vacío en eliminarFolio");
+      return;
+    }
+
+    bool eliminadoEnSupabase = false;
+
+    // 1. Intentar eliminar directamente en Supabase
     try {
-      if (kIsWeb) {
-        await Supabase.instance.client
-            .from('folios')
-            .delete()
-            .eq('folioId', folioId);
-      } else {
+      print("🌐 Intentando eliminar folio en Supabase...");
+      await Supabase.instance.client
+          .from('folios')
+          .delete()
+          .eq('folioId', folioId);
+
+      eliminadoEnSupabase = true;
+      print("✅ Folio eliminado en Supabase.");
+    } catch (e) {
+      print("⚠️ Sin conexión o error en Supabase, eliminando localmente: $e");
+      eliminadoEnSupabase = false;
+    }
+
+    // 2. Si falló Supabase, eliminar en la base de datos local (SQLite/PowerSync)
+    if (!eliminadoEnSupabase) {
+      try {
         await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
           folioId,
         ]);
+        print("💾 Folio eliminado localmente en SQLite.");
+      } catch (dbError) {
+        print("❌ Error crítico eliminando localmente: $dbError");
+        Get.snackbar("Error", "No se pudo eliminar el folio localmente.");
       }
-    } catch (e) {
-      print("Error de SQL: ${e.toString()}");
-      return null;
     }
   }
 

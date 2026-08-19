@@ -327,7 +327,16 @@ class FoliosScreen extends GetView<FoliosController> {
                               ),
                             ),
                             onPressed: () {
-                              Get.toNamed(Routes.ADD_FOLIOS);
+                              print(
+                                'Fecha seleccionada: ${controller.fechaSeleccionada.value}',
+                              );
+
+                              Get.offAndToNamed(
+                                Routes.ADD_FOLIOS,
+                                arguments: {
+                                  'fecha': controller.fechaSeleccionada.value,
+                                },
+                              );
                             },
                             icon: const Icon(
                               Icons.add,
@@ -481,8 +490,18 @@ class FoliosScreen extends GetView<FoliosController> {
                               ),
                             ),
                             TextButton.icon(
-                              onPressed: () =>
-                                  Get.offAndToNamed(Routes.ADD_FOLIOS),
+                              onPressed: () {
+                                print(
+                                  'Fecha seleccionada: ${controller.fechaSeleccionada.value}',
+                                );
+
+                                Get.offAndToNamed(
+                                  Routes.ADD_FOLIOS,
+                                  arguments: {
+                                    'fecha': controller.fechaSeleccionada.value,
+                                  },
+                                );
+                              },
                               icon: const Icon(
                                 Icons.add,
                                 color: Color(0XFF1D6CFF),

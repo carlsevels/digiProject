@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'controllers/add_folios.controller.dart';
 
@@ -39,19 +40,39 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
         ],
       ),
       body: controller.obx((state) {
+        final DateTime fecha = DateTime.parse(
+          controller.fechaSeleccionada.toString(),
+        );
+        final DateTime hoy = DateTime.now();
+
+        final bool esHoy =
+            fecha.year == hoy.year &&
+            fecha.month == hoy.month &&
+            fecha.day == hoy.day;
+
+        final String textoFecha = esHoy
+            ? "Para hoy"
+            : "Para el día ${DateFormat('d \'de\' MMMM', 'es').format(fecha)}";
         return RefreshIndicator(
           color: Colors.white,
           backgroundColor: const Color(0XFF1D6CFF),
           onRefresh: () => controller.onInitFunction(),
           child: SingleChildScrollView(
-            physics:
-                const AlwaysScrollableScrollPhysics(), // Obliga a que siempre haya scroll para activar el pull-to-refresh
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Tipo de documento
+                  Text(
+                    textoFecha,
+                    textScaleFactor: 1.5,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      color: Color(0XFF0F172A),
+                    ),
+                  ),
+                  Divider(),
                   Text(
                     "Tipo de documento",
                     textScaleFactor: 1.2,
