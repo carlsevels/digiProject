@@ -20,7 +20,7 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0XFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: BackButton(
           onPressed: () {
