@@ -49,7 +49,7 @@ FROM folios f
           FROM historialestados 
           GROUP BY "folioId"
       ) h2 ON h1."folioId" = h2."folioId" AND h1."created_at" = h2.max_date
-  ) as h ON f.id = h."folioId"
+  ) as h ON f.id = h."folioId"  -- <-- CAMBIADO: Se usa f.id en lugar de f."folioId"
   LEFT JOIN "status" st ON h."statusId" = st."id"
 WHERE f."folioId" LIKE ?
     ''';

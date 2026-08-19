@@ -47,21 +47,23 @@ LEFT JOIN direcciones d
 LEFT JOIN municipios m
     ON m.id = d."municipioId"
 
-LEFT JOIN historialestados h
-    ON h.id = (
-        SELECT h2.id
+LEFT JOIN (
+    SELECT "folioId", "statusId"
+    FROM (
+        SELECT 
+            h2."folioId", 
+            h2."statusId",
+            ROW_NUMBER() OVER(PARTITION BY h2."folioId" ORDER BY h2."created_at" DESC) as rn
         FROM historialestados h2
-        WHERE h2."folioId" = f.id
-        ORDER BY h2."created_at" DESC
-        LIMIT 1
-    )
+    ) sub
+    WHERE sub.rn = 1
+) ultimo_estado ON ultimo_estado."folioId" = f.id
 
 LEFT JOIN status st
-    ON st.id = h."statusId"
+    ON st.id = ultimo_estado."statusId"
 
 WHERE
     DATE(f."created_at") = DATE(?)
-    
     AND f."isArchived" = FALSE
 
 ORDER BY f."created_at" DESC;

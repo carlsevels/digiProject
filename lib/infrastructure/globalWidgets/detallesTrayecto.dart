@@ -9,7 +9,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
   final RxInt currentStep;
   final bool detallesTrayecto;
 
-  DetallesTrayecto({
+  const DetallesTrayecto({
     super.key,
     required this.state,
     required this.currentStep,
@@ -27,206 +27,205 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                 Get.toNamed(Routes.DETALLES_FOLIO, arguments: folioId);
               }
               
-          Get.bottomSheet(
-      DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.3,
-        maxChildSize: 0.95,
-        snap: true,
-        builder: (context, scrollController) {
-          return Container(
-            padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16),
-            width: Get.size.width,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.route_outlined,
-                          color: Color(0xFF64748B),
+              Get.bottomSheet(
+                DraggableScrollableSheet(
+                  initialChildSize: 0.65,
+                  minChildSize: 0.3,
+                  maxChildSize: 0.95,
+                  snap: true,
+                  builder: (context, scrollController) {
+                    return Container(
+                      padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16),
+                      width: Get.size.width,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
                         ),
-                        const SizedBox(width: 8.0),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Detalles del Trayecto",
-                              style: TextStyle(
-                                color: Color(0xFF0F172A),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2.5),
                               ),
                             ),
-                            if (controller.historialList.any(
-                              (item) =>
-                                  (item.status ?? '')
-                                      .toLowerCase()
-                                      .contains('pospuso') ||
-                                  (item.status ?? '')
-                                      .toLowerCase()
-                                      .contains('pendiente'),
-                            ))
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.route_outlined,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Detalles del Trayecto",
+                                        style: TextStyle(
+                                          color: Color(0xFF0F172A),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (controller.historialList.any(
+                                        (item) =>
+                                            (item.status ?? '')
+                                                .toLowerCase()
+                                                .contains('pospuso') ||
+                                            (item.status ?? '')
+                                                .toLowerCase()
+                                                .contains('pendiente'),
+                                      ))
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEF4444),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Text(
+                                            "+1 día",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEF4444),
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: parseColor(state?.statusColor?.toString()),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Text(
-                                  "+1 día",
-                                  style: TextStyle(
+                                child: Text(
+                                  state?.status ?? "",
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 10,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Obx(() {
+                            return _buildMetricsSummary(controller.historialList);
+                          }),
+
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Historial de Eventos",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          Expanded(
+                            child: Obx(() {
+                              final historialList = controller.historialList;
+
+                              if (historialList.isEmpty) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              return ListView.builder(
+                                controller: scrollController,
+                                physics: const ClampingScrollPhysics(),
+                                itemCount: historialList.length,
+                                itemBuilder: (context, index) {
+                                  final item = historialList[index];
+                                  final String createdAt = item.created_at ?? '';
+                                  final String statusName =
+                                      (item.status != null && item.status!.isNotEmpty)
+                                      ? item.status!
+                                      : 'Por iniciar';
+
+                                  String description = "";
+                                  switch (statusName) {
+                                    case "Por entregar":
+                                      description = "Por iniciar recorrido";
+                                      break;
+                                    case "En ruta":
+                                      description =
+                                          "El repartidor inició el recorrido";
+                                      break;
+                                    case "Pendiente":
+                                      description = "No se realizó la entrega";
+                                      break;
+                                    case "En sitio":
+                                      description =
+                                          "Se llegó a sitio para realizar la entrega";
+                                      break;
+                                    case "Entregado":
+                                      description =
+                                          "El repartidor realizó la entrega";
+                                      break;
+                                    default:
+                                  }
+
+                                  final String? colorHex = item.statusColor;
+                                  bool isLast = index == historialList.length - 1;
+                                  bool isWarning = statusName
+                                      .toLowerCase()
+                                      .contains('pendiente');
+
+                                  return _buildTimelineItem(
+                                    time: createdAt,
+                                    statusName: statusName,
+                                    description: description,
+                                    statusColorHex: colorHex,
+                                    isWarning: isWarning,
+                                    isFirst: index == 0,
+                                    isLast: isLast,
+                                  );
+                                },
+                              );
+                            }),
+                          ),
+                        ],
                       ),
-                      decoration: BoxDecoration(
-                        color: parseColor(state?.statusColor?.toString()),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        state?.status ?? "",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Sección de Métricas de Tiempos
-                Obx(() {
-                  return _buildMetricsSummary(controller.historialList);
-                }),
-
-                const SizedBox(height: 16),
-                const Text(
-                  "Historial de Eventos",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Expanded(
-                  child: Obx(() {
-                    final historialList = controller.historialList;
-
-                    if (historialList.isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-
-                    return ListView.builder(
-                      controller: scrollController, // <-- Conecta el controlador de arrastre aquí
-                      physics: const ClampingScrollPhysics(), // <-- Evita conflictos de rebote con el sheet
-                      itemCount: historialList.length,
-                      itemBuilder: (context, index) {
-                        final item = historialList[index];
-                        final String createdAt = item.created_at ?? '';
-                        final String statusName =
-                            (item.status != null && item.status!.isNotEmpty)
-                            ? item.status!
-                            : 'Por iniciar';
-
-                        String description = "";
-                        switch (statusName) {
-                          case "Por entregar":
-                            description = "Por iniciar recorrido";
-                            break;
-                          case "En ruta":
-                            description =
-                                "El repartidor inició el recorrido";
-                            break;
-                          case "Pendiente":
-                            description = "No se realizó la entrega";
-                            break;
-                          case "En sitio":
-                            description =
-                                "Se llegó a sitio para realizar la entrega";
-                            break;
-                          case "Entregado":
-                            description =
-                                "El repartidor realizó la entrega";
-                            break;
-                          default:
-                        }
-
-                        final String? colorHex = item.statusColor;
-                        bool isLast = index == historialList.length - 1;
-                        bool isWarning = statusName
-                            .toLowerCase()
-                            .contains('pendiente');
-
-                        return _buildTimelineItem(
-                          time: createdAt,
-                          statusName: statusName,
-                          description: description,
-                          statusColorHex: colorHex,
-                          isWarning: isWarning,
-                          isFirst: index == 0,
-                          isLast: isLast,
-                        );
-                      },
                     );
-                  }),
+                  },
                 ),
-              ],
-            ),
-          );
-        },
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-    );
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+              );
             }
           : null,
       child: Card(
         color: Colors.white,
         shape: RoundedRectangleBorder(
           side: const BorderSide(color: Colors.grey),
-          borderRadius: BorderRadiusGeometry.circular(4),
+          borderRadius: BorderRadius.circular(4),
         ),
         margin: EdgeInsets.zero,
         elevation: 0,
@@ -268,6 +267,9 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                   {"title": "Entregado", "icon": Icons.check_circle_outline},
                 ];
 
+                // Obtenemos el color entero de forma segura usando parseColor
+                final int resolvedColorValue = parseColor(state?.statusColor?.toString()).value;
+
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: List.generate(steps.length * 2 - 1, (i) {
@@ -275,9 +277,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                       final index = i ~/ 2;
                       return Expanded(
                         child: _step(
-                          colorStatus: int.parse(
-                            state?.statusColor.toString() ?? "0xFF9E9E9E",
-                          ),
+                          colorStatus: resolvedColorValue,
                           title: steps[index]["title"] as String,
                           icon: steps[index]["icon"] as IconData,
                           active: currentStep >= index,
@@ -294,11 +294,7 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
                       height: 4,
                       decoration: BoxDecoration(
                         color: currentStep > leftIndex
-                            ? Color(
-                                int.parse(
-                                  state?.statusColor.toString() ?? "0xFF9E9E9E",
-                                ),
-                              )
+                            ? Color(resolvedColorValue)
                             : Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -338,21 +334,18 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
       } catch (_) {}
     }
 
-    // 1. Tiempo en camino (De En Ruta -> En Sitio)
     String viajeDuration = "N/D";
     if (timeEnRuta != null && timeEnSitio != null) {
       final diff = timeEnSitio.difference(timeEnRuta);
       viajeDuration = _formatDuration(diff);
     }
 
-    // 2. Tiempo en sitio (De En Sitio -> Entregado/Pendiente)
     String sitioDuration = "N/D";
     if (timeEnSitio != null && timeFinalizado != null) {
       final diff = timeFinalizado.difference(timeEnSitio);
       sitioDuration = _formatDuration(diff);
     }
 
-    // 3. Cálculo extra: Tiempo Total del Proceso (Desde En Ruta -> Cierre)
     String totalDuration = "N/D";
     if (timeEnRuta != null && timeFinalizado != null) {
       final diff = timeFinalizado.difference(timeEnRuta);
@@ -418,7 +411,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
     }
   }
 
-  // --- Resto de tus métodos auxiliares (_step, parseColor, _buildTimelineItem) ---
   Widget _step({
     required String title,
     required IconData icon,
@@ -465,19 +457,22 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
 
   Color parseColor(String? hexColor) {
     if (hexColor == null || hexColor.isEmpty) {
-      return const Color(0xFF22C55E);
+      return const Color(0xFF9E9E9E);
     }
     try {
       String cleanedHex = hexColor
+          .toUpperCase()
           .replaceAll('#', '')
           .replaceAll('0X', '')
-          .replaceAll('0x', '');
+          .replaceAll('0x', '')
+          .trim();
       if (cleanedHex.length == 6) {
         cleanedHex = 'FF$cleanedHex';
       }
-      return Color(int.parse(cleanedHex, radix: 16));
+      int? colorInt = int.tryParse(cleanedHex, radix: 16);
+      return colorInt != null ? Color(colorInt) : const Color(0xFF9E9E9E);
     } catch (e) {
-      return const Color(0xFF22C55E);
+      return const Color(0xFF9E9E9E);
     }
   }
 
@@ -490,24 +485,6 @@ class DetallesTrayecto extends GetView<DetallesFolioController> {
     bool isFirst = false,
     bool isLast = false,
   }) {
-    Color parseColor(String? hexColor) {
-      if (hexColor == null || hexColor.isEmpty) {
-        return const Color(0xFF22C55E);
-      }
-      try {
-        String cleanedHex = hexColor
-            .replaceAll('#', '')
-            .replaceAll('0X', '')
-            .replaceAll('0x', '');
-        if (cleanedHex.length == 6) {
-          cleanedHex = 'FF$cleanedHex';
-        }
-        return Color(int.parse(cleanedHex, radix: 16));
-      } catch (e) {
-        return const Color(0xFF22C55E);
-      }
-    }
-
     String formatTimeToHour(String rawTime) {
       if (rawTime.isEmpty) return '';
       try {

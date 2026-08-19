@@ -19,6 +19,8 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
   RxBool isProcessingBarcode = false.obs;
+  bool isSaving = false;
+
   //Controllers
   TextEditingController cantidadController = TextEditingController();
   TextEditingController numReporteController = TextEditingController();
@@ -143,13 +145,20 @@ class AddFoliosController extends GetxController with StateMixin {
 
     usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
     reparto.assignAll(usersList);
-    
+
     await AppDatabase.db.execute(
       "DELETE FROM folios WHERE repartidorId IS NULL OR repartidorId = 'null' OR repartidorId = '0';",
     );
   }
 
   Future<Map<String, dynamic>?> postFolio() async {
+    if (isSaving) {
+      print("⚠️ postFolio() ya se está ejecutando");
+      return null;
+    }
+
+    isSaving = true;
+
     try {
       final supabase = Supabase.instance.client;
 
@@ -157,24 +166,26 @@ class AddFoliosController extends GetxController with StateMixin {
           supabase.auth.currentUser?.id ??
           supabase.auth.currentSession?.user.id;
 
-      if (userId == null) {
+      if (userId == null || userId.isEmpty) {
+        print("❌ No hay usuario autenticado");
         Get.snackbar("Error", "La sesión no está activa.");
         return null;
       }
 
-      final String idParaPowerSync = const Uuid().v4();
-      final String fechaActual = DateTime.now().toIso8601String();
-
-      final int cantidad = int.tryParse(cantidadController.text) ?? 0;
+      final int cantidad = int.tryParse(cantidadController.text.trim()) ?? 0;
       final int tipoDoc = tipoDocumentoId.value;
       final int cliente = clienteId.value;
       final int refaccion = refaccionId.value;
       final int condicion = condicionPagoId.value;
 
       if (cliente == 0 || tipoDoc == 0) {
-        Get.snackbar("Error", "Debes seleccionar valores válidos");
+        Get.snackbar("Error", "Debes seleccionar valores válidos.");
         return null;
       }
+
+      final String idFolio = const Uuid().v4();
+      final String historialId = const Uuid().v4();
+      final String fechaActual = DateTime.now().toIso8601String();
 
       String? repartidorUuid;
       if (reparto.isNotEmpty && repartidorId.value != 0) {
@@ -185,53 +196,108 @@ class AddFoliosController extends GetxController with StateMixin {
         repartidorUuid = u.userId;
       }
 
-      final datosEnviados = [
-        idParaPowerSync,
-        tipoDoc,
-        cliente,
-        refaccion,
-        cantidad,
-        condicion,
-        repartidorUuid,
-        userId,
-        fechaActual,
-        numReporteController.text,
-        false,
-      ];
+      // Preparar los payloads en formato JSON (como los espera Supabase)
+      final payloadFolio = {
+        "id": idFolio,
+        "tipoFolioId": tipoDoc,
+        "clienteId": cliente,
+        "typeRefaccionId": refaccion,
+        "cantidad": cantidad,
+        "condicionDePagoId": condicion,
+        "repartidorId": repartidorUuid,
+        "creadorId": userId,
+        "created_at": fechaActual,
+        "folioId": numReporteController.text.trim(),
+        "isArchived": false,
+      };
 
-      await AppDatabase.db.writeTransaction((txn) async {
-        await txn.execute(
-          '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId", isArchived) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-          datosEnviados,
+      final payloadHistorial = {
+        "id": historialId,
+        "folioId": idFolio,
+        "statusId": 1,
+        "created_at": fechaActual,
+      };
+
+      bool enviadoASupabase = false;
+
+      try {
+        print("🌐 Intentando subir directo a Supabase...");
+        await supabase.from('folios').insert(payloadFolio);
+        await supabase.from('historialestados').insert(payloadHistorial);
+        enviadoASupabase = true;
+        print("✅ ¡Subido directamente a Supabase con éxito!");
+      } catch (networkError) {
+        print(
+          "⚠️ No hay internet o falló Supabase. Guardando localmente en PowerSync: $networkError",
         );
+        enviadoASupabase = false;
+      }
 
-        await txn.execute(
-          'INSERT INTO historialestados (id, "folioId", "statusId", "created_at") VALUES (?, ?, ?, ?)',
-          [const Uuid().v4(), idParaPowerSync, 1, fechaActual],
-        );
-      });
+      if (!enviadoASupabase) {
+        final datosEnviados = [
+          idFolio,
+          tipoDoc,
+          cliente,
+          refaccion,
+          cantidad,
+          condicion,
+          repartidorUuid,
+          userId,
+          fechaActual,
+          numReporteController.text.trim(),
+          false,
+        ];
 
-      final status = AppDatabase.db.currentStatus;
-      print(
-        "PowerSync -> Conectado: ${status.connected}, Sincronizando: ${status.uploading}",
-      );
+        await AppDatabase.db.writeTransaction((txn) async {
+          await txn.execute('''
+            INSERT INTO folios (
+              id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, 
+              "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId", isArchived
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ''', datosEnviados);
 
+          await txn.execute(
+            '''
+            INSERT INTO historialestados (id, "folioId", "statusId", "created_at")
+            VALUES (?, ?, ?, ?)
+          ''',
+            [historialId, idFolio, 1, fechaActual],
+          );
+
+          print("💾 Guardado localmente en SQLite/PowerSync.");
+        });
+      }
+
+      // Limpiar campos
       cantidadController.clear();
       numReporteController.clear();
       clienteId.value = 0;
       refaccionId.value = 0;
       condicionPagoId.value = 0;
-      repartidorId.value = 0; 
+      repartidorId.value = 0;
       tipoDocumentoId.value = 0;
 
-      Get.snackbar("Guardado", "Registro exitoso localmente.");
+      Get.snackbar(
+        "Guardado",
+        enviadoASupabase
+            ? "Registro enviado a la nube."
+            : "Sin internet. Guardado localmente para sincronizar después.",
+      );
+
       Get.offAndToNamed(Routes.FOLIOS);
+
+      return {
+        "id": idFolio,
+        "folioId": numReporteController.text.trim(),
+        "success": true,
+      };
     } catch (e) {
-      print("Error crítico al guardar el registro localmente: $e");
-      Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
+      print("❌ Error crítico en postFolio: $e");
+      Get.snackbar("Error", "No se pudo guardar el folio.");
+      return null;
+    } finally {
+      isSaving = false;
     }
-    return null;
   }
 
   void navigateToScanner(Widget scanner, BuildContext context) {

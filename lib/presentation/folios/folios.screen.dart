@@ -63,6 +63,13 @@ class FoliosScreen extends GetView<FoliosController> {
         ),
         actions: [
           IconButton(
+            onPressed: () async {
+              await controller.syncPendingData();
+              ();
+            },
+            icon: Icon(Icons.refresh),
+          ),
+          IconButton(
             onPressed: () => controller.selectDate(context),
             icon: const Icon(Icons.filter_list_outlined),
           ),
@@ -72,170 +79,182 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ],
       ),
-     drawer: Drawer(
-  backgroundColor: const Color(0XFFF8FAFC),
-  child: LayoutBuilder(
-    builder: (context, constraints) {
-      final bool isWeb = constraints.maxWidth > 800;
-      final bool isAdmin = controller.rolName.value == "Admin";
+      drawer: Drawer(
+        backgroundColor: const Color(0XFFF8FAFC),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bool isWeb = constraints.maxWidth > 800;
+            final bool isAdmin = controller.rolName.value == "Admin";
 
-      return SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              height: 220,
-              width: constraints.maxWidth,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xff1565C0), Color(0xff42A5F5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: DrawerHeader(
-                margin: EdgeInsets.zero,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: Colors.white,
-                      child: Obx(
-                        () => Text(
-                          controller.nameUser.value.isNotEmpty
-                              ? controller.nameUser.value[0].toUpperCase()
-                              : "?",
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xff1565C0),
-                          ),
-                        ),
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    height: 220,
+                    width: constraints.maxWidth,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xff1565C0), Color(0xff42A5F5)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Obx(
-                      () => Text(
-                        controller.nameUser.value,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Obx(
-                      () => Row(
+                    child: DrawerHeader(
+                      margin: EdgeInsets.zero,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Icon(
-                            Icons.badge_outlined,
-                            color: Colors.white70,
-                            size: 18,
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: Colors.white,
+                            child: Obx(
+                              () => Text(
+                                controller.nameUser.value.isNotEmpty
+                                    ? controller.nameUser.value[0].toUpperCase()
+                                    : "?",
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff1565C0),
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            controller.rolName.value,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 15,
+                          const SizedBox(height: 16),
+                          Obx(
+                            () => Text(
+                              controller.nameUser.value,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(
+                            () => Row(
+                              children: [
+                                const Icon(
+                                  Icons.badge_outlined,
+                                  color: Colors.white70,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  controller.rolName.value,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ),
+
+                  // EL MENÚ INTERMEDIO SOLO SE MUESTRA SI NO ES WEB Y SÍ ES ADMIN
+                  if (!isWeb && isAdmin) ...[
+                    ExpansionTile(
+                      title: const Text("Organigrama"),
+                      leading: const Icon(
+                        Icons.precision_manufacturing_outlined,
+                      ),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.account_tree_outlined),
+                          title: const Text("Visitar"),
+                          onTap: () {
+                            Get.toNamed(Routes.ORGANIGRAMA);
+                          },
+                        ),
+                      ],
+                    ),
+                    ExpansionTile(
+                      title: const Text("Refacciones"),
+                      leading: const Icon(
+                        Icons.precision_manufacturing_outlined,
+                      ),
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.format_list_numbered_outlined,
+                          ),
+                          title: const Text("Refacciones"),
+                          onTap: () {
+                            Get.toNamed(Routes.REFACCIONES);
+                          },
+                        ),
+                      ],
+                    ),
+                    ExpansionTile(
+                      leading: const Icon(Icons.receipt_long_outlined),
+                      title: const Text("Folios"),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.add),
+                          title: const Text("Agregar"),
+                          onTap: () => Get.offAndToNamed(Routes.ADD_FOLIOS),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.archive_outlined),
+                          title: const Text("Archivados"),
+                          onTap: () => Get.toNamed(Routes.ARCHIVADOS),
+                        ),
+                      ],
+                    ),
+                    ExpansionTile(
+                      leading: const Icon(Icons.business_center_outlined),
+                      title: const Text("Clientes"),
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.format_list_numbered_outlined,
+                          ),
+                          title: const Text("Clientes"),
+                          onTap: () => Get.toNamed(Routes.CLIENTES),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 1),
                   ],
-                ),
-              ),
-            ),
 
-            // EL MENÚ INTERMEDIO SOLO SE MUESTRA SI NO ES WEB Y SÍ ES ADMIN
-            if (!isWeb && isAdmin) ...[
-              ExpansionTile(
-                title: const Text("Organigrama"),
-                leading: const Icon(Icons.precision_manufacturing_outlined),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.account_tree_outlined),
-                    title: const Text("Visitar"),
-                    onTap: () {
-                      Get.toNamed(Routes.ORGANIGRAMA);
-                    },
-                  ),
-                ],
-              ),
-              ExpansionTile(
-                title: const Text("Refacciones"),
-                leading: const Icon(Icons.precision_manufacturing_outlined),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.format_list_numbered_outlined),
-                    title: const Text("Refacciones"),
-                    onTap: () {
-                      Get.toNamed(Routes.REFACCIONES);
-                    },
-                  ),
-                ],
-              ),
-              ExpansionTile(
-                leading: const Icon(Icons.receipt_long_outlined),
-                title: const Text("Folios"),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: const Text("Agregar"),
-                    onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.archive_outlined),
-                    title: const Text("Archivados"),
-                    onTap: () => Get.toNamed(Routes.ARCHIVADOS),
-                  ),
-                ],
-              ),
-              ExpansionTile(
-                leading: const Icon(Icons.business_center_outlined),
-                title: const Text("Clientes"),
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.format_list_numbered_outlined),
-                    title: const Text("Clientes"),
-                    onTap: () => Get.toNamed(Routes.CLIENTES),
-                  ),
-                ],
-              ),
-              const Divider(height: 1),
-            ],
+                  // Espacio de separación si es web para que no quede pegado el botón al header
+                  if (isWeb) const SizedBox(height: 24),
 
-            // Espacio de separación si es web para que no quede pegado el botón al header
-            if (isWeb) const SizedBox(height: 24),
-
-            // BOTÓN DE CERRAR SESIÓN (VISIBLE SIEMPRE)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                leading: const Icon(Icons.logout_rounded, color: Colors.red),
-                title: const Text(
-                  "Cerrar sesión",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w600,
+                  // BOTÓN DE CERRAR SESIÓN (VISIBLE SIEMPRE)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      leading: const Icon(
+                        Icons.logout_rounded,
+                        color: Colors.red,
+                      ),
+                      title: const Text(
+                        "Cerrar sesión",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onTap: controller.signOut,
+                    ),
                   ),
-                ),
-                onTap: controller.signOut,
+                ],
               ),
-            ),
-          ],
+            );
+          },
         ),
-      );
-    },
-  ),
-), body: controller.obx(
+      ),
+      body: controller.obx(
         onLoading: Container(
           color: Colors.white,
           child: Center(
@@ -569,6 +588,19 @@ class FoliosScreen extends GetView<FoliosController> {
 
                 // FOLIO ITEM
                 final folio = item['data'];
+
+                final String rawColor = folio.statusColor?.toString() ?? '';
+                final String cleanedColor = rawColor
+                    .toUpperCase()
+                    .replaceAll('#', '')
+                    .replaceAll('0X', '')
+                    .trim();
+
+                final int colorInt =
+                    int.tryParse(cleanedColor, radix: 16) ?? 0xFF9E9E9E;
+
+                final Color finalColor = Color(colorInt);
+
                 return Container(
                   key: uniqueKey,
                   child: Dismissible(
@@ -594,63 +626,111 @@ class FoliosScreen extends GetView<FoliosController> {
                       onLongPress: () => direccionDialog(folio: folio),
                       onTap: () => Get.toNamed(
                         Routes.DETALLES_FOLIO,
-                        arguments: {
-                          'folioId': folio.folioId.toString(),
-                          'id': folio.id ?? "",
-                        },
+                        arguments: folio.folioId.toString(),
                       ),
-                      child: ListTile(
-                        dense: true,
-                        leading: Column(
-                          children: [
-                            Text(
-                              folio.cantidad.toString(),
-                              style: const TextStyle(fontSize: 32, height: 1),
-                            ),
-                            Text(folio.tiporefaccion.toString()),
-                          ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                          horizontal: 12.0,
                         ),
-                        title: Row(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.business_center_outlined,
-                              size: 20,
+                            // Leading (Cantidad y tipo de refacción)
+                            SizedBox(
+                              width: 55,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    folio.cantidad.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      height: 1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    folio.tiporefaccion.toString(),
+                                    style: const TextStyle(fontSize: 11),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
+
+                            // Contenido central
                             Expanded(
-                              child: Text(
-                                folio.nombreComercial ?? 'Sin nombre',
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "${folio.municipio ?? ''} - ${folio.folioId ?? ''}",
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color(
-                                  int.parse(folio.statusColor.toString()),
-                                ),
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                              child: Text(
-                                folio.status.toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // LÍNEA 1: Icono + Nombre Comercial (con ellipsis si es muy largo)
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.business_center_outlined,
+                                        size: 18,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          folio.nombreComercial ?? 'Sin nombre',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+
+                                  // LÍNEA 2: Municipio - Condición - FolioId Y EL CHIP DE ESTADO AL FINAL
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          "${folio.municipio ?? ''} - ${folio.condicionPago ?? ''} - ${folio.folioId ?? ''}",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: finalColor,
+                                          borderRadius: BorderRadius.circular(
+                                            50,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          folio.status.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],

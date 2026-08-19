@@ -21,7 +21,7 @@ class Folios {
   String? codigoPostal;
   String? numExt;
   String? numInt;
-  String? urlFirma; // <--- 1. Agrega la propiedad aquí
+  String? urlFirma; 
 
   Folios({
     this.id,
@@ -46,19 +46,17 @@ class Folios {
     this.colonia,
     this.numExt,
     this.numInt,
-    this.urlFirma, // <--- Agrégala en el constructor
   });
-
-  Folios.fromJson(Map<String, dynamic> json) {
+Folios.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
-    calle = json['calle']?.toString();
-    codigoPostal = json['codigoPostal']?.toString();
-    colonia = json['colonia']?.toString();
-    numExt = json['numExt']?.toString();
+    calle = json['calle']?.toString() ?? '';
+    codigoPostal = json['codigoPostal']?.toString() ?? '';
+    colonia = json['colonia']?.toString() ?? '';
+    numExt = json['numExt']?.toString() ?? '';
     numInt = json['numInt']?.toString();
-    cantidad = json['cantidad']?.toString();
+    cantidad = json['cantidad']?.toString() ?? '0';
     statusId = json['statusid']?.toString();
-    tipofolio = json['tipofolio']?.toString();
+    tipofolio = json['tipofolio']?.toString() ?? 'Folio';
 
     final rawArchived = json['isArchived'];
     if (rawArchived is bool) {
@@ -72,24 +70,24 @@ class Folios {
       isArchived = false;
     }
 
-    nombreComercial = json['nombreComercial']?.toString();
+    nombreComercial = json['nombreComercial']?.toString() ?? 'Sin nombre comercial';
     
-    // Acepta cualquiera de las dos variantes para evitar nulos por mayúsculas/minúsculas
-    tiporefaccion = (json['tipoRefaccion'] ?? json['tiporefaccion'])?.toString();
+    tiporefaccion = (json['tipoRefaccion'] ?? json['tiporefaccion'])?.toString() ?? '';
     tiporeporte = (json['tipoReporte'] ?? json['tiporeporte'])?.toString();
     
-    condicionPago = json['condicionPago']?.toString();
-    status = json['status']?.toString();
-    creador = json['creador']?.toString();
-    repartidor = json['repartidor']?.toString();
-    created_at = json['created_at']?.toString();
-    municipio = json['municipio']?.toString();
-    statusColor = json['statuscolor']?.toString();
-    folioId = json['folioId']?.toString();
+    condicionPago = json['condicionPago']?.toString() ?? '';
+    
+    // Valores por defecto para evitar nulos en la UI si el JOIN no encuentra coincidencias
+    status = json['status']?.toString() ?? 'Sin estado';
+    creador = json['creador']?.toString() ?? '';
+    repartidor = json['repartidor']?.toString() ?? '';
+    created_at = json['created_at']?.toString() ?? '';
+    municipio = json['municipio']?.toString() ?? 'Sin municipio';
+    statusColor = json['statuscolor']?.toString() ?? '#9E9E9E'; // Gris por defecto
+    
+    folioId = json['folioId']?.toString() ?? '';
     folioIdHistorial = json['folio_id_historial']?.toString();
-    urlFirma = json['url_firma']?.toString();
   }
-
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
@@ -114,7 +112,6 @@ class Folios {
     data['statuscolor'] = statusColor;
     data['folioId'] = folioId;
     data['folio_id_historial'] = folioIdHistorial;
-    data['url_firma'] = urlFirma;
     return data;
   }
 }

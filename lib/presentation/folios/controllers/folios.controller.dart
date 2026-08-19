@@ -53,7 +53,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
-    // En tu onInit() del controlador
     final box = GetStorage();
     List<dynamic>? guardado = box.read('orden_municipios');
     if (guardado != null) {
@@ -64,11 +63,11 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     await getDatos();
     controllerEasyDate = EasyDatePickerController();
 
-    // Inicializamos la variable reactiva de la fecha para evitar vacíos en la UI
     fechaSeleccionada.value = selectedDate!.toIso8601String().split('T')[0];
 
     await getDatos();
     await getFoliosWithDate();
+    
   }
 
   @override
@@ -81,10 +80,8 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     super.onClose();
   }
 
-  // Lista observable ya aplanada para que la vista no tenga que procesar nada
   final RxList<dynamic> elementosAplanados = <dynamic>[].obs;
 
-  // Método rápido para actualizar la estructura solo cuando cambian los datos o el orden
   void actualizarElementosAplanados(List<dynamic> stateData) {
     final Map<String, List<dynamic>> foliosPorMunicipio = {};
     for (var folio in stateData) {
@@ -140,9 +137,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           .toIso8601String()
           .split('T')[0];
 
-      final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
-        fechaHoy,
-      ]);
       List<Folios> listFolios = [];
 
       if (kIsWeb) {
@@ -151,7 +145,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           params: {'fecha_filtro': fechaHoy},
         );
 
-        // Si la respuesta es nula, vacía o contiene un elemento nulo [null]
         if (response == null ||
             (response is List && (response.isEmpty || response[0] == null))) {
           print("No se encontraron registros para la fecha: $fechaHoy");
@@ -161,7 +154,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
         final data = response[0];
 
-        // Validamos por si el json_agg interno devolvió null
         if (data == null || (data is List && data.isEmpty)) {
           change([], status: RxStatus.empty());
           return;
@@ -173,7 +165,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
             )
             .toList();
 
-        // Si después de mapear la lista viene vacía
         if (listFolios.isEmpty) {
           change([], status: RxStatus.empty());
           return;
@@ -181,9 +172,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
         print("Folios cargados en Web: ${listFolios.length}");
       } else {
-        // ==========================================
-        // CONSULTA LOCAL CON POWERSYNC (MÓVIL)
-        // ==========================================
         final resultSet = await AppDatabase.db.execute(datosPersonalesQuery(), [
           miId,
         ]);
@@ -206,36 +194,10 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
                   Folios.fromJson(Map<String, dynamic>.from(element as Map)),
             )
             .toList();
+        print("listFolios: ${jsonEncode(listFolios)}");
       }
 
       actualizarElementosAplanados(listFolios);
-
-      final datosPendientes = await AppDatabase.db.getAll(
-        'SELECT * FROM ps_crud',
-      );
-      for (var row in datosPendientes) {
-        try {
-          final rawData = row['data'] as String;
-          final outerMap = jsonDecode(rawData);
-
-          final String op = outerMap['op'];
-          final String type = outerMap['type'];
-          final Map<String, dynamic> payload = outerMap['data'];
-
-          if (op == 'PUT' || op == 'POST') {
-            await supabase.from(type).upsert(payload);
-          }
-
-          final int idRegistro = row['id'];
-          await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [
-            idRegistro,
-          ]);
-
-          print("Sincronizado con éxito: ID local $idRegistro");
-        } catch (e) {
-          print("Error al sincronizar el registro ${row['id']}: $e");
-        }
-      }
 
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
@@ -245,6 +207,24 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     } catch (e) {
       print("Error al cargar folios: $e");
       change(null, status: RxStatus.error(e.toString()));
+    }
+  }
+
+  Future<void> forzarSincronizacionManual() async {
+    try {
+      Get.snackbar(
+        "Sincronización",
+        "Verificando conexión y datos pendientes...",
+      );
+
+      // PowerSync sincroniza automáticamente en segundo plano cuando hay red.
+      // Solo recargamos los datos locales para refrescar la interfaz.
+      await getFoliosWithDate();
+
+      Get.snackbar("Éxito", "Vista actualizada correctamente.");
+    } catch (e) {
+      print("Error al sincronizar: $e");
+      Get.snackbar("Error", "No se pudo actualizar: $e");
     }
   }
 
@@ -547,6 +527,115 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
       },
     );
   }
+
+Future<void> syncPendingData() async {
+  try {
+    final supabase = Supabase.instance.client;
+
+    // 1. Notificar al usuario que comenzó el proceso
+    Get.snackbar(
+      "Sincronización",
+      "Buscando datos pendientes...",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    final datosPendientes = await AppDatabase.db.getAll(
+      'SELECT * FROM ps_crud',
+    );
+
+    if (datosPendientes.isEmpty) {
+      Get.snackbar(
+        "Sincronización",
+        "No hay folios ni historiales pendientes por sincronizar.",
+      );
+      return;
+    }
+
+    List<Map<String, dynamic>> registrosFolios = [];
+    List<Map<String, dynamic>> registrosHistorial = [];
+
+    for (var row in datosPendientes) {
+      final rawData = row['data'] as String;
+      final outerMap = jsonDecode(rawData);
+      final String type = outerMap['type'];
+
+      if (type == 'folios') {
+        registrosFolios.add({'id_crud': row['id'], ...outerMap});
+      } else if (type == 'historialestados') {
+        registrosHistorial.add({'id_crud': row['id'], ...outerMap});
+      }
+    }
+
+    if (registrosFolios.isEmpty && registrosHistorial.isEmpty) {
+      Get.snackbar(
+        "Sincronización",
+        "No se encontraron registros pendientes válidos.",
+      );
+      return;
+    }
+
+    List<Map<String, dynamic>> payloadsFolios = [];
+    List<int> idsCrudFolios = [];
+
+    List<Map<String, dynamic>> payloadsHistorial = [];
+    List<int> idsCrudHistorial = [];
+
+    // Preparar folios
+    for (var folioItem in registrosFolios) {
+      final opFolio = folioItem['op'];
+      if (opFolio == 'PUT' || opFolio == 'POST' || opFolio == 'PATCH') {
+        payloadsFolios.add(folioItem['data']);
+        idsCrudFolios.add(folioItem['id_crud']);
+      }
+    }
+
+    // Preparar historiales
+    for (var historialItem in registrosHistorial) {
+      final opHistorial = historialItem['op'];
+      if (opHistorial == 'PUT' || opHistorial == 'POST' || opHistorial == 'PATCH') {
+        payloadsHistorial.add(historialItem['data']);
+        idsCrudHistorial.add(historialItem['id_crud']);
+      }
+    }
+
+    int totalSincronizados = 0;
+
+    // 2. Subir Folios
+    if (payloadsFolios.isNotEmpty) {
+      await supabase.from('folios').upsert(payloadsFolios);
+      totalSincronizados += payloadsFolios.length;
+
+      for (var idCrud in idsCrudFolios) {
+        await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [idCrud]);
+      }
+    }
+
+    // 3. Subir Historiales
+    if (payloadsHistorial.isNotEmpty) {
+      await supabase.from('historialestados').upsert(payloadsHistorial);
+      totalSincronizados += payloadsHistorial.length;
+
+      for (var idCrud in idsCrudHistorial) {
+        await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [idCrud]);
+      }
+    }
+
+    Get.snackbar(
+      "¡Sincronización Exitosa!",
+      "Se sincronizaron $totalSincronizados registros (${payloadsFolios.length} folios y ${payloadsHistorial.length} historiales) correctamente.",
+      duration: const Duration(seconds: 4),
+    );
+    
+  } catch (e) {
+    print("Error crítico durante la sincronización masiva: $e");
+    
+    Get.snackbar(
+      "Error de Sincronización",
+      "No se pudieron enviar los datos. Revisa tu conexión a internet.",
+      duration: const Duration(seconds: 4),
+    );
+  }
+}
 
   void increment() => count.value++;
 }

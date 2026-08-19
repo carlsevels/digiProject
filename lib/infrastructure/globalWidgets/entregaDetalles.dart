@@ -6,40 +6,39 @@ import 'package:get/get.dart';
 class DetallesEntrega extends GetView<DetallesFolioController> {
   final Folios? state;
 
-  DetallesEntrega({super.key, required this.state});
+  const DetallesEntrega({super.key, required this.state});
+
   @override
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(
         side: const BorderSide(color: Colors.grey),
-        borderRadius: BorderRadiusGeometry.circular(4),
+        borderRadius: BorderRadius.circular(4),
       ),
       color: Colors.white,
       margin: EdgeInsets.zero,
       elevation: 0,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Column(
           children: [
-            Container(
-              child: Row(
-                children: [
-                  Icon(Icons.local_shipping_outlined, color: Color(0XFF64748B)),
-                  SizedBox(width: 8.0),
-                  Text(
-                    "Detalles de Entrega",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Color(0XFF0F172A),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
+            Row(
+              children: const [
+                Icon(Icons.local_shipping_outlined, color: Color(0XFF64748B)),
+                SizedBox(width: 8.0),
+                Text(
+                  "Detalles de Entrega",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Color(0XFF0F172A),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             ListTile(
               isThreeLine: false,
               contentPadding: EdgeInsets.zero,
@@ -48,7 +47,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
                   Text(
                     state?.cantidad ?? "",
                     textScaleFactor: 3.5,
-                    style: TextStyle(height: 1),
+                    style: const TextStyle(height: 1),
                   ),
                   Flexible(
                     child: Container(
@@ -69,7 +68,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: Text(
-                      state!.nombreComercial ?? 'Sin nombre comercial',
+                      state?.nombreComercial ?? 'Sin nombre comercial',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -123,7 +122,7 @@ class DetallesEntrega extends GetView<DetallesFolioController> {
                         ),
                       ),
                       child: Text(
-                        state?.status.toString() ?? "",
+                        state?.status?.toString() ?? "",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: state?.status == "Por entregar"

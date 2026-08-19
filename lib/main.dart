@@ -22,9 +22,6 @@ void main() async {
 
   if (!kIsWeb) {
     await AppDatabase.initialize();
-  } else {
-    // TODO: Si estás usando Drift/SQLite en Web, aquí debes inicializar
-    // la versión compatible con WebAssembly (WASM) / IndexedDB.
   }
 
   final supabase = Supabase.instance.client;
@@ -35,15 +32,15 @@ void main() async {
       await AppDatabase.initialize();
     }
 
+    // Conectar PowerSync solo si ya existe una sesión guardada al abrir la app
     await AppDatabase.db.connect(connector: MyBackendConnector(AppDatabase.db));
-
     await AppDatabase.db.waitForFirstSync();
   }
 
   runApp(Main(session != null ? Routes.FOLIOS : Routes.LOGIN));
 }
 
-void setupAuthListener(BuildContext context) {
+void setupAuthListener() {
   Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
     final AuthChangeEvent event = data.event;
     final Session? session = data.session;
@@ -57,28 +54,21 @@ void setupAuthListener(BuildContext context) {
         print("Error al desconectar PowerSync: $e");
       }
 
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          Routes.LOGIN, 
-          (route) => false,
-        );
-      }
+      // Redirección segura usando GetX en lugar de Navigator clásico
+      Get.offAllNamed(Routes.LOGIN);
     }
   });
 }
 
-void cerrarSesionSinBorrarLocales(BuildContext context) async {
+void cerrarSesionSinBorrarLocales() async {
   try {
     await AppDatabase.db.disconnect();
-
     await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
   } catch (e) {
     print("Error al cerrar sesión de forma segura: $e");
   }
 
-  if (context.mounted) {
-    Navigator.of(context).pushNamedAndRemoveUntil(Routes.LOGIN, (route) => false);
-  }
+  Get.offAllNamed(Routes.LOGIN);
 }
 
 class Main extends StatefulWidget {
@@ -93,7 +83,7 @@ class _MainState extends State<Main> {
   @override
   void initState() {
     super.initState();
-    setupAuthListener(context);
+    setupAuthListener();
   }
 
   @override

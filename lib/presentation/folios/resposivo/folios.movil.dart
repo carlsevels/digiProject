@@ -17,7 +17,7 @@ class FoliosMovilView extends GetView<FoliosController> {
       onRefresh: () => controller.getFoliosWithDate(),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: state!.length + 1,
+        itemCount: state.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
             return Column(

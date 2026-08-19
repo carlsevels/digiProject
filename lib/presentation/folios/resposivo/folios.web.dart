@@ -15,7 +15,7 @@ class FolioWebView extends GetView<FoliosController> {
       color: const Color(
         0xFFF8FAFC,
       ), // Fondo general tipo dashboard corporativo
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -33,16 +33,21 @@ class FolioWebView extends GetView<FoliosController> {
                             DateTime.now(),
                       ),
                       style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   const Text(
-                    "Gestión y seguimiento de folios activos",
-                    style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                    "Gestión y seguimiento de folios activos en tiempo real",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ],
               ),
@@ -51,15 +56,18 @@ class FolioWebView extends GetView<FoliosController> {
                 icon: const Icon(Icons.add_rounded, size: 20),
                 label: const Text("Agregar Folio"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0XFF1D6CFF),
+                  backgroundColor: const Color(
+                    0xFF2563EB,
+                  ), // Azul corporativo vibrante
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
+                    horizontal: 22,
+                    vertical: 16,
                   ),
                   elevation: 0,
+                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -69,16 +77,13 @@ class FolioWebView extends GetView<FoliosController> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          // --- CUADRÍCULA DE TARJETAS PROFESIONALES ---
           Expanded(
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent:
-                    420, // Ancho ideal para tarjetas web compactas
-                mainAxisExtent:
-                    130, // Altura óptima para acomodar la información
+                maxCrossAxisExtent: 440,
+                mainAxisExtent: 140,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
               ),
@@ -89,189 +94,204 @@ class FolioWebView extends GetView<FoliosController> {
                 final int colorInt =
                     (folio.statusColor != null &&
                         folio.statusColor.toString().isNotEmpty)
-                    ? (int.tryParse(folio.statusColor.toString()) ?? 0xFF9E9E9E)
-                    : 0xFF9E9E9E;
+                    ? (int.tryParse(folio.statusColor.toString()) ?? 0xFF64748B)
+                    : 0xFF64748B;
 
-                return Material(
-                  color: Colors.white,
-                  elevation: 1,
-                  shadowColor: Colors.black.withOpacity(0.05),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.grey.shade200, width: 1),
+                final Color statusColor = Color(colorInt);
+                final bool isPorEntregar = folio.status == "Por entregar";
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFE2E8F0),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0F172A).withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      if (folio.folioId != null) {
-                        Get.toNamed(
-                          Routes.DETALLES_FOLIO,
-                          arguments: folio.folioId.toString(),
-                        );
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          // Columna Izquierda: Cantidad y Tipo con diseño de insignia
-                          // Columna Izquierda: Cantidad y Tipo
-                          Container(
-                            width: 65,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  folio.cantidad.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                    height: 1,
-                                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () {
+                        if (folio.folioId != null) {
+                          Get.toNamed(
+                            Routes.DETALLES_FOLIO,
+                            arguments: folio.folioId.toString(),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            // Columna Izquierda: Insignia de Cantidad y Tipo
+                            Container(
+                              width: 70,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFF1F5F9),
                                 ),
-                                const SizedBox(height: 4),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  child: Text(
-                                    folio.tiporefaccion?.toString() ?? '',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    folio.cantidad.toString(),
                                     style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF64748B),
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0F172A),
+                                      height: 1,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 6),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                    ),
+                                    child: Text(
+                                      folio.tiporefaccion?.toString() ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
+                            const SizedBox(width: 16),
 
-                          // Columna Derecha: Información Principal
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Nombre Comercial
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.business_center_outlined,
-                                      size: 15,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        folio.nombreComercial ??
-                                            'Sin nombre comercial',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: Color(0xFF1E293B),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-
-                                // Municipio y Folio
-                                Row(
-                                  children: [
-                                    if (folio.municipio != null &&
-                                        folio.municipio!.trim().isNotEmpty) ...[
+                            // Columna Derecha: Información Principal
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Nombre Comercial
+                                  Row(
+                                    children: [
                                       const Icon(
-                                        Icons.location_on_outlined,
-                                        size: 13,
-                                        color: Color(0xFF94A3B8),
+                                        Icons.business_center_rounded,
+                                        size: 15,
+                                        color: Color(0xFF64748B),
                                       ),
-                                      const SizedBox(width: 2),
-                                      Flexible(
+                                      const SizedBox(width: 6),
+                                      Expanded(
                                         child: Text(
-                                          folio.municipio!,
+                                          folio.nombreComercial ??
+                                              'Sin nombre comercial',
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF64748B),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14,
+                                            color: Color(0xFF1E293B),
                                           ),
                                         ),
                                       ),
-                                      const Text(
-                                        " • ",
-                                        style: TextStyle(
-                                          fontSize: 12,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Municipio y Folio ID
+                                  Row(
+                                    children: [
+                                      if (folio.municipio != null &&
+                                          folio.municipio!
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                        const Icon(
+                                          Icons.location_on_outlined,
+                                          size: 13,
                                           color: Color(0xFF94A3B8),
                                         ),
-                                      ),
-                                    ],
-                                    if (folio.folioId != null) ...[
-                                      const Icon(
-                                        Icons.confirmation_number_outlined,
-                                        size: 13,
-                                        color: Color(0xFF94A3B8),
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        "#${folio.folioId}",
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF64748B),
-                                          fontWeight: FontWeight.w600,
+                                        const SizedBox(width: 3),
+                                        Flexible(
+                                          child: Text(
+                                            folio.municipio!,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF64748B),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        const Text(
+                                          " • ",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFFCBD5E1),
+                                          ),
+                                        ),
+                                      ],
+                                      if (folio.folioId != null) ...[
+                                        const Icon(
+                                          Icons.tag_rounded,
+                                          size: 13,
+                                          color: Color(0xFF94A3B8),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          "${folio.folioId}",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFF64748B),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
+                                  ),
+                                  const SizedBox(height: 12),
 
-                                // Estado de la orden / Badge
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: folio.status != "Por entregar"
-                                          ? Color(colorInt)
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: Color(colorInt),
-                                        width: 1.2,
+                                  // Badge de Estado Moderno
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
                                       ),
-                                    ),
-                                    child: Text(
-                                      folio.status.toString(),
-                                      style: TextStyle(
-                                        color: folio.status == "Por entregar"
-                                            ? Color(colorInt)
-                                            : Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                      decoration: BoxDecoration(
+                                        color: isPorEntregar
+                                            ? statusColor.withOpacity(0.1)
+                                            : statusColor,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        folio.status.toString(),
+                                        style: TextStyle(
+                                          color: isPorEntregar
+                                              ? statusColor
+                                              : Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.2,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -1,5 +1,3 @@
-// Ejemplo de cómo suele verse la configuración
-
 import 'package:powersync/powersync.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,20 +8,13 @@ class MyBackendConnector extends PowerSyncBackendConnector {
   PowerSyncDatabase db;
 
   MyBackendConnector(this.db);
+
   @override
   Future<PowerSyncCredentials?> fetchCredentials() async {
-    // Implement fetchCredentials to obtain a JWT from your authentication service
-    // If you're using Supabase or Firebase, you can re-use the JWT from those clients, see
-    // - https://docs.powersync.com/installation/authentication-setup/supabase-auth
-    // - https://docs.powersync.com/installation/authentication-setup/firebase-auth
-
-    // See example implementation here: https://pub.dev/documentation/powersync/latest/powersync/DevConnector/fetchCredentials.html
     final supabase = Supabase.instance.client;
 
-    // 1. Obtén la sesión actual sin refrescar innecesariamente
     var session = supabase.auth.currentSession;
 
-    // 2. Si no hay sesión, intenta un refresco (solo si es necesario)
     if (session == null || session.isExpired) {
       try {
         final response = await supabase.auth.refreshSession();
@@ -38,16 +29,12 @@ class MyBackendConnector extends PowerSyncBackendConnector {
       endpoint: "https://6a4e6c7849dca2d8a417eda2.powersync.journeyapps.com",
       token: session!.accessToken,
       userId: session.user.id,
-      // Opcional: Proporcionar expiresAt ayuda a PowerSync a refrescar antes de que expire
       expiresAt: session.expiresAt != null
           ? DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000)
           : null,
     );
   }
 
-  // Implement uploadData to send local changes to your backend service
-  // You can omit this method if you only want to sync data from the server to the client
-  // See example implementation here: https://docs.powersync.com/client-sdk-references/flutter#3-integrate-with-your-backend
   @override
   Future<void> uploadData(PowerSyncDatabase database) async {
     final transaction = await database.getNextCrudTransaction();
@@ -55,20 +42,20 @@ class MyBackendConnector extends PowerSyncBackendConnector {
 
     final supabase = Supabase.instance.client;
 
-    for (var op in transaction.crud) {
-      final table = op.table;
-      final data = op.opData ?? {};
+    try {
+      for (var op in transaction.crud) {
+        final table = op.table;
+        final data = Map<String, dynamic>.from(op.opData ?? {});
 
-      // Asegurar que el ID esté presente para operaciones que lo requieren
-      data['id'] = op.id;
+        // Asegurar explícitamente que el ID esté presente en los datos
+        data['id'] = op.id;
 
-      if (op.op == UpdateType.put) {
-        await supabase.from(table).upsert(data);
-      } else if (op.op == UpdateType.patch) {
-        await supabase.from(table).update(data).eq('id', op.id);
-      } else if (op.op == UpdateType.delete) {
-        try {
-          // Lista de tablas que requieren búsqueda por folioId
+        if (op.op == UpdateType.put) {
+          // Usar onConflict para garantizar que si ya existe el registro, se actualice en lugar de duplicar
+          await supabase.from(table).upsert(data, onConflict: 'id');
+        } else if (op.op == UpdateType.patch) {
+          await supabase.from(table).update(data).eq('id', op.id);
+        } else if (op.op == UpdateType.delete) {
           final List<String> tablasConFolioId = [
             'folios',
             'historialestados',
@@ -76,32 +63,34 @@ class MyBackendConnector extends PowerSyncBackendConnector {
           ];
 
           if (tablasConFolioId.contains(table)) {
-            // Lógica especial: Buscar primero el valor de folioId
             final registro = await supabase
                 .from(table)
                 .select('folioId')
                 .eq('id', op.id)
-                .single();
+                .maybeSingle();
 
-            final folioId = registro['folioId'];
-
-            await supabase.from(table).delete().eq('folioId', folioId);
-
-            print("🗑️ Eliminado en Supabase usando folioId: $folioId");
+            if (registro != null && registro['folioId'] != null) {
+              final folioId = registro['folioId'];
+              await supabase.from(table).delete().eq('folioId', folioId);
+              print("🗑️ Eliminado en Supabase usando folioId: $folioId");
+            } else {
+              await supabase.from(table).delete().eq('id', op.id);
+              print("🗑️ Eliminado en Supabase usando id por respaldo: ${op.id}");
+            }
           } else {
-            // Lógica general: Borrar usando el 'id' (para tablas como 'tipos', 'clientes', etc.)
             await supabase.from(table).delete().eq('id', op.id);
-
             print("🗑️ Eliminado en Supabase usando id: ${op.id}");
           }
-        } catch (e, st) {
-          print("❌ Error DELETE Supabase: $e");
-          print(st);
         }
       }
-    }
 
-    await transaction.complete();
+      // Marcar la transacción como completada solo si todo salió bien
+      await transaction.complete();
+    } catch (e, st) {
+      print("❌ Error en uploadData de PowerSync: $e");
+      print(st);
+      rethrow; // Permite que PowerSync reintente la transacción de forma segura más adelante
+    }
   }
 }
 
@@ -124,10 +113,8 @@ class AppDatabase {
     String dbPath;
 
     if (kIsWeb) {
-      // En Web, PowerSync utiliza almacenamiento interno administrado (IndexedDB / OPFS)
       dbPath = 'database.sqlite';
     } else {
-      // En Android, iOS y Escritorio (Nativo)
       final dir = await getApplicationDocumentsDirectory();
       dbPath = join(dir.path, 'database.sqlite');
     }

@@ -44,8 +44,15 @@ class LoginController extends GetxController with StateMixin {
           );
 
       if (res.user != null) {
+        // 1. Inicializar la base de datos local si no está lista
         await AppDatabase.initialize();
 
+        // 2. ¡IMPORTANTE! Conectar PowerSync con el backend ahora que ya hay sesión
+        await AppDatabase.db.connect(
+          connector: MyBackendConnector(AppDatabase.db),
+        );
+
+        // 3. Esperar la primera sincronización de PowerSync
         await AppDatabase.db.waitForFirstSync();
 
         final miId = res.user!.id;
@@ -66,11 +73,10 @@ class LoginController extends GetxController with StateMixin {
         if (data != null) {
           await UserStorage.guardarRol(data['rol_nombre'] as String);
 
-          Get.back();
-          Get.offAllNamed(Routes.FOLIOS);
+          Get.back(); // Cerrar diálogo de carga
+          Get.offAllNamed(Routes.FOLIOS); // Redirigir correctamente con GetX
         } else {
           Get.back();
-
           Get.snackbar(
             "Error",
             "Usuario autenticado pero sin datos personales",

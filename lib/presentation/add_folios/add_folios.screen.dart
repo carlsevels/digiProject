@@ -335,9 +335,11 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      onPressed: () {
-                        controller.postFolio();
-                      },
+                      onPressed: controller.isSaving
+                          ? null
+                          : () async {
+                              await controller.postFolio();
+                            },
                       child: const Text(
                         "Agregar",
                         style: TextStyle(fontSize: 16),
@@ -345,7 +347,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                     ),
                   ),
 
-                  // Espaciado extra de seguridad abajo para que el botón no quede pegado al borde del celular
                   const SizedBox(height: 40),
                 ],
               ),

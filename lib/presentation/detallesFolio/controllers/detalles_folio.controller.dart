@@ -12,8 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:signature/signature.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,8 +21,6 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   int? nextStatus;
   var historialList = <Folios>[].obs;
 
-  // Variables para guardar los datos que recibas
-//  String id = "";
   String folioIdArgnt = "";
 
   @override
@@ -43,24 +39,16 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   void _leerArgumentos() {
     final args = Get.arguments;
 
-    if (args is Map) {
-     //id = args['id']?.toString() ?? "";
+    if (args is String) {
+      folioIdArgnt = args;
+    } else if (args is Map) {
       folioIdArgnt = args['folioId']?.toString() ?? "";
-    } else if (args is String) {
-     // id = args;
+    } else {
+      folioIdArgnt = args?.toString() ?? "";
     }
   }
 
   Future<void> onInitDetalles() async {
-    // print("ID recibido: $id");
-    // print("FolioId recibido: $folioIdArgnt");
-
-    // if (id.isEmpty) {
-    //   print("Error: El ID recibido es nulo o vacío");
-    //   change(null, status: RxStatus.error("ID no válido"));
-    //   return;
-    // }
-
     await getDetailsFolio(folioIdArgnt);
   }
 
@@ -80,7 +68,8 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           params: {'id_buscado': idBuscado},
         );
 
-        if (response == null || (response is List && (response.isEmpty || response[0] == null))) {
+        if (response == null ||
+            (response is List && (response.isEmpty || response[0] == null))) {
           change(null, status: RxStatus.empty());
           return;
         }
@@ -91,17 +80,18 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           return;
         }
 
-        final itemMap = data is List ? Map<String, dynamic>.from(data[0]) : Map<String, dynamic>.from(data);
+        final itemMap = data is List
+            ? Map<String, dynamic>.from(data[0])
+            : Map<String, dynamic>.from(data);
         folio = Folios.fromJson(itemMap);
       } else {
-        final resultSet = await AppDatabase.db.execute(folioId(), [
-          idBuscado,
-        ]);
+        final resultSet = await AppDatabase.db.execute(folioId(), [idBuscado]);
         if (resultSet.isEmpty) {
           change(null, status: RxStatus.empty());
           return;
         }
         folio = Folios.fromJson(resultSet.first);
+        print("folioId: ${jsonEncode(folio)}");
       }
 
       final ultimoRegistro = await getUltimoStatus(
@@ -160,7 +150,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     }
   }
 
- Future<void> historialFolio(String folioId) async {
+  Future<void> historialFolio(String folioId) async {
     try {
       historialList.clear();
       List<Folios> folio = [];
@@ -175,27 +165,20 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         if (response != null) {
           folio = (response as List).map((element) {
             final map = Map<String, dynamic>.from(element);
-            
+
             if (map['status'] != null && map['status'] is Map) {
               final statusMap = Map<String, dynamic>.from(map['status']);
               map['status'] = statusMap['nombre'];
-              // Pasamos el color a String plano para evitar conflictos de tipos
               map['statuscolor'] = statusMap['color']?.toString();
-            }
-            
-            // Aseguramos que si el modelo tiene un campo 'color' directo, no cause conflictos
-            if (map.containsKey('color')) {
-              map['color'] = map['color']?.toString();
             }
 
             return Folios.fromJson(map);
           }).toList();
         }
       } else {
-        final resultSet = await AppDatabase.db.getAll(
-          getHistorialFolio(),
-          [folioId],
-        );
+        final resultSet = await AppDatabase.db.getAll(getHistorialFolio(), [
+          folioId,
+        ]);
 
         folio = resultSet
             .map(
@@ -212,38 +195,38 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
       print("Error en historial: $e");
     }
   }
+
+  // Método seguro para parsear colores hexadecimales (elimina '#' y usa radix: 16)
   Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
     if (colorStr == null || colorStr.isEmpty) return defaultColor;
 
-    String cleanColor = colorStr.toUpperCase().replaceAll('0X', '');
+    String cleanColor = colorStr
+        .toUpperCase()
+        .replaceAll('#', '')
+        .replaceAll('0X', '')
+        .trim();
+
+    if (cleanColor.length == 6) {
+      cleanColor = 'FF$cleanColor';
+    }
 
     int? colorInt = int.tryParse(cleanColor, radix: 16);
 
-    return colorInt != null ? Color(colorInt | 0xFF000000) : defaultColor;
+    return colorInt != null ? Color(colorInt) : defaultColor;
   }
 
   int getStepIndex(int statusId) {
     switch (statusId) {
-      // Por iniciar
       case 1:
         return 0;
-
-      // Llegada
       case 2:
         return 1;
-
-      // Entregado
       case 3:
         return 3;
-
-      // Pendiente
       case 4:
         return 0;
-
-      // Sitio
       case 5:
         return 2;
-
       default:
         return 0;
     }
@@ -252,25 +235,25 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   Widget statusFolio(int statusId) {
     switch (statusId) {
       case 1 || 4:
-        return Text(
+        return const Text(
           'Empezar ruta',
           textScaleFactor: 1.3,
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       case 2:
-        return Text(
+        return const Text(
           'Llegada',
           textScaleFactor: 1.3,
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       case 5:
-        return Text(
+        return const Text(
           'Finalizar entrega',
           textScaleFactor: 1.3,
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
@@ -368,10 +351,8 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         );
       }
       await onInitDetalles();
-      return null;
     } catch (e) {
       print("Error al archivar folio: $e");
-      return null;
     }
   }
 
@@ -393,19 +374,13 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         );
       }
       await onInitDetalles();
-      return null;
     } catch (e) {
       print("Error al restaurar folio: $e");
-      return null;
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
-        folioId,
-      ]);
-      Get.offAllNamed(Routes.FOLIOS);
       if (kIsWeb) {
         await Supabase.instance.client
             .from('folios')
@@ -416,10 +391,9 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
           folioId,
         ]);
       }
-      Get.toNamed(Routes.FOLIOS);
+      Get.offAllNamed(Routes.FOLIOS);
     } catch (e) {
       print("Error de SQL: ${e.toString()}");
-      return null;
     }
   }
 
@@ -458,37 +432,6 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
             bytes,
             fileOptions: const FileOptions(contentType: 'image/svg+xml'),
           );
-
-      final imageUrl = Supabase.instance.client.storage
-          .from('firmas')
-          .getPublicUrl(filePath);
-
-      debugPrint('URL pública de la firma: $imageUrl');
-
-      // final targetId = state?.id?.toString() ?? id;
-      // debugPrint('Intentando actualizar el registro con ID: $targetId');
-
-      // if (targetId.isEmpty) {
-      //   debugPrint(
-      //     '❌ Error: El ID está vacío, no se puede actualizar Supabase.',
-      //   );
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Error: ID de folio no válido')),
-      //   );
-      //   return;
-      // }
-
-      // final response = await Supabase.instance.client
-      //     .from('folios')
-      //     .update({'url_firma': imageUrl})
-      //     .eq('id', targetId.trim())
-      //     .select();
-
-      // debugPrint('✅ Respuesta de Supabase al actualizar: $response');
-
-      // if (response == null || (response is List && response.isEmpty)) {
-      //   throw 'No se pudo actualizar el registro. Revisa si el ID existe o si las políticas RLS están bloqueando la actualización.';
-      // }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
