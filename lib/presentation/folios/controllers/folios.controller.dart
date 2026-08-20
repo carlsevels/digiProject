@@ -527,124 +527,114 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     );
   }
 
-  Future<void> syncPendingData() async {
-    try {
-      final supabase = Supabase.instance.client;
+ Future<void> syncPendingData() async {
+  try {
+    final supabase = Supabase.instance.client;
 
-      // 1. Notificar al usuario que comenzó el proceso
+    Get.snackbar(
+      "Sincronización",
+      "Buscando datos pendientes...",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    final datosPendientes = await AppDatabase.db.getAll('SELECT * FROM ps_crud');
+
+    if (datosPendientes.isEmpty) {
       Get.snackbar(
         "Sincronización",
-        "Buscando datos pendientes...",
-        snackPosition: SnackPosition.BOTTOM,
+        "No hay registros pendientes por sincronizar.",
       );
-
-      final datosPendientes = await AppDatabase.db.getAll(
-        'SELECT * FROM ps_crud',
-      );
-
-      if (datosPendientes.isEmpty) {
-        Get.snackbar(
-          "Sincronización",
-          "No hay folios ni historiales pendientes por sincronizar.",
-        );
-        return;
-      }
-
-      List<Map<String, dynamic>> registrosFolios = [];
-      List<Map<String, dynamic>> registrosHistorial = [];
-
-      for (var row in datosPendientes) {
-        final rawData = row['data'] as String;
-        final outerMap = jsonDecode(rawData);
-        final String type = outerMap['type'];
-
-        if (type == 'folios') {
-          registrosFolios.add({'id_crud': row['id'], ...outerMap});
-        } else if (type == 'historialestados') {
-          registrosHistorial.add({'id_crud': row['id'], ...outerMap});
-        }
-      }
-
-      if (registrosFolios.isEmpty && registrosHistorial.isEmpty) {
-        Get.snackbar(
-          "Sincronización",
-          "No se encontraron registros pendientes válidos.",
-        );
-        return;
-      }
-
-      List<Map<String, dynamic>> payloadsFolios = [];
-      List<int> idsCrudFolios = [];
-
-      List<Map<String, dynamic>> payloadsHistorial = [];
-      List<int> idsCrudHistorial = [];
-
-      // Preparar folios
-      for (var folioItem in registrosFolios) {
-        final opFolio = folioItem['op'];
-        if (opFolio == 'PUT' || opFolio == 'POST' || opFolio == 'PATCH') {
-          payloadsFolios.add(folioItem['data']);
-          idsCrudFolios.add(folioItem['id_crud']);
-        }
-      }
-
-      // Preparar historiales
-      for (var historialItem in registrosHistorial) {
-        final opHistorial = historialItem['op'];
-        if (opHistorial == 'PUT' ||
-            opHistorial == 'POST' ||
-            opHistorial == 'PATCH') {
-          payloadsHistorial.add(historialItem['data']);
-          idsCrudHistorial.add(historialItem['id_crud']);
-        }
-      }
-
-      int totalSincronizados = 0;
-
-      // 2. Subir Folios
-      if (payloadsFolios.isNotEmpty) {
-        await supabase.from('folios').upsert(payloadsFolios);
-        totalSincronizados += payloadsFolios.length;
-
-        for (var idCrud in idsCrudFolios) {
-          await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [
-            idCrud,
-          ]);
-        }
-      }
-
-      // 3. Subir Historiales
-      if (payloadsHistorial.isNotEmpty) {
-        await supabase.from('historialestados').upsert(payloadsHistorial);
-        totalSincronizados += payloadsHistorial.length;
-
-        for (var idCrud in idsCrudHistorial) {
-          await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [
-            idCrud,
-          ]);
-        }
-      }
-
-      Get.snackbar(
-        "¡Sincronización Exitosa!",
-        "Se sincronizaron $totalSincronizados registros (${payloadsFolios.length} folios y ${payloadsHistorial.length} historiales) correctamente.",
-        duration: const Duration(seconds: 4),
-      );
-    } catch (e, stackTrace) {
-      // Imprime el error exacto y la traza completa en la consola para depuración
-      print("❌ Error crítico durante la sincronización masiva: $e");
-      print("🔍 StackTrace: $stackTrace");
-
-      // Muestra un mensaje detallado al usuario incluyendo el error exacto
-      Get.snackbar(
-        "Error de Sincronización",
-        "Ocurrió un problema: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      return;
     }
+
+    List<Map<String, dynamic>> registrosFolios = [];
+    List<Map<String, dynamic>> registrosHistorial = [];
+
+    for (var row in datosPendientes) {
+      final rawData = row['data'];
+      if (rawData == null) continue;
+
+      // Decodificar asegurando que sea un mapa válido
+      final outerMap = jsonDecode(rawData.toString());
+      if (outerMap is! Map<String, dynamic>) continue;
+
+      final String? type = outerMap['type'];
+
+      if (type == 'folios') {
+        registrosFolios.add({'id_crud': row['id'], ...outerMap});
+      } else if (type == 'historialestados') {
+        registrosHistorial.add({'id_crud': row['id'], ...outerMap});
+      }
+    }
+
+    int totalSincronizados = 0;
+
+    // 1. Sincronizar primero los FOLIOS
+    for (var folioItem in registrosFolios) {
+      final dataFolio = folioItem['data'];
+      if (dataFolio is! Map<String, dynamic>) continue;
+      
+      final int idCrud = folioItem['id_crud'];
+
+      try {
+        await supabase.from('folios').upsert(dataFolio);
+        await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [idCrud]);
+        totalSincronizados++;
+      } catch (e) {
+        print("❌ Error al subir folio individual: $e");
+      }
+    }
+
+    // 2. Sincronizar después los HISTORIALES
+    for (var historialItem in registrosHistorial) {
+      final dataHistorial = historialItem['data'];
+      if (dataHistorial is! Map<String, dynamic>) continue;
+
+      final int idCrud = historialItem['id_crud'];
+      final String? folioIdAsociado = dataHistorial['folioId'];
+
+      if (folioIdAsociado == null) continue;
+
+      try {
+        final folioExiste = await supabase
+            .from('folios')
+            .select('id')
+            .eq('id', folioIdAsociado)
+            .maybeSingle();
+
+        if (folioExiste != null) {
+          await supabase.from('historialestados').upsert(dataHistorial);
+          await AppDatabase.db.execute('DELETE FROM ps_crud WHERE id = ?', [idCrud]);
+          totalSincronizados++;
+        } else {
+          print("⚠️ Omitiendo historial: El folio con id '$folioIdAsociado' aún no existe en Supabase.");
+        }
+      } catch (e) {
+        print("❌ Error al subir historial individual: $e");
+      }
+    }
+
+    Get.snackbar(
+      "¡Sincronización Exitosa!",
+      "Se sincronizaron $totalSincronizados registros correctamente.",
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 4),
+    );
+
+  } catch (e, stackTrace) {
+    print("❌ Error crítico durante la sincronización masiva: $e");
+    print("🔍 StackTrace: $stackTrace");
+
+    Get.snackbar(
+      "Error de Sincronización",
+      "Ocurrió un problema: ${e.toString()}",
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 5),
+    );
   }
+}
 
   void increment() => count.value++;
 }
