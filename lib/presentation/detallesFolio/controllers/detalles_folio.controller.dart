@@ -2,18 +2,13 @@ import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
-import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
-import 'package:bitacora_frontend/presentation/detallesFolio/querys/getHistorialFolio.dart';
-import 'package:bitacora_frontend/presentation/detallesFolio/querys/update.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetallesFolioController extends GetxController with StateMixin<Folios> {
-  //TODO: Implement DetallesFolioController
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
   int? nextStatus;
@@ -44,59 +39,91 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     await getDetailsFolio(id);
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        idBuscado,
-      ]);
-      if (resultSet.isEmpty) {
+      final response = await Supabase.instance.client
+          .from('folios')
+          .select('''
+            id, 
+            folioId, 
+            isArchived, 
+            created_at,
+            cantidad,
+            tipofolio:tipoFolioId(nombre),
+            clientes:clienteId(
+              nombreComercial,
+              direcciones(
+                calle,
+                colonia,
+                codigoPostal,
+                numExt,
+                numInt,
+                municipios(nombre)
+              )
+            ),
+            typeRefaccion:typeRefaccionId(nombre),
+            condicionPago:condicionDePagoId(nombre),
+            historialestados(
+              statusId,
+              status:statusId(nombre, color)
+            )
+          ''')
+          .eq('folioId', idBuscado)
+          .order(
+            'created_at',
+            ascending: true,
+            referencedTable: 'historialestados',
+          )
+          .maybeSingle();
+
+      if (response == null) {
         change(null, status: RxStatus.empty());
         return;
       }
-      final folio = Folios.fromJson(resultSet.first);
 
-      final ultimoRegistro = await getUltimoStatus(
-        folio.folioIdHistorial ?? "",
-      );
+      final folio = Folios.fromJson(Map<String, dynamic>.from(response));
+
+      final idParaHistorial =
+          folio.folioIdHistorial ?? folio.folioId ?? idBuscado;
+
+      final ultimoRegistro = await getUltimoStatus(idParaHistorial);
 
       if (ultimoRegistro != null) {
         statusId.value = ultimoRegistro["statusId"] as int;
         currentStep.value = getStepIndex(statusId.value);
         print("Status actual actualizado a: ${currentStep.value}");
       } else {
-        print(
-          "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
-        );
+        // Fallback: Si el historial viene directamente en el JSON de la consulta
+        if (folio.statusId != null) {
+          statusId.value = int.tryParse(folio.statusId!) ?? 1;
+          currentStep.value = getStepIndex(statusId.value);
+        } else {
+          print(
+            "ADVERTENCIA: No se encontró estatus para el folioId: ${folio.folioId}",
+          );
+        }
       }
 
       print("Folio: ${jsonEncode(folio)}");
-      print("state!.isArchived: ${folio.isArchived}");
       change(folio, status: RxStatus.success());
     } catch (e) {
+      print("Error al cargar detalles del folio: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
   }
 
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
-      final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM historialestados 
-      WHERE "folioId" = ? 
-      ORDER BY "created_at" DESC 
-      LIMIT 1
-      ''',
-        [folioId],
-      );
+      final response = await Supabase.instance.client
+          .from('historialestados')
+          .select()
+          .eq('folioId', folioId)
+          .order('created_at', ascending: false)
+          .limit(1);
 
-      if (result.isNotEmpty) {
-        return result.first;
+      if (response != null && (response as List).isNotEmpty) {
+        return response.first as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
@@ -109,58 +136,65 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
     try {
       historialList.clear();
 
-      final ResultSet resultSet = await AppDatabase.db.getAll(
-        getHistorialFolio(),
-        [folioId],
-      );
+      final response = await Supabase.instance.client
+          .from('historialestados')
+          .select('''
+            id,
+            folioId,
+            statusId,
+            created_at,
+            status:statusId(nombre, color)
+          ''')
+          .eq('folioId', folioId)
+          .order('created_at', ascending: true);
 
-      List<Folios> folio = resultSet
-          .map(
-            (element) =>
-                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
+      List<Folios> folio = (response as List)
+          .map((element) => Folios.fromJson(Map<String, dynamic>.from(element)))
           .toList();
 
       historialList.value = folio;
-      print("FolioId: ${folioId}");
-      print("Folio Historial: ${jsonEncode(historialList)}");
+      print("FolioId Historial cargado: $folioId");
     } catch (e) {
-      print("Error: $e");
+      print("Error en historialFolio: $e");
     }
   }
 
-  Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
-    if (colorStr == null || colorStr.isEmpty) return defaultColor;
+  Color parseColor(String? hexColor) {
+    if (hexColor == null || hexColor.isEmpty) {
+      return const Color(0xFF22C55E);
+    }
+    try {
+      String cleanedHex = hexColor
+          .replaceAll('#', '')
+          .replaceAll('0X', '')
+          .replaceAll('0x', '');
 
-    String cleanColor = colorStr.toUpperCase().replaceAll('0X', '');
+      if (cleanedHex.length == 6) {
+        cleanedHex = 'FF$cleanedHex';
+      } else if (cleanedHex.length == 7) {
+        cleanedHex = 'F$cleanedHex';
+      } else if (cleanedHex.length < 6) {
+        return const Color(0xFF22C55E);
+      }
 
-    int? colorInt = int.tryParse(cleanColor, radix: 16);
-
-    return colorInt != null ? Color(colorInt | 0xFF000000) : defaultColor;
+      return Color(int.parse(cleanedHex, radix: 16));
+    } catch (e) {
+      return const Color(0xFF22C55E);
+    }
   }
 
   int getStepIndex(int statusId) {
     switch (statusId) {
-      // Por iniciar
       case 1:
-        return 0;
-
-      // Llegada
+        return 0; // Por iniciar
       case 2:
-        return 1;
-
-      // Entregado
+        return 1; // Llegada
       case 3:
-        return 3;
-
-      // Pendiente
+        return 3; // Entregado
       case 4:
-        return 0;
-
-      // Sitio
+        return 0; // Pendiente
       case 5:
-        return 2;
-
+        return 2; // Sitio
       default:
         return 0;
     }
@@ -169,25 +203,25 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
   Widget statusFolio(int statusId) {
     switch (statusId) {
       case 1 || 4:
-        return Text(
+        return const Text(
           'Empezar ruta',
-          textScaleFactor: 1.3,
+          textScaler: TextScaler.linear(1.3),
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       case 2:
-        return Text(
+        return const Text(
           'Llegada',
-          textScaleFactor: 1.3,
+          textScaler: TextScaler.linear(1.3),
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       case 5:
-        return Text(
+        return const Text(
           'Finalizar entrega',
-          textScaleFactor: 1.3,
+          textScaler: TextScaler.linear(1.3),
           style: TextStyle(fontWeight: FontWeight.bold),
         );
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
@@ -213,24 +247,23 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
         return null;
     }
 
-    // Se ejecuta la inserción una sola vez
-    await AppDatabase.db.execute(insertStatusFolio(), [
-      const Uuid().v4(),
-      folioId,
-      nextStatus.toString(),
-      DateTime.now().toIso8601String(),
-    ]);
+    await Supabase.instance.client.from('historialestados').insert({
+      'id': const Uuid().v4(),
+      'folioId': folioId,
+      'statusId': nextStatus,
+      'created_at': DateTime.now().toIso8601String(),
+    });
 
     return nextStatus;
   }
 
   Future<void> pedidoPendiente(String folioId) async {
-    await AppDatabase.db.execute(insertStatusFolio(), [
-      const Uuid().v4(),
-      folioId,
-      4,
-      DateTime.now().toIso8601String(),
-    ]);
+    await Supabase.instance.client.from('historialestados').insert({
+      'id': const Uuid().v4(),
+      'folioId': folioId,
+      'statusId': 4,
+      'created_at': DateTime.now().toIso8601String(),
+    });
   }
 
   Future<void> llamarTelefonoSoporteTecnico() async {
@@ -252,49 +285,40 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
 
   Future<void> archivarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute(
-        '''
-        UPDATE folios 
-        SET "isArchived" = true 
-        WHERE "folioId" = ?;
-        ''',
-        [folioId],
-      );
+      await Supabase.instance.client
+          .from('folios')
+          .update({'isArchived': true})
+          .eq('folioId', folioId);
+
       await onInitDetalles();
-      return null;
     } catch (e) {
       print("Error al archivar folio: $e");
-      return null;
     }
   }
 
   Future<void> restaurarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute(
-        '''
-        UPDATE folios 
-        SET "isArchived" = false 
-        WHERE "folioId" = ?;
-        ''',
-        [folioId],
-      );
+      await Supabase.instance.client
+          .from('folios')
+          .update({'isArchived': false})
+          .eq('folioId', folioId);
+
       await onInitDetalles();
-      return null;
     } catch (e) {
-      print("Error al archivar folio: $e");
-      return null;
+      print("Error al restaurar folio: $e");
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
-        folioId,
-      ]);
+      await Supabase.instance.client
+          .from('folios')
+          .delete()
+          .eq('folioId', folioId);
+
       Get.toNamed(Routes.FOLIOS);
     } catch (e) {
-      print("Error de SQL: ${e.toString()}");
-      return null;
+      print("Error al eliminar folio en Supabase: ${e.toString()}");
     }
   }
 }

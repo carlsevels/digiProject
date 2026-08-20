@@ -8,7 +8,8 @@ import 'package:get/get.dart';
 class BtnSliderStatus extends GetView<DetallesFolioController> {
   final Folios? state;
 
-  BtnSliderStatus({super.key, required this.state});
+  const BtnSliderStatus({super.key, required this.state});
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -33,29 +34,28 @@ class BtnSliderStatus extends GetView<DetallesFolioController> {
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: controller.statusFolio(controller.statusId.value),
+            child: Obx(() => controller.statusFolio(controller.statusId.value)),
           ),
           action: (sliderController) async {
             sliderController.loading();
 
             int? nextStatus = await controller.changeStatus(
-              controller.statusId.toString(),
-              state?.folioIdHistorial?.toString() ?? "",
+              controller.statusId.value.toString(),
+              state?.id?.toString() ?? "",
             );
 
             if (nextStatus == 3) {
               sliderController.success();
               await Future.delayed(const Duration(milliseconds: 500));
-
               Get.toNamed(Routes.SUCCESS, arguments: state?.folioId.toString());
             } else {
               sliderController.success();
               await Future.delayed(const Duration(milliseconds: 500));
+              
               await controller.onInitDetalles();
+              
+              sliderController.reset();
             }
-
-            await Future.delayed(const Duration(milliseconds: 500));
-            await this.controller.onInitDetalles();
           },
         ),
       ),

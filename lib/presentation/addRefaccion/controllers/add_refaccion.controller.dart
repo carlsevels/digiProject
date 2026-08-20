@@ -1,5 +1,4 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,16 +24,12 @@ class AddRefaccionController extends GetxController {
   }
 
   Future<void> postRefaccion() async {
-    if (nombreController.text.isEmpty) return;
+    if (nombreController.text.trim().isEmpty) return;
 
     try {
-      final String nuevoId = DateTime.now().microsecondsSinceEpoch.toString();
-
-      await AppDatabase.db.writeTransaction((txn) async {
-        await txn.execute(
-          '''INSERT INTO tipos (id, nombre) VALUES (?, ?)''',
-          [nuevoId, nombreController.text],
-        );
+      // Inserción directa en la tabla 'tipos' usando Supabase
+      await Supabase.instance.client.from('tipos').insert({
+        'nombre': nombreController.text.trim(),
       });
 
       nombreController.clear();
@@ -50,7 +45,7 @@ class AddRefaccionController extends GetxController {
       );
       Get.toNamed(Routes.REFACCIONES);
     } catch (e) {
-      print("Error detallado al insertar: $e");
+      print("Error detallado al insertar en Supabase: $e");
       Get.snackbar(
         "Error",
         "No se pudo guardar la refacción",

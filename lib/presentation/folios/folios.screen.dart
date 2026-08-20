@@ -6,7 +6,6 @@ import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/folios.controller.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class FoliosScreen extends GetView<FoliosController> {
   const FoliosScreen({super.key});
@@ -357,6 +356,11 @@ class FoliosScreen extends GetView<FoliosController> {
                   );
                 }
                 final folio = state[index - 1];
+                final statusColor = controller.parseColor(
+                  folio.statusColor?.toString(),
+                  defaultColor: const Color(0XFF1D6CFF),
+                );
+
                 return InkWell(
                   onLongPress: () {
                     direccionDialog(folio: folio);
@@ -371,12 +375,11 @@ class FoliosScreen extends GetView<FoliosController> {
                   },
                   child: Dismissible(
                     key: ValueKey(folio.id),
-                    direction: controller.rolName == "Reparto"
+                    direction: controller.rolName.value == "Reparto"
                         ? DismissDirection.startToEnd
                         : DismissDirection.horizontal,
                     confirmDismiss: (direction) async {
                       if (direction == DismissDirection.startToEnd) {
-                        // Resultado de la confirmación
                         final bool? confirmacion = await showDialog<bool>(
                           context: context,
                           barrierDismissible: false,
@@ -494,10 +497,8 @@ class FoliosScreen extends GetView<FoliosController> {
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(
-                                            context,
-                                            false,
-                                          ), // Retorna false (no eliminar)
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
                                           child: const Text(
                                             'Cancelar',
                                             style: TextStyle(
@@ -511,10 +512,7 @@ class FoliosScreen extends GetView<FoliosController> {
                                             controller.eliminarFolio(
                                               folio.folioId ?? "",
                                             );
-                                            Navigator.pop(
-                                              context,
-                                              true,
-                                            ); // Retorna true (sí eliminar)
+                                            Navigator.pop(context, true);
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(
@@ -586,7 +584,9 @@ class FoliosScreen extends GetView<FoliosController> {
                       style: ListTileStyle.list,
                       dense: true,
                       isThreeLine: false,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
                       leading: Column(
                         children: [
                           Text(
@@ -715,24 +715,16 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                             decoration: BoxDecoration(
                               color: folio.status != "Por entregar"
-                                  ? Color(
-                                      int.parse(folio.statusColor.toString()),
-                                    )
+                                  ? statusColor
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: Color(
-                                  int.parse(folio.statusColor.toString()),
-                                ),
-                              ),
+                              border: Border.all(color: statusColor),
                             ),
                             child: Text(
                               folio.status.toString(),
                               style: TextStyle(
                                 color: folio.status == "Por entregar"
-                                    ? Color(
-                                        int.parse(folio.statusColor.toString()),
-                                      )
+                                    ? statusColor
                                     : Colors.white,
                                 fontSize: 12,
                               ),

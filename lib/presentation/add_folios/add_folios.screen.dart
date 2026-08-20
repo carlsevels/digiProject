@@ -36,14 +36,12 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
           backgroundColor: const Color(0XFF1D6CFF),
           onRefresh: () => controller.onInitFunction(),
           child: SingleChildScrollView(
-            physics:
-                const AlwaysScrollableScrollPhysics(), // Obliga a que siempre haya scroll para activar el pull-to-refresh
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Tipo de documento
                   Text(
                     "Tipo de documento",
                     textScaleFactor: 1.2,

@@ -2,13 +2,8 @@ import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/direcciones.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
-import 'package:bitacora_frontend/presentation/clientes/querys/direccionCliente.dart';
-import 'package:bitacora_frontend/presentation/clientes/querys/listClientes.dart';
-import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ClientesController extends GetxController
@@ -49,17 +44,19 @@ class ClientesController extends GetxController
       return;
     }
 
-    final ResultSet resultSet = await AppDatabase.db.execute(
-      datosPersonalesQuery(),
-      [miId],
-    );
+    // Consulta directa a Supabase para obtener el rol del usuario
+    final datosRes = await Supabase.instance.client
+        .from('datosPersonales')
+        .select('rolId')
+        .eq('userId', miId)
+        .maybeSingle();
 
-    if (resultSet.isEmpty) {
+    if (datosRes == null) {
       change(null, status: RxStatus.empty());
       return;
     }
 
-    rolUsuario.value = resultSet.first['rolId'] as int;
+    rolUsuario.value = datosRes['rolId'] as int;
     getClientes();
   }
 
@@ -69,15 +66,25 @@ class ClientesController extends GetxController
     change(null, status: RxStatus.loading());
 
     try {
-      final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        listClientesQuery(),
-        [searchText, searchText, searchText, _limit, _page * _limit],
-      );
+      final searchText = buscadorController.text.trim();
+      
+      var query = Supabase.instance.client.from('clientes').select();
 
-      List<Clientes> listClientes = resultSet.map((element) {
-        final map = Map<String, dynamic>.from(element as Map);
-        return Clientes.fromJson(map);
+      // Aplicar filtro de búsqueda si el texto no está vacío (ajusta las columnas según tu base de datos)
+      if (searchText.isNotEmpty) {
+        query = query.or('nombreComercial.ilike.%$searchText%,nombre.ilike.%$searchText%');
+      }
+
+      // Paginación en Supabase usando range
+      final int from = _page * _limit;
+      final int to = from + _limit - 1;
+      
+      final response = await query
+          .range(from, to)
+          .order('id', ascending: true); // Ajusta la columna de ordenamiento si es necesario
+
+      List<Clientes> listClientes = (response as List).map((element) {
+        return Clientes.fromJson(Map<String, dynamic>.from(element));
       }).toList();
 
       if (listClientes.length < _limit) {
@@ -101,15 +108,23 @@ class ClientesController extends GetxController
     _page++;
 
     try {
-      final searchText = buscadorController.text;
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        listClientesQuery(),
-        [searchText, searchText, searchText, _limit, _page * _limit],
-      );
+      final searchText = buscadorController.text.trim();
+      
+      var query = Supabase.instance.client.from('clientes').select();
 
-      List<Clientes> moreClientes = resultSet.map((element) {
-        final map = Map<String, dynamic>.from(element as Map);
-        return Clientes.fromJson(map);
+      if (searchText.isNotEmpty) {
+        query = query.or('nombreComercial.ilike.%$searchText%,nombre.ilike.%$searchText%');
+      }
+
+      final int from = _page * _limit;
+      final int to = from + _limit - 1;
+
+      final response = await query
+          .range(from, to)
+          .order('id', ascending: true);
+
+      List<Clientes> moreClientes = (response as List).map((element) {
+        return Clientes.fromJson(Map<String, dynamic>.from(element));
       }).toList();
 
       if (moreClientes.length < _limit) {
@@ -129,24 +144,15 @@ class ClientesController extends GetxController
 
   Future<void> getDireccionCliente(dynamic clienteId) async {
     try {
-      final status = AppDatabase.db.currentStatus;
+      // Consulta directa a Supabase para la dirección del cliente
+      final resultado = await Supabase.instance.client
+          .from('direcciones') // Ajusta el nombre de la tabla de direcciones si es diferente
+          .select()
+          .eq('clienteId', clienteId) // Ajusta la llave foránea según tu esquema
+          .maybeSingle();
 
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream
-            .firstWhere((s) => s.hasSynced == true)
-            .timeout(
-              const Duration(seconds: 10),
-              onTimeout: () =>
-                  throw Exception('Timeout waiting for PowerSync sync.'),
-            );
-      }
-
-      final resultado = await AppDatabase.db.getOptional(
-        direccionClienteQuery(),
-        [clienteId],
-      );
-      print("Direccion: ${jsonEncode(direccion)}");
+      print("Direccion cruda: ${jsonEncode(resultado)}");
+      
       direccion = resultado != null
           ? Direcciones.fromJson(resultado)
           : Direcciones();

@@ -44,7 +44,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
                   backgroundColor: Colors.red,
                   onPressed: () {
                     controller.pedidoPendiente(
-                      state?.folioIdHistorial?.toString() ?? "",
+                      state?.id?.toString() ?? "",
                     );
                     controller.onInitDetalles();
                   },

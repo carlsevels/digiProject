@@ -1,22 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:bitacora_frontend/infrastructure/models/datosPersonales.dart';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
-import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
-import 'package:bitacora_frontend/presentation/folios/querys/listFolios.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FoliosController extends GetxController with StateMixin<List<Folios>> {
-  //TODO: Implement FoliosController
   RxInt rolUsuario = 0.obs;
   DateTime? selectedDate;
   var rolName = "Cargando...".obs;
@@ -37,9 +30,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
-
     await getDatos();
-
     await getFoliosWithDate();
   }
 
@@ -63,41 +54,56 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
         return;
       }
 
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        datosPersonalesQuery(),
-        [miId],
-      );
+      if (rolUsuario.value == 0) {
+        final datosRes = await Supabase.instance.client
+            .from('datosPersonales')
+            .select('rolId')
+            .eq('userId', miId)
+            .maybeSingle();
 
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+        if (datosRes != null && datosRes['rolId'] != null) {
+          rolUsuario.value = int.tryParse(datosRes['rolId'].toString()) ?? 0;
+        }
       }
-
-      rolUsuario.value = resultSet.first['rolId'] as int;
 
       final String fechaHoy = (selectedDate ?? DateTime.now())
           .toIso8601String()
           .split('T')[0];
 
       print(
-        "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
+        "Consultando folios en Supabase para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
       );
 
-      final getFolios = await AppDatabase.db.getAll(listFoliosQuery(), [
-        fechaHoy,
-      ]);
+      final response = await Supabase.instance.client
+          .from('folios')
+          .select('''
+      *,
+      clientes:clienteId (nombreComercial, razonSocial),
+      condicionPago:condicionDePagoId (nombre),
+      typeRefaccion:typeRefaccionId (nombre, color),
+      tipoFolio:tipoFolioId (nombre, color),
+      historialestados (
+        id,
+        statusId,
+        created_at,
+        status:statusId (nombre, color)
+      )
+    ''')
+          .eq('created_at', fechaHoy)
+          .order(
+            'created_at',
+            ascending: true,
+            referencedTable: 'historialestados',
+          );
 
-      List<Folios> listFolios = getFolios
-          .map(
-            (element) =>
-                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
-          .toList();
+      List<Folios> listFolios = (response as List).map((element) {
+        return Folios.fromJson(Map<String, dynamic>.from(element));
+      }).toList();
 
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {
-        print("listFolios: ${jsonEncode(listFolios)}");
+        print("listFolios con datos: ${jsonEncode(listFolios)}");
         change(listFolios, status: RxStatus.success());
       }
     } catch (e) {
@@ -116,24 +122,13 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
     if (picked != null && picked != selectedDate) {
       selectedDate = picked;
-
       fechaSeleccionada.value = picked.toIso8601String().split('T')[0];
-
       await getFoliosWithDate();
     }
   }
 
   Future<void> signOut() async {
     try {
-      await AppDatabase.db.disconnect();
-
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/${AppDatabase.db}');
-
-      if (await file.exists()) {
-        await file.delete();
-      }
-
       await Supabase.instance.client.auth.signOut();
       await Get.deleteAll(force: true);
       Get.offAllNamed(Routes.LOGIN);
@@ -147,35 +142,26 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     change(null, status: RxStatus.loading());
     try {
       final miId = Supabase.instance.client.auth.currentUser?.id;
-      final status = AppDatabase.db.currentStatus;
-      print("¿Ha terminado la sincronización inicial?: ${status.hasSynced}");
+      if (miId == null) return null;
 
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream.firstWhere(
-          (s) => s.hasSynced == true,
-        );
-        print("¡Sincronización completada!");
-      }
+      final resultado = await Supabase.instance.client
+          .from('datosPersonales')
+          .select('*, roles:rolId(name)')
+          .eq('userId', miId)
+          .maybeSingle();
 
-      final resultado = await AppDatabase.db.getOptional(
-        '''
-  SELECT dp.*, r."name" as "nombre_rol" 
-  FROM "datosPersonales" dp
-  INNER JOIN "roles" r ON dp."rolId" = r."id"
-  WHERE dp."userId" = ?
-  ''',
-        [miId],
-      );
       if (resultado != null) {
-        rolName.value = resultado["nombre_rol"];
-        nameUser.value = resultado["nombre"];
-        print("rolName: ${rolName.value}");
-        print("nameUser: ${nameUser.value}");
+        final rolData = resultado['roles'];
+        if (rolData != null && rolData is Map) {
+          rolName.value = rolData['name']?.toString() ?? "Sin rol";
+        }
+
+        nameUser.value = resultado["nombre"]?.toString() ?? "Sin nombre";
       } else {
         change(null, status: RxStatus.empty());
       }
     } catch (e) {
+      print("Error al obtener datos personales: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
     return null;
@@ -192,8 +178,6 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
     final int diferencia = hoy.difference(fecha).inDays;
 
-    print("DEBUG: Hoy es $hoy, fecha recibida $fecha, diferencia: $diferencia");
-
     if (diferencia == 0) {
       return "Hoy";
     } else if (diferencia == 1) {
@@ -207,31 +191,41 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
 
   Future<void> archivarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute(
-        '''
-        UPDATE folios 
-        SET "isArchived" = true 
-        WHERE "folioId" = ?;
-        ''',
-        [folioId],
-      );
+      await Supabase.instance.client
+          .from('folios')
+          .update({'isArchived': true})
+          .eq('folioId', folioId);
+
       await getFoliosWithDate();
-      return null;
     } catch (e) {
       print("Error al archivar folio: $e");
-      return null;
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
-        folioId,
-      ]);
+      await Supabase.instance.client
+          .from('folios')
+          .delete()
+          .eq('folioId', folioId);
+
+      await getFoliosWithDate();
     } catch (e) {
-      print("Error de SQL: ${e.toString()}");
-      return null;
+      print("Error al eliminar folio en Supabase: ${e.toString()}");
     }
+  }
+
+  // Función auxiliar para parsear colores de manera segura
+  Color parseColor(String? colorStr, {Color defaultColor = Colors.grey}) {
+    if (colorStr == null || colorStr.isEmpty || colorStr == 'null') {
+      return defaultColor;
+    }
+    String cleanColor = colorStr
+        .toUpperCase()
+        .replaceAll('0X', '')
+        .replaceAll('#', '');
+    int? colorInt = int.tryParse(cleanColor, radix: 16);
+    return colorInt != null ? Color(colorInt | 0xFF000000) : defaultColor;
   }
 
   void increment() => count.value++;

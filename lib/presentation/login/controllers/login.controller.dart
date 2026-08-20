@@ -1,9 +1,7 @@
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/infrastructure/storage/user.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginController extends GetxController with StateMixin {
@@ -44,29 +42,26 @@ class LoginController extends GetxController with StateMixin {
           );
 
       if (res.user != null) {
-        await AppDatabase.initialize();
-
-        await AppDatabase.db.waitForFirstSync();
-
         final miId = res.user!.id;
 
-        final data = await AppDatabase.db.getOptional(
-          '''
-        SELECT 
-          dp."nombre",
-          r."name" as "rol_nombre"
-        FROM "datosPersonales" dp
-        INNER JOIN "roles" r 
-          ON dp."rolId" = r."id"
-        WHERE dp."userId" = ?
-        ''',
-          [miId],
-        );
+        // Consulta directa a Supabase con relación a la tabla roles
+        final data = await Supabase.instance.client
+            .from('datosPersonales')
+            .select('nombre, roles:rolId(name)')
+            .eq('userId', miId)
+            .maybeSingle();
 
         if (data != null) {
-          await UserStorage.guardarRol(data['rol_nombre'] as String);
+          final rolData = data['roles'];
+          String rolNombre = "Sin rol";
+          
+          if (rolData != null && rolData is Map) {
+            rolNombre = rolData['name'] ?? "Sin rol";
+          }
 
-          Get.back();
+          await UserStorage.guardarRol(rolNombre);
+
+          Get.back(); // Cierra el diálogo de carga
           Get.offAllNamed(Routes.FOLIOS);
         } else {
           Get.back();

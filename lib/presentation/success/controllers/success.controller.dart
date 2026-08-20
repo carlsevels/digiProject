@@ -1,11 +1,9 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
-import 'package:bitacora_frontend/presentation/detallesFolio/querys/detallesFolio.dart';
 import 'package:confetti/confetti.dart';
 import 'package:get/get.dart';
-import 'package:powersync/sqlite3.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SuccessController extends GetxController with StateMixin<Folios> {
   late ConfettiController confettiController;
@@ -26,14 +24,19 @@ class SuccessController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      final ResultSet resultSet = await AppDatabase.db.execute(folioId(), [
-        idBuscado,
-      ]);
-      if (resultSet.isEmpty) {
+      // Consulta directa a Supabase para obtener el folio por su ID
+      final response = await Supabase.instance.client
+          .from('folios')
+          .select()
+          .eq('folioId', idBuscado)
+          .maybeSingle();
+
+      if (response == null) {
         change(null, status: RxStatus.empty());
         return;
       }
-      final folio = Folios.fromJson(resultSet.first);
+      
+      final folio = Folios.fromJson(Map<String, dynamic>.from(response));
 
       final ultimoRegistro = await getUltimoStatus(
         folio.folioIdHistorial ?? "",
@@ -61,18 +64,15 @@ class SuccessController extends GetxController with StateMixin<Folios> {
 
   Future<Map<String, dynamic>?> getUltimoStatus(String folioId) async {
     try {
-      final List<Map<String, dynamic>> result = await AppDatabase.db.getAll(
-        '''
-      SELECT * FROM historialestados 
-      WHERE "folioId" = ? 
-      ORDER BY "created_at" DESC 
-      LIMIT 1
-      ''',
-        [folioId],
-      );
+      final response = await Supabase.instance.client
+          .from('historialestados')
+          .select()
+          .eq('folioId', folioId)
+          .order('created_at', ascending: false)
+          .limit(1);
 
-      if (result.isNotEmpty) {
-        return result.first;
+      if (response != null && (response as List).isNotEmpty) {
+        return response.first as Map<String, dynamic>;
       }
       return null;
     } catch (e) {

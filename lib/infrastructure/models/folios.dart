@@ -41,29 +41,25 @@ class Folios {
     this.folioIdHistorial,
     this.isArchived,
     this.calle,
-    this.codigoPostal,
     this.colonia,
+    this.codigoPostal,
     this.numExt,
     this.numInt,
   });
 
   Folios.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
-    calle = json['calle']?.toString();
-    codigoPostal = json['codigoPostal']?.toString();
-    colonia = json['colonia']?.toString();
-    numExt = json['numExt']?.toString();
-    numInt = json['numInt']?.toString();
     cantidad = json['cantidad']?.toString();
-    statusId = json['statusid']?.toString();
-    tipofolio = json['tipofolio']?.toString();
+    created_at = json['created_at']?.toString();
+    folioId = json['folioId']?.toString();
+    folioIdHistorial = json['folio_id_historial']?.toString();
 
-    // Mapeo robusto que soporta bool, int (1/0) y String desde PowerSync/Supabase
+    // Mapeo robusto para isArchived (bool, int o String)
     final rawArchived = json['isArchived'];
     if (rawArchived is bool) {
       isArchived = rawArchived;
     } else if (rawArchived is int) {
-      isArchived = rawArchived == 1; // 1 es true, 0 es false
+      isArchived = rawArchived == 1;
     } else if (rawArchived != null) {
       final str = rawArchived.toString().toLowerCase();
       isArchived = str == 'true' || str == '1';
@@ -71,18 +67,65 @@ class Folios {
       isArchived = false;
     }
 
-    nombreComercial = json['nombreComercial']?.toString();
-    tiporefaccion = json['tipoRefaccion']?.toString();
+    // 1. Extracción de la relación 'clientes' y sus 'direcciones' en formato lista
+    final cliente = json['clientes'] is Map ? json['clientes'] : {};
+    nombreComercial = cliente['nombreComercial']?.toString() ?? json['nombreComercial']?.toString();
+
+    final direccionesList = cliente['direcciones'] is List ? cliente['direcciones'] as List : [];
+    if (direccionesList.isNotEmpty) {
+      final dir = direccionesList.first is Map ? direccionesList.first : {};
+      calle = dir['calle']?.toString();
+      colonia = dir['colonia']?.toString();
+      codigoPostal = dir['codigoPostal']?.toString();
+      numExt = dir['numExt']?.toString();
+      numInt = dir['numInt']?.toString();
+
+      final muni = dir['municipios'] is Map ? dir['municipios'] : {};
+      municipio = muni['nombre']?.toString();
+    } else {
+      municipio = json['municipio']?.toString();
+      calle = json['calle']?.toString();
+      colonia = json['colonia']?.toString();
+      codigoPostal = json['codigoPostal']?.toString();
+      numExt = json['numExt']?.toString();
+      numInt = json['numInt']?.toString();
+    }
+
+    // 2. Extracción de catálogos
+    final condPago = json['condicionPago'] is Map ? json['condicionPago'] : {};
+    condicionPago = condPago['nombre']?.toString() ?? json['condicionPago']?.toString();
+
+    final refaccion = json['typeRefaccion'] is Map ? json['typeRefaccion'] : {};
+    tiporefaccion = refaccion['nombre']?.toString() ?? json['tipoRefaccion']?.toString();
+
+    final tFolio = json['tipofolio'] is Map ? json['tipofolio'] : {};
+    tipofolio = tFolio['nombre']?.toString() ?? json['tipofolio']?.toString();
+
     tiporeporte = json['tipoReporte']?.toString();
-    condicionPago = json['condicionPago']?.toString();
-    status = json['status']?.toString();
     creador = json['creador']?.toString();
     repartidor = json['repartidor']?.toString();
-    created_at = json['created_at']?.toString();
-    municipio = json['municipio']?.toString();
-    statusColor = json['statuscolor']?.toString();
-    folioId = json['folioId']?.toString();
-    folioIdHistorial = json['folio_id_historial']?.toString();
+
+    // 3. Extracción de estatus (Soporta lista de historial o registro directo del historial)
+    final historialList = json['historialestados'] is List ? json['historialestados'] as List : [];
+    
+    if (historialList.isNotEmpty) {
+      final ultimoEstado = historialList.last is Map ? historialList.last : {};
+      statusId = ultimoEstado['statusId']?.toString();
+      
+      final estadoRelacion = ultimoEstado['status'] is Map ? ultimoEstado['status'] : {};
+      status = estadoRelacion['nombre']?.toString();
+      statusColor = estadoRelacion['color']?.toString() ?? ultimoEstado['statusColor']?.toString();
+    } else if (json['status'] is Map) {
+      // Si viene directamente de la consulta de la tabla 'historialestados'
+      final estadoRelacion = json['status'] as Map;
+      statusId = json['statusId']?.toString() ?? json['status_id']?.toString();
+      status = estadoRelacion['nombre']?.toString();
+      statusColor = estadoRelacion['color']?.toString() ?? json['statusColor']?.toString() ?? json['statuscolor']?.toString();
+    } else {
+      statusId = json['statusid']?.toString();
+      status = json['status']?.toString();
+      statusColor = json['statusColor']?.toString() ?? json['statuscolor']?.toString();
+    }
   }
 
   Map<String, dynamic> toJson() {

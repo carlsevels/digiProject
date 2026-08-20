@@ -4,18 +4,16 @@ import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddFoliosController extends GetxController with StateMixin {
-  //TODO: Implement AddFoliosController
   RxInt clienteId = 0.obs;
   RxInt refaccionId = 0.obs;
   RxInt condicionPagoId = 0.obs;
-  RxInt repartidorId = 2.obs;
+  RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
 
   //Controllers
@@ -75,160 +73,272 @@ class AddFoliosController extends GetxController with StateMixin {
   }
 
   Future<void> getClientes() async {
-    final result = await AppDatabase.db.getAll("SELECT * FROM clientes;");
-    List<Clientes> listaProcesada = result.map((row) {
-      return Clientes.fromJson(Map<String, dynamic>.from(row as Map));
+    final response = await Supabase.instance.client.from('clientes').select();
+    List<Clientes> listaProcesada = (response as List).map((row) {
+      return Clientes.fromJson(Map<String, dynamic>.from(row));
     }).toList();
+
     final defaultItem = Clientes(
       id: 0,
       nombreComercial: "Seleccione un Cliente",
     );
     listaProcesada.insert(0, defaultItem);
     clientesModel.assignAll(listaProcesada);
-    clientesModel.value = listaProcesada;
   }
 
   Future<void> getTipoDocumento() async {
-    final result = await AppDatabase.db.getAll(
-      "SELECT * FROM tipos WHERE id IN (1, 2);",
-    );
-    List<GeneralModel> tipoDocumentoList = result.map((row) {
-      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    final response = await Supabase.instance.client
+        .from('tipos')
+        .select()
+        .inFilter('id', [1, 2]);
+
+    List<GeneralModel> tipoDocumentoList = (response as List).map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row));
     }).toList();
+
     final defaultItem = GeneralModel(
       id: 0,
       nombre: "Seleccione tipo de documento",
     );
     tipoDocumentoList.insert(0, defaultItem);
     tipoDocumento.assignAll(tipoDocumentoList);
-    tipoDocumento.value = tipoDocumentoList;
   }
 
   Future<void> getRefaccion() async {
-    final result = await AppDatabase.db.getAll(
-      "SELECT * FROM tipos WHERE id not in (1, 2);",
-    );
-    List<GeneralModel> refaccionesList = result.map((row) {
-      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    final response = await Supabase.instance.client
+        .from('tipos')
+        .select()
+        .not('id', 'in', '(1, 2)');
+
+    List<GeneralModel> refaccionesList = (response as List).map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row));
     }).toList();
+
     final defaultItem = GeneralModel(id: 0, nombre: "Seleccione una refacción");
     refaccionesList.insert(0, defaultItem);
     refacciones.assignAll(refaccionesList);
-    refacciones.value = refaccionesList;
   }
 
   Future<void> getCondicionPago() async {
-    final result = await AppDatabase.db.getAll("SELECT * FROM condicionPago;");
-    List<GeneralModel> condicionDePagoList = result.map((row) {
-      return GeneralModel.fromJson(Map<String, dynamic>.from(row as Map));
+    final response = await Supabase.instance.client
+        .from('condicionPago')
+        .select();
+    List<GeneralModel> condicionDePagoList = (response as List).map((row) {
+      return GeneralModel.fromJson(Map<String, dynamic>.from(row));
     }).toList();
+
     final defaultItem = GeneralModel(
       id: 0,
       nombre: "Seleccione una condición de pago",
     );
     condicionDePagoList.insert(0, defaultItem);
     condicionPago.assignAll(condicionDePagoList);
-    condicionPago.value = condicionDePagoList;
   }
 
   Future<void> getUsersReparto() async {
-    final result = await AppDatabase.db.getAll(
-      '''SELECT * FROM "datosPersonales" WHERE "rolId" = 2;''',
-    );
-    List<Users> usersList = result.map((row) {
-      return Users.fromJson(Map<String, dynamic>.from(row as Map));
+    final response = await Supabase.instance.client
+        .from('datosPersonales')
+        .select()
+        .eq('rolId', 2);
+
+    List<Users> usersList = (response as List).map((row) {
+      return Users.fromJson(Map<String, dynamic>.from(row));
     }).toList();
-
+    usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
     reparto.assignAll(usersList);
-    await AppDatabase.db.execute(
-      "DELETE FROM folios WHERE repartidorId IS NULL OR repartidorId = 'null' OR repartidorId = '0';",
-    );
-    reparto.value = usersList;
   }
+Future<Map<String, dynamic>?> postFolio() async {
+  try {
+    final supabase = Supabase.instance.client;
 
-  Future<Map<String, dynamic>?> postFolio() async {
-    try {
-      final supabase = Supabase.instance.client;
+    // ============================================================
+    // 1. OBTENER USUARIO AUTENTICADO
+    // ============================================================
+    final String? userId =
+        supabase.auth.currentUser?.id ??
+        supabase.auth.currentSession?.user.id;
 
-      final String? userId =
-          supabase.auth.currentUser?.id ??
-          supabase.auth.currentSession?.user.id;
-
-      if (userId == null) {
-        Get.snackbar("Error", "La sesión no está activa.");
-        return null;
-      }
-
-      final String idParaPowerSync = const Uuid().v4();
-      final String fechaActual = DateTime.now().toIso8601String();
-
-      final int cantidad = int.tryParse(cantidadController.text) ?? 0;
-      final int tipoDoc = tipoDocumentoId.value;
-      final int cliente = clienteId.value;
-      final int refaccion = refaccionId.value;
-      final int condicion = condicionPagoId.value;
-
-      if (cliente == 0 || tipoDoc == 0) {
-        Get.snackbar("Error", "Debes seleccionar valores válidos");
-        return null;
-      }
-
-      String? repartidorUuid;
-      if (reparto.isNotEmpty && repartidorId.value != 0) {
-        final u = reparto.firstWhere(
-          (u) => u.id == repartidorId.value,
-          orElse: () => Users(userId: null),
-        );
-        repartidorUuid = u.userId;
-      }
-
-      final datosEnviados = [
-        idParaPowerSync,
-        tipoDoc,
-        cliente,
-        refaccion,
-        cantidad,
-        condicion,
-        repartidorUuid,
-        userId,
-        fechaActual,
-        numReporteController.text,
-        false,
-      ];
-
-      await AppDatabase.db.writeTransaction((txn) async {
-        await txn.execute(
-          '''INSERT INTO folios (id, "tipoFolioId", "clienteId", "typeRefaccionId", cantidad, "condicionDePagoId", "repartidorId", "creadorId", created_at, "folioId", isArchived) 
-       VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-          datosEnviados,
-        );
-
-        String fechaMonterrey = DateTime.now().toIso8601String();
-
-        await txn.execute(
-          'INSERT INTO historialestados (id, "folioId", "statusId", "created_at") VALUES (?, ?, ?, ?)',
-          [const Uuid().v4(), idParaPowerSync, 1, fechaMonterrey],
-        );
-
-        print("datosEnviados: ${jsonEncode(datosEnviados)}");
-      });
-
-      cantidadController.clear();
-      numReporteController.clear();
-      clienteId.value = 0;
-      refaccionId.value = 0;
-      condicionPagoId.value = 0;
-      repartidorId.value = 2;
-      tipoDocumentoId.value = 0;
-
-      Get.snackbar("Guardado", "Registro exitoso.");
-      Get.toNamed(Routes.FOLIOS);
-    } catch (e) {
-      print("Error al crear: $e");
-      Get.snackbar("Error", "No se pudo guardar: ${e.toString()}");
+    if (userId == null) {
+      Get.snackbar(
+        "Error",
+        "La sesión no está activa.",
+      );
+      return null;
     }
+
+    // ============================================================
+    // 2. GENERAR DATOS DEL FOLIO
+    // ============================================================
+    final String uuidUnico = const Uuid().v4();
+    final String fechaActual = DateTime.now().toIso8601String();
+
+    final int cantidad =
+        int.tryParse(cantidadController.text) ?? 0;
+
+    final int tipoDoc = tipoDocumentoId.value;
+    final int cliente = clienteId.value;
+    final int refaccion = refaccionId.value;
+    final int condicion = condicionPagoId.value;
+
+    // ============================================================
+    // 3. VALIDACIONES
+    // ============================================================
+    if (cliente == 0 || tipoDoc == 0) {
+      Get.snackbar(
+        "Error",
+        "Debes seleccionar valores válidos.",
+      );
+      return null;
+    }
+
+    // ============================================================
+    // 4. OBTENER UUID DEL REPARTIDOR
+    // ============================================================
+    String? repartidorUuid;
+
+    if (reparto.isNotEmpty && repartidorId.value != 0) {
+      final u = reparto.firstWhere(
+        (u) => u.id == repartidorId.value,
+        orElse: () => Users(userId: null),
+      );
+
+      repartidorUuid = u.userId;
+    }
+
+    // ============================================================
+    // 5. DATOS DEL FOLIO
+    // ============================================================
+    final Map<String, dynamic> datosFolio = {
+      'id': uuidUnico,
+      'tipoFolioId': tipoDoc,
+      'clienteId': cliente,
+      'typeRefaccionId': refaccion,
+      'cantidad': cantidad,
+      'condicionDePagoId': condicion,
+      'repartidorId': repartidorUuid,
+      'creadorId': userId,
+      'created_at': fechaActual,
+      'folioId': numReporteController.text,
+      'isArchived': false,
+    };
+
+    print('');
+    print('==========================================');
+    print('🟢 CREANDO FOLIO');
+    print('==========================================');
+    print('🆔 UUID: $uuidUnico');
+    print('📄 Folio: ${numReporteController.text}');
+    print('👤 Usuario: $userId');
+    print('📦 Datos folio: $datosFolio');
+
+    // ============================================================
+    // 6. INSERTAR FOLIO
+    // ============================================================
+    final folioResponse = await supabase
+        .from('folios')
+        .insert(datosFolio)
+        .select()
+        .single();
+
+    print('');
+    print('✅ FOLIO CREADO CORRECTAMENTE');
+    print('📄 Respuesta: $folioResponse');
+
+    // ============================================================
+    // 7. CREAR HISTORIAL ESTADO INICIAL
+    // ============================================================
+    final Map<String, dynamic> datosHistorial = {
+      'id': const Uuid().v4(),
+
+      // IMPORTANTE:
+      // Este valor corresponde al id UUID del folio.
+      'folioId': uuidUnico,
+
+      // Estado inicial
+      'statusId': 1,
+
+      // Misma fecha del folio
+      'created_at': fechaActual,
+    };
+
+    print('');
+    print('==========================================');
+    print('🟡 CREANDO HISTORIAL');
+    print('==========================================');
+    print('🆔 ID HISTORIAL: ${datosHistorial['id']}');
+    print('🔗 FOLIO ID: ${datosHistorial['folioId']}');
+    print('📊 STATUS ID: ${datosHistorial['statusId']}');
+    print('📅 FECHA: ${datosHistorial['created_at']}');
+    print('📦 Datos historial: $datosHistorial');
+
+    // ============================================================
+    // 8. INSERTAR HISTORIAL
+    // ============================================================
+    final historialResponse = await supabase
+        .from('historialestados')
+        .insert(datosHistorial)
+        .select()
+        .single();
+
+    print('');
+    print('==========================================');
+    print('✅ HISTORIAL CREADO CORRECTAMENTE');
+    print('==========================================');
+    print('📚 Respuesta: $historialResponse');
+
+    // ============================================================
+    // 9. LIMPIAR FORMULARIO
+    // ============================================================
+    cantidadController.clear();
+    numReporteController.clear();
+
+    clienteId.value = 0;
+    refaccionId.value = 0;
+    condicionPagoId.value = 0;
+    repartidorId.value = 2;
+    tipoDocumentoId.value = 0;
+
+    // ============================================================
+    // 10. NOTIFICACIÓN
+    // ============================================================
+    Get.snackbar(
+      "Guardado",
+      "Registro exitoso.",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    // ============================================================
+    // 11. REGRESAR A FOLIOS
+    // ============================================================
+    Get.offAllNamed(Routes.FOLIOS);
+
+    // ============================================================
+    // 12. RETORNAR INFORMACIÓN
+    // ============================================================
+    return {
+      'folio': folioResponse,
+      'historial': historialResponse,
+    };
+  } catch (e, stackTrace) {
+    print('');
+    print('==========================================');
+    print('❌ ERROR AL CREAR FOLIO');
+    print('==========================================');
+    print('ERROR: $e');
+    print('');
+    print('STACKTRACE:');
+    print(stackTrace);
+    print('==========================================');
+
+    Get.snackbar(
+      "Error",
+      "No se pudo guardar: ${e.toString()}",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 5),
+    );
+
     return null;
   }
-
+}
   void increment() => count.value++;
 }

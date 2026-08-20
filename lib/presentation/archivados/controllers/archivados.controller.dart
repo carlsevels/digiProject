@@ -1,13 +1,9 @@
 import 'dart:convert';
 
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
-import 'package:bitacora_frontend/presentation/archivados/querys/listFoliosArchivados.dart';
-import 'package:bitacora_frontend/presentation/folios/querys/datosPersonales.query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:powersync/sqlite3.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ArchivadosController extends GetxController
@@ -31,6 +27,7 @@ class ArchivadosController extends GetxController
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
+    await getDatos();
     await getFoliosWithDate(id.text);
   }
 
@@ -44,39 +41,45 @@ class ArchivadosController extends GetxController
         return;
       }
 
-      final ResultSet resultSet = await AppDatabase.db.execute(
-        datosPersonalesQuery(),
-        [miId],
-      );
+      // Obtener rol del usuario directamente desde Supabase si aún no está cargado
+      if (rolUsuario.value == 0) {
+        final datosRes = await Supabase.instance.client
+            .from('datosPersonales')
+            .select('rolId')
+            .eq('userId', miId)
+            .maybeSingle();
 
-      if (resultSet.isEmpty) {
-        change(null, status: RxStatus.empty());
-        return;
+        if (datosRes != null) {
+          rolUsuario.value = datosRes['rolId'] as int;
+        }
       }
 
-      rolUsuario.value = resultSet.first['rolId'] as int;
-
-      // Obtenemos la fecha en formato YYYY-MM-DD
+      // Obtenemos la fecha en formato YYYY-MM-DD (si deseas filtrar también por fecha)
       final String fechaHoy = (selectedDate ?? DateTime.now())
           .toIso8601String()
           .split('T')[0];
 
       print(
-        "Consultando folios para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
+        "Consultando folios archivados en Supabase para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
       );
 
-      final getFolios = await AppDatabase.db.getAll(
-        listFoliosArchivadosQuery(),
-        [rolUsuario.value, idBuscado, idBuscado],
-      );
+      // Construimos la consulta base para folios archivados (isArchived = true)
+      // Ajusta los filtros según si también necesitas filtrar por fecha o solo por archivados y búsqueda de ID
+      var query = Supabase.instance.client
+          .from('folios')
+          .select()
+          .eq('isArchived', true);
 
-      List<Folios> listFolios = getFolios
-          .map(
-            (element) =>
-                Folios.fromJson(Map<String, dynamic>.from(element as Map)),
-          )
+      // Si hay un texto de búsqueda por ID, aplicamos el filtro (ej. que contenga el texto o sea igual)
+      if (idBuscado.trim().isNotEmpty) {
+        query = query.ilike('folioId', '%$idBuscado%');
+      }
+
+      final response = await query;
+
+      List<Folios> listFolios = (response as List)
+          .map((element) => Folios.fromJson(Map<String, dynamic>.from(element)))
           .toList();
-      await getDatos();
 
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
@@ -85,51 +88,45 @@ class ArchivadosController extends GetxController
         change(listFolios, status: RxStatus.success());
       }
     } catch (e) {
-      print("Error al cargar folios: $e");
+      print("Error al cargar folios archivados: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
   }
 
   Future<Map<String, dynamic>?> getDatos() async {
-    change(null, status: RxStatus.loading());
     try {
       final miId = Supabase.instance.client.auth.currentUser?.id;
-      final status = AppDatabase.db.currentStatus;
-      print("¿Ha terminado la sincronización inicial?: ${status.hasSynced}");
+      if (miId == null) return null;
 
-      if (status.hasSynced != true) {
-        print("Esperando a que PowerSync sincronice...");
-        await AppDatabase.db.statusStream.firstWhere(
-          (s) => s.hasSynced == true,
-        );
-        print("¡Sincronización completada!");
-      }
+      // Consulta directa a Supabase con relación a la tabla roles
+      final resultado = await Supabase.instance.client
+          .from('datosPersonales')
+          .select('*, roles:rolId(name)')
+          .eq('userId', miId)
+          .maybeSingle();
 
-      final resultado = await AppDatabase.db.getOptional(
-        '''
-  SELECT dp.*, r."name" as "nombre_rol" 
-  FROM "datosPersonales" dp
-  INNER JOIN "roles" r ON dp."rolId" = r."id"
-  WHERE dp."userId" = ?
-  ''',
-        [miId],
-      );
       if (resultado != null) {
-        rolName.value = resultado["nombre_rol"];
-        nameUser.value = resultado["nombre"];
+        final rolData = resultado['roles'];
+        if (rolData != null && rolData is Map) {
+          rolName.value = rolData['name'] ?? "Sin rol";
+        }
+        
+        nameUser.value = resultado["nombre"] ?? "Sin nombre";
+        
         print("rolName: ${rolName.value}");
         print("nameUser: ${nameUser.value}");
       } else {
         change(null, status: RxStatus.empty());
       }
     } catch (e) {
+      print("Error al obtener datos personales: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
+    return null;
   }
 
   String obtenerEtiquetaFecha(DateTime fechaSeleccionada) {
     final ahora = DateTime.now();
-    // Limpiamos horas para que la comparación sea solo por días
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final fecha = DateTime(
       fechaSeleccionada.year,
@@ -137,7 +134,6 @@ class ArchivadosController extends GetxController
       fechaSeleccionada.day,
     );
 
-    // AQUÍ ESTÁ LA CLAVE: calculamos la diferencia en días como entero
     final int diferencia = hoy.difference(fecha).inDays;
 
     print("DEBUG: Hoy es $hoy, fecha recibida $fecha, diferencia: $diferencia");
@@ -155,30 +151,29 @@ class ArchivadosController extends GetxController
 
   Future<void> archivarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute(
-        '''
-        UPDATE folios 
-        SET "isArchived" = false 
-        WHERE "folioId" = ?;
-        ''',
-        [folioId],
-      );
+      // Cambiar 'isArchived' a false para desarchivar el folio directamente en Supabase
+      await Supabase.instance.client
+          .from('folios')
+          .update({'isArchived': false})
+          .eq('folioId', folioId);
+
       await getFoliosWithDate(id.text);
-      return null;
     } catch (e) {
-      print("Error al archivar folio: $e");
-      return null;
+      print("Error al desarchivar folio: $e");
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await AppDatabase.db.execute("DELETE FROM folios WHERE folioId = ?", [
-        folioId,
-      ]);
+      // Eliminar el registro directamente en Supabase
+      await Supabase.instance.client
+          .from('folios')
+          .delete()
+          .eq('folioId', folioId);
+
+      await getFoliosWithDate(id.text);
     } catch (e) {
-      print("Error de SQL: ${e.toString()}");
-      return null;
+      print("Error al eliminar folio en Supabase: ${e.toString()}");
     }
   }
 

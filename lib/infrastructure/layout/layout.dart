@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bitacora_frontend/infrastructure/layout/layoutExterno.dart';
 import 'package:bitacora_frontend/infrastructure/layout/layoutInterno.dart';
-import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bitacora_frontend/infrastructure/supabase/db.dart';
 
-// Asegúrate de importar el controlador creado arriba
 class Layout extends StatelessWidget {
   final Widget? child;
   // Inicializamos el controlador una sola vez
@@ -33,17 +30,9 @@ class AuthController extends GetxController {
     // Obtener sesión inicial
     currentSession.value = Supabase.instance.client.auth.currentSession;
 
-    // Escuchar cambios de sesión de forma segura
+    // Escuchar cambios de sesión
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       currentSession.value = data.session;
-
-      if (data.session != null) {
-        // Conectar PowerSync cuando hay sesión
-        AppDatabase.db.connect(connector: MyBackendConnector(AppDatabase.db));
-      } else {
-        // Desconectar cuando no hay sesión
-        AppDatabase.db.disconnect();
-      }
     });
   }
 }

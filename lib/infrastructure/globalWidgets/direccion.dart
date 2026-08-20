@@ -6,42 +6,41 @@ import 'package:get/get.dart';
 class Direccion extends GetView<DetallesFolioController> {
   final Folios? state;
 
-  Direccion({super.key, required this.state});
+  const Direccion({super.key, required this.state});
+
   @override
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(
         side: const BorderSide(color: Colors.grey),
-        borderRadius: BorderRadiusGeometry.circular(4),
+        borderRadius: BorderRadius.circular(4), // Corregido aquí
       ),
       color: Colors.white,
       margin: EdgeInsets.zero,
       elevation: 0,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              child: Row(
-                children: [
-                  Icon(Icons.directions_outlined, color: Color(0XFF64748B)),
-                  SizedBox(width: 8.0),
-                  Text(
-                    "Dirección",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Color(0XFF0F172A),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
-                    ),
+            Row(
+              children: const [
+                Icon(Icons.directions_outlined, color: Color(0XFF64748B)),
+                SizedBox(width: 8.0),
+                Text(
+                  "Dirección",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Color(0XFF0F172A),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
