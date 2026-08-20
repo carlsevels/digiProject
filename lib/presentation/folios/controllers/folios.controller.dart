@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:bitacora_frontend/infrastructure/models/datosPersonales.dart';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -227,6 +228,14 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     int? colorInt = int.tryParse(cleanColor, radix: 16);
     return colorInt != null ? Color(colorInt | 0xFF000000) : defaultColor;
   }
+
+Future<void> fetchData() async {
+  final connectivityResult = await (Connectivity().checkConnectivity());
+  if (connectivityResult == ConnectivityResult.none) {
+    print("No hay internet");
+    return;
+  }
+}
 
   void increment() => count.value++;
 }

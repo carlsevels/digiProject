@@ -115,6 +115,68 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
           ),
         ),
       ),
+      onError: (error) {
+        if (error.toString().contains('SocketException') ||
+            error.toString().contains('no internet')) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.wifi_off,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Sin conexión a internet",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "No pudimos conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      controller.onInit();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("Reintentar conexión"),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return Center(child: Text("Ocurrió un error inesperado: $error"));
+      },
       onEmpty: Scaffold(
         backgroundColor: const Color(0XFFF8FAFC),
         appBar: buildAppBar(),
@@ -137,10 +199,6 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
         body: const Center(
           child: CircularProgressIndicator(color: Color(0XFF00BC16)),
         ),
-      ),
-      onError: (err) => Scaffold(
-        appBar: buildAppBar(),
-        body: Center(child: Text("Error: $err")),
       ),
     );
   }
