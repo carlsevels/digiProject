@@ -1,10 +1,10 @@
-import 'dart:ui';
-
+import 'package:bitacora_frontend/presentation/folios/localWidgets/easy_date_timeline.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/direccionDialog.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'controllers/folios.controller.dart';
 
 class FoliosScreen extends GetView<FoliosController> {
@@ -16,7 +16,7 @@ class FoliosScreen extends GetView<FoliosController> {
     final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0XFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         scrolledUnderElevation: 0.0,
@@ -203,7 +203,10 @@ class FoliosScreen extends GetView<FoliosController> {
                     ListTile(
                       leading: const Icon(Icons.add),
                       title: const Text("Agregar"),
-                      onTap: () => Get.toNamed(Routes.ADD_FOLIOS),
+                      onTap: () => Get.toNamed(
+                        Routes.ADD_FOLIOS,
+                        arguments: controller.fechaSeleccionada,
+                      ),
                     ),
                     ListTile(
                       leading: const Icon(Icons.archive_outlined),
@@ -351,10 +354,7 @@ class FoliosScreen extends GetView<FoliosController> {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: Get.size.height,
-              child: Center(child: FoliosEmptyPage(needDate: true)),
-            ),
+            child: FoliosEmptyPage(needDate: true),
           ),
         ),
         (state) {
@@ -397,9 +397,16 @@ class FoliosScreen extends GetView<FoliosController> {
                                   ),
                                 ),
                               ),
+
                               onPressed: () {
-                                Get.toNamed(Routes.ADD_FOLIOS);
+                                Get.toNamed(
+                                  Routes.ADD_FOLIOS,
+                                  arguments: {
+                                    'fecha': controller.fechaSeleccionada.value,
+                                  },
+                                );
                               },
+
                               icon: const Icon(
                                 Icons.add,
                                 color: Color(0XFF1D6CFF),
@@ -411,6 +418,14 @@ class FoliosScreen extends GetView<FoliosController> {
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      BitacoraCalendar(
+                        onDateSelected: (value) {
+                          controller.fechaSeleccionada.value = value
+                              .toIso8601String()
+                              .split('T')[0];
+                        },
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -495,7 +510,7 @@ class FoliosScreen extends GetView<FoliosController> {
                                         ElevatedButton(
                                           onPressed: () {
                                             controller.archivarFolio(
-                                              folio.folioId ?? "",
+                                              folio.id ?? "",
                                             );
                                             Navigator.pop(context, true);
                                           },
@@ -571,7 +586,7 @@ class FoliosScreen extends GetView<FoliosController> {
                                         ElevatedButton(
                                           onPressed: () {
                                             controller.eliminarFolio(
-                                              folio.folioId ?? "",
+                                              folio.id ?? "",
                                             );
                                             Navigator.pop(context, true);
                                           },

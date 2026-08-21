@@ -3,6 +3,7 @@ import 'package:bitacora_frontend/infrastructure/globalWidgets/detallesTrayecto.
 import 'package:bitacora_frontend/infrastructure/globalWidgets/direccion.dart';
 import 'package:bitacora_frontend/infrastructure/globalWidgets/repartidorDetalle.dart';
 import 'package:bitacora_frontend/presentation/folios/localWidgets/folios.empty.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'controllers/search_folio.controller.dart';
@@ -15,191 +16,151 @@ class SearchFolioScreen extends GetView<SearchFolioController> {
     PreferredSizeWidget buildAppBar() => AppBar(
       scrolledUnderElevation: 0.0,
       backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
-      iconTheme: const IconThemeData(color: Color(0XFF64748B)),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1.0),
-        child: Container(color: Color(0XFF64748B), height: 1.0),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            controller.getDetailsFolio(controller.id.text);
-          },
-          icon: Icon(Icons.search, color: Color(0XFF64748B)),
-        ),
-      ],
       title: TextField(
         controller: controller.id,
-        onSubmitted: (value) {
-          controller.getDetailsFolio(value);
-        },
-        autofocus: true,
+        onSubmitted: (value) async => await _buscarFolio(value),
         decoration: const InputDecoration(
           hintText: 'Buscar por ID de Folio...',
           border: InputBorder.none,
-          hintStyle: TextStyle(color: Color(0XFF64748B)),
         ),
-        style: const TextStyle(color: Color(0xff0F172A), fontSize: 18),
-        keyboardType: TextInputType.number,
       ),
       centerTitle: true,
     );
 
-    return controller.obx(
-      (state) => Scaffold(
-        backgroundColor: const Color(0XFFF8FAFC),
-        appBar: buildAppBar(),
-        body: RefreshIndicator(
-          color: Colors.white,
-          backgroundColor: const Color(0XFF1D6CFF),
-          onRefresh: () async => await controller.onInitDetalles(),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RepartidorDetalles(state: state),
-                  SizedBox(height: 16.0),
-                  DetallesTrayecto(
-                    detallesTrayecto: false,
-                    state: state,
-                    currentStep: controller.currentStep,
-                  ),
-                  SizedBox(height: 16.0),
-                  Direccion(state: state),
-                  const SizedBox(height: 32.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      final folioId = state?.folioId?.toString();
-                      if (folioId != null && folioId.isNotEmpty) {
-                        Get.toNamed(Routes.DETALLES_FOLIO, arguments: folioId);
-                      } else {
-                        Get.snackbar(
-                          "Aviso",
-                          "El ID del folio no está disponible",
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E6FF3),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Ir al folio",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Icon(Icons.chevron_right),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      onError: (error) {
-        if (error.toString().contains('SocketException') ||
-            error.toString().contains('no internet')) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.wifi_off,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Sin conexión a internet",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "No pudimos conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      controller.onInit();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text("Reintentar conexión"),
-                  ),
-                ],
-              ),
-            ),
-          );
+    // Aquí está la clave: Verificamos si hay internet ANTES de decidir qué mostrar
+    return FutureBuilder<bool>(
+      future: _hayInternet(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data == false) {
+          return _sinInternetScreen(buildAppBar);
         }
-        return Center(child: Text("Ocurrió un error inesperado: $error"));
+
+        return controller.obx(
+          (state) => _buildMainContent(state, buildAppBar),
+          onEmpty: _buildEmptyContent(buildAppBar, context),
+          onLoading: Scaffold(
+            appBar: buildAppBar(),
+            body: const Center(child: CircularProgressIndicator()),
+          ),
+          onError: (error) => _buildErrorScreen(context, buildAppBar, error),
+        );
       },
-      onEmpty: Scaffold(
-        backgroundColor: const Color(0XFFF8FAFC),
-        appBar: buildAppBar(),
-        body: RefreshIndicator(
-          onRefresh: () async =>
-              await controller.getDetailsFolio(controller.id.text),
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
+    );
+  }
+
+  // Lógica para verificar internet
+  Future<bool> _hayInternet() async {
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity is List) {
+      return !connectivity.contains(ConnectivityResult.none);
+    }
+    return connectivity != ConnectivityResult.none;
+  }
+
+  Widget _buildMainContent(state, buildAppBar) {
+    return Scaffold(
+      backgroundColor: const Color(0XFFF8FAFC),
+      appBar: buildAppBar(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.7,
-                child: Center(child: FoliosEmptyPage(needDate: false)),
+              RepartidorDetalles(state: state),
+              DetallesTrayecto(
+                detallesTrayecto: false,
+                state: state,
+                currentStep: controller.currentStep,
               ),
+              Direccion(state: state),
             ],
           ),
         ),
       ),
-      onLoading: Scaffold(
-        appBar: buildAppBar(),
-        body: const Center(
-          child: CircularProgressIndicator(color: Color(0XFF00BC16)),
+    );
+  }
+
+  Widget _buildEmptyContent(buildAppBar, context) {
+    return Scaffold(
+      backgroundColor: const Color(0XFFF8FAFC),
+      appBar: buildAppBar(),
+      body: Center(child: FoliosEmptyPage(needDate: false)),
+    );
+  }
+
+  Widget _sinInternetScreen(buildAppBar) {
+    return Scaffold(
+      backgroundColor: const Color(0XFFF8FAFC),
+      appBar: buildAppBar(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 80, color: Colors.grey),
+            const SizedBox(height: 20),
+            const Text(
+              "Sin conexión a internet",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () async {
+                // 1. Verificamos si ya hay internet antes de reintentar
+                final connectivity = await Connectivity().checkConnectivity();
+                bool sinConexion = false;
+                if (connectivity is List<ConnectivityResult>) {
+                  sinConexion =
+                      connectivity.contains(ConnectivityResult.none) &&
+                      connectivity.length == 1;
+                } else {
+                  sinConexion = connectivity == ConnectivityResult.none;
+                }
+
+                if (sinConexion) {
+                  Get.snackbar(
+                    "Sin conexión",
+                    "Aún no detectamos acceso a internet.",
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                  );
+                  return;
+                }
+
+                await controller.onInitDetalles();
+
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.refresh),
+              label: const Text("Reintentar conexión"),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildErrorScreen(context, buildAppBar, error) {
+    // Si el error es de conexión, mostramos la pantalla de "Sin Internet"
+    return _sinInternetScreen(buildAppBar);
+  }
+
+  Future<void> _buscarFolio([String? folio]) async {
+    final hasInternet = await _hayInternet();
+    if (!hasInternet) {
+      Get.snackbar("Error", "No hay conexión a internet");
+      return;
+    }
+    await controller.getDetailsFolio(folio ?? controller.id.text);
   }
 }

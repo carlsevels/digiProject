@@ -5,6 +5,7 @@ import 'package:bitacora_frontend/infrastructure/models/datosPersonales.dart';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:bitacora_frontend/infrastructure/navigation/routes.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +27,7 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   @override
   void onInit() {
     super.onInit();
+    print('CONTROLLER FOLIOS: ${identityHashCode(this)}');
     _onInit();
   }
 
@@ -33,6 +35,14 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     selectedDate ??= DateTime.now();
     await getDatos();
     await getFoliosWithDate();
+    if (fechaSeleccionada.value.isEmpty) {
+      final now = DateTime.now();
+      fechaSeleccionada.value = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).toIso8601String().split('T')[0];
+    }
   }
 
   @override
@@ -71,25 +81,46 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
           .toIso8601String()
           .split('T')[0];
 
-      print(
-        "Consultando folios en Supabase para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
-      );
-
       final response = await Supabase.instance.client
           .from('folios')
           .select('''
-      *,
-      clientes:clienteId (nombreComercial, razonSocial),
-      condicionPago:condicionDePagoId (nombre),
-      typeRefaccion:typeRefaccionId (nombre, color),
-      tipoFolio:tipoFolioId (nombre, color),
-      historialestados (
-        id,
-        statusId,
-        created_at,
-        status:statusId (nombre, color)
+  *,
+  clientes:clienteId (
+    nombreComercial,
+    razonSocial,
+    direcciones (
+      calle,
+      colonia,
+      codigoPostal,
+      numExt,
+      numInt,
+      municipio:municipioId (
+        nombre
       )
-    ''')
+    )
+  ),
+  condicionPago:condicionDePagoId (
+    nombre
+  ),
+  typeRefaccion:typeRefaccionId (
+    nombre,
+    color
+  ),
+  tipoFolio:tipoFolioId (
+    nombre,
+    color
+  ),
+  historialestados (
+    id,
+    statusId,
+    created_at,
+    status:statusId (
+      nombre,
+      color
+    )
+  )
+''')
+          .eq('isArchived', false)
           .eq('created_at', fechaHoy)
           .order(
             'created_at',
@@ -190,25 +221,47 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     }
   }
 
-  Future<void> archivarFolio(String folioId) async {
+  Future<void> archivarFolio(String idRegistro, {String idBuscado = ""}) async {
     try {
-      await Supabase.instance.client
+      print("Intentando archivar el registro con ID interno: $idRegistro");
+
+      // Cambiamos .eq('folioId', ...) por .eq('id', ...)
+      final response = await Supabase.instance.client
           .from('folios')
           .update({'isArchived': true})
-          .eq('folioId', folioId);
+          .eq('id', idRegistro) // <- Usamos el UUID único del renglón
+          .select();
+
+      print("Respuesta de Supabase al archivar: $response");
+
+      if (response != null && (response as List).isNotEmpty) {
+        Get.snackbar(
+          "Éxito",
+          "Folio archivado correctamente",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        print(
+          "⚠️ Advertencia: Ningún registro fue actualizado. Revisa si el ID existe.",
+        );
+      }
 
       await getFoliosWithDate();
     } catch (e) {
-      print("Error al archivar folio: $e");
+      print("❌ Error al archivar folio: $e");
+      Get.snackbar(
+        "Error",
+        "No se pudo archivar el folio: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      await Supabase.instance.client
-          .from('folios')
-          .delete()
-          .eq('folioId', folioId);
+      await Supabase.instance.client.from('folios').delete().eq('id', folioId);
 
       await getFoliosWithDate();
     } catch (e) {
@@ -229,13 +282,50 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     return colorInt != null ? Color(colorInt | 0xFF000000) : defaultColor;
   }
 
-Future<void> fetchData() async {
-  final connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult == ConnectivityResult.none) {
-    print("No hay internet");
-    return;
+  Future<void> fetchData() async {
+    final connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      print("No hay internet");
+      return;
+    }
   }
-}
+
+  final EasyInfiniteDateTimelineController timelineController =
+      EasyInfiniteDateTimelineController();
+
+  void goToToday(Function(DateTime) onDateSelected) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    selectedDate = today;
+
+    fechaSeleccionada.value =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        timelineController.animateToDate(today);
+      } catch (e, stackTrace) {
+        debugPrint('❌ Error haciendo scroll a hoy: $e');
+        debugPrint('$stackTrace');
+      }
+
+      await getFoliosWithDate();
+      onDateSelected(today);
+    });
+  }
+
+  void changeDate(DateTime date, Function(DateTime) onDateSelected) {
+    final cleanDate = DateTime(date.year, date.month, date.day);
+
+    selectedDate = cleanDate;
+
+    fechaSeleccionada.value = cleanDate.toIso8601String().split('T')[0];
+
+    onDateSelected(cleanDate);
+  }
 
   void increment() => count.value++;
 }

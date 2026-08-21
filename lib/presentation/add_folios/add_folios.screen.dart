@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:bitacora_frontend/infrastructure/models/clientes.dart';
 import 'package:bitacora_frontend/infrastructure/models/refacciones.dart';
 import 'package:bitacora_frontend/infrastructure/models/users.dart';
@@ -43,6 +41,56 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Obx(() {
+                      final fecha = DateTime.tryParse(
+                        controller.fechaSeleccionada.value,
+                      );
+
+                      if (fecha == null) {
+                        return const Text('');
+                      }
+
+                      final hoy = DateTime.now();
+
+                      final esHoy =
+                          fecha.year == hoy.year &&
+                          fecha.month == hoy.month &&
+                          fecha.day == hoy.day;
+
+                      if (esHoy) {
+                        return const Text(
+                          'Hoy',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        );
+                      }
+
+                      const meses = [
+                        'Enero',
+                        'Febrero',
+                        'Marzo',
+                        'Abril',
+                        'Mayo',
+                        'Junio',
+                        'Julio',
+                        'Agosto',
+                        'Septiembre',
+                        'Octubre',
+                        'Noviembre',
+                        'Diciembre',
+                      ];
+
+                      return Text(
+                        'Para el ${fecha.day} de ${meses[fecha.month - 1]}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    }),
+                    Divider(),
                     Text(
                       "Tipo de documento",
                       textScaleFactor: 1.2,
@@ -78,7 +126,6 @@ class AddFoliosScreen extends GetView<AddFoliosController> {
                       );
                     }),
 
-                    // Campo condicional de número de reporte
                     Obx(() {
                       if (controller.tipoDocumentoId.value != 0) {
                         return Column(

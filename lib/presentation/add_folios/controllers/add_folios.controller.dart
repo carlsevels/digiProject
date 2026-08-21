@@ -15,6 +15,7 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt condicionPagoId = 0.obs;
   RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
+  final RxString fechaSeleccionada = "".obs;
 
   //Controllers
   TextEditingController cantidadController = TextEditingController();
@@ -45,6 +46,7 @@ class AddFoliosController extends GetxController with StateMixin {
       this._tipoDocumento.value = value;
 
   final count = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -53,12 +55,22 @@ class AddFoliosController extends GetxController with StateMixin {
 
   Future<void> onInitFunction() async {
     change(null, status: RxStatus.loading());
+    final arguments = Get.arguments;
+
+    if (arguments is Map) {
+      final fecha = arguments['fecha'];
+
+      if (fecha != null) {
+        fechaSeleccionada.value = fecha.toString();
+      }
+    }
+
     await getClientes();
     await getRefaccion();
     await getCondicionPago();
     await getUsersReparto();
     await getTipoDocumento();
-    print("DEBUG: refacciones cargadas: ${refacciones.length}");
+
     change(null, status: RxStatus.success());
   }
 
@@ -147,198 +159,152 @@ class AddFoliosController extends GetxController with StateMixin {
     usersList.add(Users(id: 0, nombre: "Seleccionar repartidor..."));
     reparto.assignAll(usersList);
   }
-Future<Map<String, dynamic>?> postFolio() async {
-  try {
-    final supabase = Supabase.instance.client;
 
-    // ============================================================
-    // 1. OBTENER USUARIO AUTENTICADO
-    // ============================================================
-    final String? userId =
-        supabase.auth.currentUser?.id ??
-        supabase.auth.currentSession?.user.id;
+  Future<Map<String, dynamic>?> postFolio() async {
+    try {
+      final supabase = Supabase.instance.client;
 
-    if (userId == null) {
+      final String? userId =
+          supabase.auth.currentUser?.id ??
+          supabase.auth.currentSession?.user.id;
+
+      if (userId == null) {
+        Get.snackbar("Error", "La sesión no está activa.");
+        return null;
+      }
+
+      final String uuidUnico = const Uuid().v4();
+      final String fechaActual = DateTime.now().toIso8601String();
+
+      final int cantidad = int.tryParse(cantidadController.text) ?? 0;
+
+      final int tipoDoc = tipoDocumentoId.value;
+      final int cliente = clienteId.value;
+      final int refaccion = refaccionId.value;
+      final int condicion = condicionPagoId.value;
+
+      if (cliente == 0 || tipoDoc == 0) {
+        Get.snackbar("Error", "Debes seleccionar valores válidos.");
+        return null;
+      }
+
+      String? repartidorUuid;
+
+      if (reparto.isNotEmpty && repartidorId.value != 0) {
+        final u = reparto.firstWhere(
+          (u) => u.id == repartidorId.value,
+          orElse: () => Users(userId: null),
+        );
+
+        repartidorUuid = u.userId;
+      }
+
+      final Map<String, dynamic> datosFolio = {
+        'id': uuidUnico,
+        'tipoFolioId': tipoDoc,
+        'clienteId': cliente,
+        'typeRefaccionId': refaccion,
+        'cantidad': cantidad,
+        'condicionDePagoId': condicion,
+        'repartidorId': repartidorUuid,
+        'creadorId': userId,
+        'created_at': fechaSeleccionada.value,
+        'folioId': numReporteController.text,
+        'isArchived': false,
+      };
+
+      final folioResponse = await supabase
+          .from('folios')
+          .insert(datosFolio)
+          .select()
+          .single();
+
+      final Map<String, dynamic> datosHistorial = {
+        'id': const Uuid().v4(),
+
+        'folioId': uuidUnico,
+
+        'statusId': 1,
+
+        'created_at': fechaSeleccionada.value,
+      };
+
+      print('');
+      print('==========================================');
+      print('🟡 CREANDO HISTORIAL');
+      print('==========================================');
+      print('🆔 ID HISTORIAL: ${datosHistorial['id']}');
+      print('🔗 FOLIO ID: ${datosHistorial['folioId']}');
+      print('📊 STATUS ID: ${datosHistorial['statusId']}');
+      print('📅 FECHA: ${datosHistorial['created_at']}');
+      print('📦 Datos historial: $datosHistorial');
+
+      // ============================================================
+      // 8. INSERTAR HISTORIAL
+      // ============================================================
+      final historialResponse = await supabase
+          .from('historialestados')
+          .insert(datosHistorial)
+          .select()
+          .single();
+
+      print('');
+      print('==========================================');
+      print('✅ HISTORIAL CREADO CORRECTAMENTE');
+      print('==========================================');
+      print('📚 Respuesta: $historialResponse');
+
+      // ============================================================
+      // 9. LIMPIAR FORMULARIO
+      // ============================================================
+      cantidadController.clear();
+      numReporteController.clear();
+
+      clienteId.value = 0;
+      refaccionId.value = 0;
+      condicionPagoId.value = 0;
+      repartidorId.value = 2;
+      tipoDocumentoId.value = 0;
+
+      // ============================================================
+      // 10. NOTIFICACIÓN
+      // ============================================================
+      Get.snackbar(
+        "Guardado",
+        "Registro exitoso.",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      // ============================================================
+      // 11. REGRESAR A FOLIOS
+      // ============================================================
+      Get.offAllNamed(Routes.FOLIOS);
+
+      // ============================================================
+      // 12. RETORNAR INFORMACIÓN
+      // ============================================================
+      return {'folio': folioResponse, 'historial': historialResponse};
+    } catch (e, stackTrace) {
+      print('');
+      print('==========================================');
+      print('❌ ERROR AL CREAR FOLIO');
+      print('==========================================');
+      print('ERROR: $e');
+      print('');
+      print('STACKTRACE:');
+      print(stackTrace);
+      print('==========================================');
+
       Get.snackbar(
         "Error",
-        "La sesión no está activa.",
+        "No se pudo guardar: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 5),
       );
+
       return null;
     }
-
-    // ============================================================
-    // 2. GENERAR DATOS DEL FOLIO
-    // ============================================================
-    final String uuidUnico = const Uuid().v4();
-    final String fechaActual = DateTime.now().toIso8601String();
-
-    final int cantidad =
-        int.tryParse(cantidadController.text) ?? 0;
-
-    final int tipoDoc = tipoDocumentoId.value;
-    final int cliente = clienteId.value;
-    final int refaccion = refaccionId.value;
-    final int condicion = condicionPagoId.value;
-
-    // ============================================================
-    // 3. VALIDACIONES
-    // ============================================================
-    if (cliente == 0 || tipoDoc == 0) {
-      Get.snackbar(
-        "Error",
-        "Debes seleccionar valores válidos.",
-      );
-      return null;
-    }
-
-    // ============================================================
-    // 4. OBTENER UUID DEL REPARTIDOR
-    // ============================================================
-    String? repartidorUuid;
-
-    if (reparto.isNotEmpty && repartidorId.value != 0) {
-      final u = reparto.firstWhere(
-        (u) => u.id == repartidorId.value,
-        orElse: () => Users(userId: null),
-      );
-
-      repartidorUuid = u.userId;
-    }
-
-    // ============================================================
-    // 5. DATOS DEL FOLIO
-    // ============================================================
-    final Map<String, dynamic> datosFolio = {
-      'id': uuidUnico,
-      'tipoFolioId': tipoDoc,
-      'clienteId': cliente,
-      'typeRefaccionId': refaccion,
-      'cantidad': cantidad,
-      'condicionDePagoId': condicion,
-      'repartidorId': repartidorUuid,
-      'creadorId': userId,
-      'created_at': fechaActual,
-      'folioId': numReporteController.text,
-      'isArchived': false,
-    };
-
-    print('');
-    print('==========================================');
-    print('🟢 CREANDO FOLIO');
-    print('==========================================');
-    print('🆔 UUID: $uuidUnico');
-    print('📄 Folio: ${numReporteController.text}');
-    print('👤 Usuario: $userId');
-    print('📦 Datos folio: $datosFolio');
-
-    // ============================================================
-    // 6. INSERTAR FOLIO
-    // ============================================================
-    final folioResponse = await supabase
-        .from('folios')
-        .insert(datosFolio)
-        .select()
-        .single();
-
-    print('');
-    print('✅ FOLIO CREADO CORRECTAMENTE');
-    print('📄 Respuesta: $folioResponse');
-
-    // ============================================================
-    // 7. CREAR HISTORIAL ESTADO INICIAL
-    // ============================================================
-    final Map<String, dynamic> datosHistorial = {
-      'id': const Uuid().v4(),
-
-      // IMPORTANTE:
-      // Este valor corresponde al id UUID del folio.
-      'folioId': uuidUnico,
-
-      // Estado inicial
-      'statusId': 1,
-
-      // Misma fecha del folio
-      'created_at': fechaActual,
-    };
-
-    print('');
-    print('==========================================');
-    print('🟡 CREANDO HISTORIAL');
-    print('==========================================');
-    print('🆔 ID HISTORIAL: ${datosHistorial['id']}');
-    print('🔗 FOLIO ID: ${datosHistorial['folioId']}');
-    print('📊 STATUS ID: ${datosHistorial['statusId']}');
-    print('📅 FECHA: ${datosHistorial['created_at']}');
-    print('📦 Datos historial: $datosHistorial');
-
-    // ============================================================
-    // 8. INSERTAR HISTORIAL
-    // ============================================================
-    final historialResponse = await supabase
-        .from('historialestados')
-        .insert(datosHistorial)
-        .select()
-        .single();
-
-    print('');
-    print('==========================================');
-    print('✅ HISTORIAL CREADO CORRECTAMENTE');
-    print('==========================================');
-    print('📚 Respuesta: $historialResponse');
-
-    // ============================================================
-    // 9. LIMPIAR FORMULARIO
-    // ============================================================
-    cantidadController.clear();
-    numReporteController.clear();
-
-    clienteId.value = 0;
-    refaccionId.value = 0;
-    condicionPagoId.value = 0;
-    repartidorId.value = 2;
-    tipoDocumentoId.value = 0;
-
-    // ============================================================
-    // 10. NOTIFICACIÓN
-    // ============================================================
-    Get.snackbar(
-      "Guardado",
-      "Registro exitoso.",
-      snackPosition: SnackPosition.BOTTOM,
-    );
-
-    // ============================================================
-    // 11. REGRESAR A FOLIOS
-    // ============================================================
-    Get.offAllNamed(Routes.FOLIOS);
-
-    // ============================================================
-    // 12. RETORNAR INFORMACIÓN
-    // ============================================================
-    return {
-      'folio': folioResponse,
-      'historial': historialResponse,
-    };
-  } catch (e, stackTrace) {
-    print('');
-    print('==========================================');
-    print('❌ ERROR AL CREAR FOLIO');
-    print('==========================================');
-    print('ERROR: $e');
-    print('');
-    print('STACKTRACE:');
-    print(stackTrace);
-    print('==========================================');
-
-    Get.snackbar(
-      "Error",
-      "No se pudo guardar: ${e.toString()}",
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 5),
-    );
-
-    return null;
   }
-}
+
   void increment() => count.value++;
 }

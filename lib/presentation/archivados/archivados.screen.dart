@@ -258,8 +258,30 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                       ),
                     );
                   }
+                  Color _parseColor(
+                    String? colorStr, {
+                    Color defaultColor = Colors.grey,
+                  }) {
+                    if (colorStr == null ||
+                        colorStr.isEmpty ||
+                        colorStr == 'null') {
+                      return defaultColor;
+                    }
+                    String cleanColor = colorStr
+                        .toUpperCase()
+                        .replaceAll('0X', '')
+                        .replaceAll('#', '');
+                    int? colorInt = int.tryParse(cleanColor, radix: 16);
+                    return colorInt != null
+                        ? Color(colorInt | 0xFF000000)
+                        : defaultColor;
+                  }
 
                   final folio = state[index - 2];
+                  final Color statusColor = _parseColor(
+                    folio.statusColor?.toString(),
+                  );
+
                   return InkWell(
                     onTap: () {
                       if (folio.folioId != null) {
@@ -328,7 +350,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                                             ElevatedButton(
                                               onPressed: () {
                                                 controller.archivarFolio(
-                                                  folio.folioId ?? "",
+                                                  folio.id ?? "",
                                                 );
                                                 Navigator.pop(context, true);
                                               },
@@ -404,7 +426,7 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                                             ElevatedButton(
                                               onPressed: () {
                                                 controller.eliminarFolio(
-                                                  folio.folioId ?? "",
+                                                  folio.id ?? "",
                                                 );
                                                 Navigator.pop(context, true);
                                               },
@@ -615,26 +637,16 @@ class ArchivadosScreen extends GetView<ArchivadosController> {
                               ),
                               decoration: BoxDecoration(
                                 color: folio.status != "Por entregar"
-                                    ? Color(
-                                        int.parse(folio.statusColor.toString()),
-                                      )
+                                    ? statusColor
                                     : Colors.white,
                                 borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                  color: Color(
-                                    int.parse(folio.statusColor.toString()),
-                                  ),
-                                ),
+                                border: Border.all(color: statusColor),
                               ),
                               child: Text(
                                 folio.status.toString(),
                                 style: TextStyle(
                                   color: folio.status == "Por entregar"
-                                      ? Color(
-                                          int.parse(
-                                            folio.statusColor.toString(),
-                                          ),
-                                        )
+                                      ? statusColor
                                       : Colors.white,
                                   fontSize: 12,
                                 ),

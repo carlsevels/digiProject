@@ -41,7 +41,6 @@ class ArchivadosController extends GetxController
         return;
       }
 
-      // Obtener rol del usuario directamente desde Supabase si aún no está cargado
       if (rolUsuario.value == 0) {
         final datosRes = await Supabase.instance.client
             .from('datosPersonales')
@@ -49,33 +48,38 @@ class ArchivadosController extends GetxController
             .eq('userId', miId)
             .maybeSingle();
 
-        if (datosRes != null) {
-          rolUsuario.value = datosRes['rolId'] as int;
+        if (datosRes != null && datosRes['rolId'] != null) {
+          rolUsuario.value = int.tryParse(datosRes['rolId'].toString()) ?? 0;
         }
       }
 
-      // Obtenemos la fecha en formato YYYY-MM-DD (si deseas filtrar también por fecha)
-      final String fechaHoy = (selectedDate ?? DateTime.now())
-          .toIso8601String()
-          .split('T')[0];
+      print("Consultando todos los folios archivados en Supabase...");
 
-      print(
-        "Consultando folios archivados en Supabase para la fecha: $fechaHoy con rol: ${rolUsuario.value}",
-      );
+      // 1. Consulta base con relaciones
+      var query = Supabase.instance.client.from('folios').select('''
+            *,
+            clientes:clienteId (nombreComercial, razonSocial),
+            condicionPago:condicionDePagoId (nombre),
+            typeRefaccion:typeRefaccionId (nombre, color),
+            tipoFolio:tipoFolioId (nombre, color),
+            historialestados (
+              id,
+              statusId,
+              created_at,
+              status:statusId (nombre, color)
+            )
+          ''');
 
-      // Construimos la consulta base para folios archivados (isArchived = true)
-      // Ajusta los filtros según si también necesitas filtrar por fecha o solo por archivados y búsqueda de ID
-      var query = Supabase.instance.client
-          .from('folios')
-          .select()
-          .eq('isArchived', true);
+      var filteredQuery = query.eq('isArchived', true);
 
-      // Si hay un texto de búsqueda por ID, aplicamos el filtro (ej. que contenga el texto o sea igual)
       if (idBuscado.trim().isNotEmpty) {
-        query = query.ilike('folioId', '%$idBuscado%');
+        filteredQuery = filteredQuery.ilike('folioId', '%$idBuscado%');
       }
 
-      final response = await query;
+      final response = await filteredQuery.order(
+        'created_at',
+        ascending: false,
+      );
 
       List<Folios> listFolios = (response as List)
           .map((element) => Folios.fromJson(Map<String, dynamic>.from(element)))
@@ -84,7 +88,7 @@ class ArchivadosController extends GetxController
       if (listFolios.isEmpty) {
         change(listFolios, status: RxStatus.empty());
       } else {
-        print("listFolios Archivados: ${jsonEncode(listFolios)}");
+        print("listFolios Archivados encontrados: ${listFolios.length}");
         change(listFolios, status: RxStatus.success());
       }
     } catch (e) {
@@ -110,9 +114,9 @@ class ArchivadosController extends GetxController
         if (rolData != null && rolData is Map) {
           rolName.value = rolData['name'] ?? "Sin rol";
         }
-        
+
         nameUser.value = resultado["nombre"] ?? "Sin nombre";
-        
+
         print("rolName: ${rolName.value}");
         print("nameUser: ${nameUser.value}");
       } else {
@@ -149,13 +153,12 @@ class ArchivadosController extends GetxController
     }
   }
 
-  Future<void> archivarFolio(String folioId) async {
+  Future<void> archivarFolio(String idRegistro) async {
     try {
-      // Cambiar 'isArchived' a false para desarchivar el folio directamente en Supabase
       await Supabase.instance.client
           .from('folios')
           .update({'isArchived': false})
-          .eq('folioId', folioId);
+          .eq('id', idRegistro);
 
       await getFoliosWithDate(id.text);
     } catch (e) {
@@ -165,11 +168,10 @@ class ArchivadosController extends GetxController
 
   Future<void> eliminarFolio(String folioId) async {
     try {
-      // Eliminar el registro directamente en Supabase
       await Supabase.instance.client
           .from('folios')
           .delete()
-          .eq('folioId', folioId);
+          .eq('id', folioId);
 
       await getFoliosWithDate(id.text);
     } catch (e) {

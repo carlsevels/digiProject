@@ -45,7 +45,6 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
-      // Consulta directa a Supabase buscando el folio por coincidencia parcial en el ID
       final response = await Supabase.instance.client
           .from('folios')
           .select()
