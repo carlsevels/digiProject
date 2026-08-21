@@ -16,6 +16,7 @@ class AddFoliosController extends GetxController with StateMixin {
   RxInt repartidorId = 0.obs;
   RxInt tipoDocumentoId = 0.obs;
   final RxString fechaSeleccionada = "".obs;
+  final RxBool isLoading = false.obs;
 
   //Controllers
   TextEditingController cantidadController = TextEditingController();
@@ -161,6 +162,9 @@ class AddFoliosController extends GetxController with StateMixin {
   }
 
   Future<Map<String, dynamic>?> postFolio() async {
+    // Evitar ejecuciones simultáneas si ya se está enviando un formulario
+    if (isLoading.value) return null;
+
     try {
       final supabase = Supabase.instance.client;
 
@@ -173,21 +177,96 @@ class AddFoliosController extends GetxController with StateMixin {
         return null;
       }
 
-      final String uuidUnico = const Uuid().v4();
-      final String fechaActual = DateTime.now().toIso8601String();
-
-      final int cantidad = int.tryParse(cantidadController.text) ?? 0;
+      // ============================================================
+      // 1. OBTENCIÓN Y LIMPIEZA DE DATOS
+      // ============================================================
+      final String numReporte = numReporteController.text.trim();
+      final String cantidadText = cantidadController.text.trim();
+      final int cantidad = int.tryParse(cantidadText) ?? 0;
 
       final int tipoDoc = tipoDocumentoId.value;
       final int cliente = clienteId.value;
       final int refaccion = refaccionId.value;
       final int condicion = condicionPagoId.value;
 
-      if (cliente == 0 || tipoDoc == 0) {
-        Get.snackbar("Error", "Debes seleccionar valores válidos.");
+      // ============================================================
+      // 2. VALIDACIONES ESTRICTAS (ANTES DE CUALQUIER OPERACIÓN)
+      // ============================================================
+
+      // Validar Número de Reporte / Folio
+      if (numReporte.isEmpty) {
+        Get.snackbar(
+          "Campo Requerido",
+          "Por favor ingresa el número de reporte/folio.",
+        );
+        return null; // SE DETIENE AQUÍ: NADA LLEGA A SUPABASE
+      }
+
+      // Validar Cliente
+      if (cliente == 0) {
+        Get.snackbar("Campo Requerido", "Debes seleccionar un cliente.");
+        return null; // SE DETIENE AQUÍ
+      }
+
+      // Validar Tipo de Documento
+      if (tipoDoc == 0) {
+        Get.snackbar(
+          "Campo Requerido",
+          "Debes seleccionar un tipo de documento.",
+        );
+        return null; // SE DETIENE AQUÍ
+      }
+
+      // Validar Cantidad
+      if (cantidadText.isEmpty || cantidad <= 0) {
+        Get.snackbar("Campo Requerido", "Debes ingresar una cantidad válida.");
+        return null; // SE DETIENE AQUÍ
+      }
+
+      // Validar Condición de Pago
+      if (condicion == 0) {
+        Get.snackbar(
+          "Campo Requerido",
+          "Debes seleccionar una condición de pago.",
+        );
+        return null; // SE DETIENE AQUÍ
+      }
+
+      // Validar Refacción
+      if (refaccion == 0) {
+        Get.snackbar(
+          "Campo Requerido",
+          "Debes seleccionar un tipo de refacción.",
+        );
+        return null; // SE DETIENE AQUÍ
+      }
+
+      // Activar loader para bloquear nuevos clics
+      isLoading.value = true;
+
+      // ============================================================
+      // 3. VERIFICAR DUPLICADOS EN BASE DE DATOS
+      // ============================================================
+      final existingFolio = await supabase
+          .from('folios')
+          .select('id')
+          .eq('folioId', numReporte)
+          .maybeSingle();
+
+      if (existingFolio != null) {
+        Get.snackbar(
+          "Aviso",
+          "El número de folio '$numReporte' ya está registrado.",
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
         return null;
       }
 
+      // ============================================================
+      // 4. PREPARACIÓN DE DATOS E INSERCIÓN DE FOLIO
+      // ============================================================
+      final String uuidUnico = const Uuid().v4();
       String? repartidorUuid;
 
       if (reparto.isNotEmpty && repartidorId.value != 0) {
@@ -195,7 +274,6 @@ class AddFoliosController extends GetxController with StateMixin {
           (u) => u.id == repartidorId.value,
           orElse: () => Users(userId: null),
         );
-
         repartidorUuid = u.userId;
       }
 
@@ -209,7 +287,7 @@ class AddFoliosController extends GetxController with StateMixin {
         'repartidorId': repartidorUuid,
         'creadorId': userId,
         'created_at': fechaSeleccionada.value,
-        'folioId': numReporteController.text,
+        'folioId': numReporte,
         'isArchived': false,
       };
 
@@ -219,43 +297,24 @@ class AddFoliosController extends GetxController with StateMixin {
           .select()
           .single();
 
+      // ============================================================
+      // 5. INSERCIÓN EN HISTORIAL
+      // ============================================================
       final Map<String, dynamic> datosHistorial = {
         'id': const Uuid().v4(),
-
         'folioId': uuidUnico,
-
         'statusId': 1,
-
         'created_at': fechaSeleccionada.value,
       };
 
-      print('');
-      print('==========================================');
-      print('🟡 CREANDO HISTORIAL');
-      print('==========================================');
-      print('🆔 ID HISTORIAL: ${datosHistorial['id']}');
-      print('🔗 FOLIO ID: ${datosHistorial['folioId']}');
-      print('📊 STATUS ID: ${datosHistorial['statusId']}');
-      print('📅 FECHA: ${datosHistorial['created_at']}');
-      print('📦 Datos historial: $datosHistorial');
-
-      // ============================================================
-      // 8. INSERTAR HISTORIAL
-      // ============================================================
       final historialResponse = await supabase
           .from('historialestados')
           .insert(datosHistorial)
           .select()
           .single();
 
-      print('');
-      print('==========================================');
-      print('✅ HISTORIAL CREADO CORRECTAMENTE');
-      print('==========================================');
-      print('📚 Respuesta: $historialResponse');
-
       // ============================================================
-      // 9. LIMPIAR FORMULARIO
+      // 6. LIMPIAR FORMULARIO
       // ============================================================
       cantidadController.clear();
       numReporteController.clear();
@@ -267,7 +326,7 @@ class AddFoliosController extends GetxController with StateMixin {
       tipoDocumentoId.value = 0;
 
       // ============================================================
-      // 10. NOTIFICACIÓN
+      // 7. NOTIFICAR Y REDIRIGIR
       // ============================================================
       Get.snackbar(
         "Guardado",
@@ -275,24 +334,13 @@ class AddFoliosController extends GetxController with StateMixin {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      // ============================================================
-      // 11. REGRESAR A FOLIOS
-      // ============================================================
       Get.offAllNamed(Routes.FOLIOS);
 
-      // ============================================================
-      // 12. RETORNAR INFORMACIÓN
-      // ============================================================
       return {'folio': folioResponse, 'historial': historialResponse};
     } catch (e, stackTrace) {
-      print('');
       print('==========================================');
-      print('❌ ERROR AL CREAR FOLIO');
-      print('==========================================');
-      print('ERROR: $e');
-      print('');
-      print('STACKTRACE:');
-      print(stackTrace);
+      print('❌ ERROR AL CREAR FOLIO: $e');
+      print('STACKTRACE:\n$stackTrace');
       print('==========================================');
 
       Get.snackbar(
@@ -303,6 +351,9 @@ class AddFoliosController extends GetxController with StateMixin {
       );
 
       return null;
+    } finally {
+      // Asegura que siempre libere el indicador de carga, incluso si falla
+      isLoading.value = false;
     }
   }
 
