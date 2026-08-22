@@ -11,11 +11,8 @@ class BitacoraCalendar extends GetView<FoliosController> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
-
     final firstDate = today.subtract(const Duration(days: 15));
-
     final lastDate = today.add(const Duration(days: 5));
 
     return Row(
@@ -82,68 +79,73 @@ class BitacoraCalendar extends GetView<FoliosController> {
         const SizedBox(width: 8),
 
         // ============================================================
-        // CALENDARIO
+        // CALENDARIO REACTIVO CON Obx
         // ============================================================
         Expanded(
-          child: EasyInfiniteDateTimeLine(
-            locale: 'es',
-            showTimelineHeader: false,
+          child: Obx(() {
+            // Convertimos la fecha seleccionada en string o Rx a DateTime para el focusDate
+            DateTime fechaFocuseada =
+                DateTime.tryParse(controller.fechaSeleccionada.value) ??
+                DateTime.now();
 
-            controller: controller.timelineController,
-
-            firstDate: firstDate,
-            lastDate: lastDate,
-
-            focusDate: controller.selectedDate,
-
-            onDateChange: (date) async {
-              controller.changeDate(date, onDateSelected);
-
-              await controller.getFoliosWithDate();
-
-              print('CALENDARIO FINAL: ${controller.fechaSeleccionada.value}');
-            },
-            dayProps: EasyDayProps(
-              height: 85,
-              width: 65,
-              dayStructure: DayStructure.monthDayNumDayStr,
-
-              activeDayStyle: DayStyle(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  color: Color(0xFF1D6CFF),
+            return EasyInfiniteDateTimeLine(
+              locale: 'es',
+              showTimelineHeader: false,
+              controller: controller.timelineController,
+              firstDate: firstDate,
+              lastDate: lastDate,
+              focusDate:
+                  fechaFocuseada, // Ahora reacciona dinámicamente al cambio sin redibujar toda la pantalla
+              onDateChange: (date) async {
+                controller.changeDate(date, onDateSelected);
+                await controller.getFoliosWithDate();
+              },
+              dayProps: EasyDayProps(
+                height: 85,
+                width: 65,
+                dayStructure: DayStructure.monthDayNumDayStr,
+                activeDayStyle: DayStyle(
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    color: Color(0xFF1D6CFF),
+                  ),
+                  dayNumStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  dayStrStyle: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                  monthStrStyle: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                dayNumStyle: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                dayStrStyle: const TextStyle(fontSize: 12, color: Colors.white),
-                monthStrStyle: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w500,
+                inactiveDayStyle: DayStyle(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    color: Colors.grey.shade200,
+                  ),
+                  dayNumStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  dayStrStyle: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                  monthStrStyle: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-
-              inactiveDayStyle: DayStyle(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  color: Colors.grey.shade200,
-                ),
-                dayNumStyle: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                dayStrStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                monthStrStyle: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
+            );
+          }),
         ),
       ],
     );

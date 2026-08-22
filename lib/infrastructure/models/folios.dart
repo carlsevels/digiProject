@@ -80,7 +80,8 @@ class Folios {
       numExt = dir['numExt']?.toString();
       numInt = dir['numInt']?.toString();
 
-      final muni = dir['municipios'] is Map ? dir['municipios'] : {};
+      // Corregido a 'municipio' (singular) para coincidir con el alias de la consulta Supabase
+      final muni = dir['municipio'] is Map ? dir['municipio'] : {};
       municipio = muni['nombre']?.toString();
     } else {
       municipio = json['municipio']?.toString();
@@ -103,9 +104,18 @@ class Folios {
 
     tiporeporte = json['tipoReporte']?.toString();
     creador = json['creador']?.toString();
-    repartidor = json['repartidor']?.toString();
 
-    // 3. Extracción de estatus (Soporta lista de historial o registro directo del historial)
+    // 3. Extracción de la relación 'repartidor' (datosPersonales)
+    final repData = json['repartidor'] is Map ? json['repartidor'] : {};
+    if (repData.isNotEmpty) {
+      final nombreRep = repData['nombre']?.toString() ?? '';
+      final apellidoRep = repData['apellidoPaterno']?.toString() ?? '';
+      repartidor = '$nombreRep $apellidoRep'.trim();
+    } else {
+      repartidor = json['repartidor']?.toString();
+    }
+
+    // 4. Extracción de estatus (Soporta lista de historial o registro directo del historial)
     final historialList = json['historialestados'] is List ? json['historialestados'] as List : [];
     
     if (historialList.isNotEmpty) {
@@ -116,7 +126,6 @@ class Folios {
       status = estadoRelacion['nombre']?.toString();
       statusColor = estadoRelacion['color']?.toString() ?? ultimoEstado['statusColor']?.toString();
     } else if (json['status'] is Map) {
-      // Si viene directamente de la consulta de la tabla 'historialestados'
       final estadoRelacion = json['status'] as Map;
       statusId = json['statusId']?.toString() ?? json['status_id']?.toString();
       status = estadoRelacion['nombre']?.toString();

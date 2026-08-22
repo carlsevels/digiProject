@@ -27,12 +27,22 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
   @override
   void onInit() {
     super.onInit();
-    print('CONTROLLER FOLIOS: ${identityHashCode(this)}');
     _onInit();
   }
 
   Future<void> _onInit() async {
     selectedDate ??= DateTime.now();
+    final now = DateTime.now();
+    selectedDate = DateTime(now.year, now.month, now.day);
+    fechaSeleccionada.value = selectedDate!.toIso8601String().split('T')[0];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        timelineController.animateToDate(selectedDate!);
+      } catch (e) {
+        debugPrint('Error al inicializar el scroll del calendario: $e');
+      }
+    });
     await getDatos();
     await getFoliosWithDate();
     if (fechaSeleccionada.value.isEmpty) {
@@ -297,15 +307,19 @@ class FoliosController extends GetxController with StateMixin<List<Folios>> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
+    // 1. Actualizamos la variable local del controlador
     selectedDate = today;
 
+    // 2. IMPORTANTE: Asignamos el valor en formato string para que el Obx del calendario reaccione al instante
     fechaSeleccionada.value =
         '${today.year.toString().padLeft(4, '0')}-'
         '${today.month.toString().padLeft(2, '0')}-'
         '${today.day.toString().padLeft(2, '0')}';
 
+    // 3. Animamos el timeline y pedimos los folios
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
+        // Forzamos el movimiento del timeline hacia el día de hoy
         timelineController.animateToDate(today);
       } catch (e, stackTrace) {
         debugPrint('❌ Error haciendo scroll a hoy: $e');

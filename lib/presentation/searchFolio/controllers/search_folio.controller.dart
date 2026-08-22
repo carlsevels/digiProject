@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:bitacora_frontend/infrastructure/models/folios.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -5,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class SearchFolioController extends GetxController with StateMixin<Folios> {
-  //TODO: Implement SearchFolioController
   RxInt currentStep = 0.obs;
   RxInt statusId = 0.obs;
   TextEditingController id = TextEditingController();
@@ -14,6 +14,7 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   var hasData = false.obs;
 
   final count = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -45,34 +46,75 @@ class SearchFolioController extends GetxController with StateMixin<Folios> {
   Future<void> getDetailsFolio(String idBuscado) async {
     change(null, status: RxStatus.loading());
     try {
+      // Consulta actualizada con las relaciones completas adaptada a la búsqueda parcial (ilike)
       final response = await Supabase.instance.client
           .from('folios')
-          .select()
+          .select('''
+            id, 
+            folioId, 
+            isArchived, 
+            created_at,
+            cantidad,
+            repartidor:repartidorId(nombre, apellidoPaterno),
+            tipofolio:tipoFolioId(nombre),
+            clientes:clienteId(
+              nombreComercial,
+              direcciones(
+                calle,
+                colonia,
+                codigoPostal,
+                numExt,
+                numInt,
+                municipios(nombre)
+              )
+            ),
+            typeRefaccion:typeRefaccionId(nombre),
+            condicionPago:condicionDePagoId(nombre),
+            historialestados(
+              statusId,
+              status:statusId(nombre, color)
+            )
+          ''')
           .ilike('folioId', '%$idBuscado%')
+          .order(
+            'created_at',
+            ascending: true,
+            referencedTable: 'historialestados',
+          )
           .maybeSingle();
 
       if (response == null) {
         change(null, status: RxStatus.empty());
         return;
       }
-      
+
       final folio = Folios.fromJson(Map<String, dynamic>.from(response));
 
-      final ultimoRegistro = await getUltimoStatus(
-        folio.folioIdHistorial ?? "",
-      );
+      final idParaHistorial =
+          folio.folioIdHistorial ?? folio.folioId ?? idBuscado;
+
+      final ultimoRegistro = await getUltimoStatus(idParaHistorial);
 
       if (ultimoRegistro != null) {
         statusId.value = ultimoRegistro["statusId"] as int;
         currentStep.value = getStepIndex(statusId.value);
+        print("Status actual actualizado a: ${currentStep.value}");
       } else {
-        print(
-          "ADVERTENCIA: No se encontró ningún registro en historialestados para el folioId: ${folio.folioId}",
-        );
+        // Fallback: Si el historial viene directamente en el JSON de la consulta
+        if (folio.statusId != null) {
+          statusId.value = int.tryParse(folio.statusId!) ?? 1;
+          currentStep.value = getStepIndex(statusId.value);
+        } else {
+          print(
+            "ADVERTENCIA: No se encontró estatus para el folioId: ${folio.folioId}",
+          );
+        }
       }
 
+      print("Folio: ${jsonEncode(folio)}");
       change(folio, status: RxStatus.success());
     } catch (e) {
+      print("Error al cargar detalles del folio: $e");
       change(null, status: RxStatus.error(e.toString()));
     }
   }

@@ -124,7 +124,7 @@ class DetallesFolioScreen extends GetView<DetallesFolioController> {
           bottomNavigationBar: controller.statusId.value != 3
               ? BtnSliderStatus(state: state)
               : SizedBox.shrink(),
-          backgroundColor: Color(0XFFF8FAFC),
+          backgroundColor: Colors.white,
           appBar: AppBarWithoutImage(
             title: "Detalles de Folio",
             state: state,

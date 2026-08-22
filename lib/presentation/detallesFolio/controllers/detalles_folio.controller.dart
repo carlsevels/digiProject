@@ -50,6 +50,7 @@ class DetallesFolioController extends GetxController with StateMixin<Folios> {
             isArchived, 
             created_at,
             cantidad,
+            repartidor:repartidorId(nombre, apellidoPaterno),
             tipofolio:tipoFolioId(nombre),
             clientes:clienteId(
               nombreComercial,

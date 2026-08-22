@@ -253,568 +253,659 @@ class FoliosScreen extends GetView<FoliosController> {
           ),
         ),
       ),
-      body: controller.obx(
-        onLoading: Container(
-          color: Colors.white,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeInOut,
-                  builder: (context, value, child) =>
-                      Transform.scale(scale: value, child: child),
-                  child: SizedBox(
-                    width: 120,
-                    child: Image.asset(
-                      fit: BoxFit.contain,
-                      "assets/logos/digiApp.jpeg",
+                Obx(
+                  () => Text(
+                    controller.obtenerEtiquetaFecha(
+                      DateTime.tryParse(controller.fechaSeleccionada.value) ??
+                          DateTime.now(),
                     ),
+                    textScaler: const TextScaler.linear(1.8),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(50, 30),
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                  ),
+                  onPressed: () {
+                    Get.toNamed(
+                      Routes.ADD_FOLIOS,
+                      arguments: {'fecha': controller.fechaSeleccionada.value},
+                    );
+                  },
+                  icon: const Icon(Icons.add, color: Color(0XFF1D6CFF)),
+                  label: const Text(
+                    "Agregar Folio",
+                    style: TextStyle(color: Color(0XFF1D6CFF)),
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-        onError: (error) {
-          if (error.toString().contains('SocketException') ||
-              error.toString().contains('no internet')) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.wifi_off,
-                        size: 48,
-                        color: Colors.red,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      "Sin conexión a internet",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "No pudimos conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        controller.onInit();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+          const SizedBox(height: 8),
+
+          BitacoraCalendar(
+            onDateSelected: (value) {
+              controller.fechaSeleccionada.value = value
+                  .toIso8601String()
+                  .split('T')[0];
+            },
+          ),
+          const SizedBox(height: 16),
+
+          Expanded(
+            child: controller.obx(
+              onLoading: Container(
+                color: Colors.white,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.8, end: 1.0),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeInOut,
+                        builder: (context, value, child) =>
+                            Transform.scale(scale: value, child: child),
+                        child: SizedBox(
+                          width: 120,
+                          child: Image.asset(
+                            fit: BoxFit.contain,
+                            "assets/logos/digiApp.jpeg",
+                          ),
                         ),
                       ),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text("Reintentar conexión"),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            );
-          }
-          return Center(child: Text("Ocurrió un error inesperado: $error"));
-        },
-        onEmpty: RefreshIndicator(
-          color: Colors.white,
-          backgroundColor: const Color(0XFF1D6CFF),
-          onRefresh: () async {
-            await controller.getFoliosWithDate();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: FoliosEmptyPage(needDate: true),
-          ),
-        ),
-        (state) {
-          return RefreshIndicator(
-            color: Colors.white,
-            backgroundColor: const Color(0XFF1D6CFF),
-            onRefresh: () => controller.getFoliosWithDate(),
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: state!.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Obx(
-                              () => Text(
-                                controller.obtenerEtiquetaFecha(
-                                  DateTime.tryParse(
-                                        controller.fechaSeleccionada.value,
-                                      ) ??
-                                      DateTime.now(),
-                                ),
-                                textScaler: const TextScaler.linear(1.8),
+              onError: (error) {
+                if (error.toString().contains('SocketException') ||
+                    error.toString().contains('no internet')) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.wifi_off,
+                              size: 48,
+                              color: Colors.red,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            "Sin conexión a internet",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "No pudimos conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              controller.onInit();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F172A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            TextButton.icon(
-                              style: TextButton.styleFrom(
-                                minimumSize: const Size(50, 30),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4),
-                                  ),
-                                ),
-                              ),
-
-                              onPressed: () {
-                                Get.toNamed(
-                                  Routes.ADD_FOLIOS,
-                                  arguments: {
-                                    'fecha': controller.fechaSeleccionada.value,
-                                  },
-                                );
-                              },
-
-                              icon: const Icon(
-                                Icons.add,
-                                color: Color(0XFF1D6CFF),
-                              ),
-                              label: const Text(
-                                "Agregar Folio",
-                                style: TextStyle(color: Color(0XFF1D6CFF)),
-                              ),
-                            ),
-                          ],
-                        ),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text("Reintentar conexión"),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      BitacoraCalendar(
-                        onDateSelected: (value) {
-                          controller.fechaSeleccionada.value = value
-                              .toIso8601String()
-                              .split('T')[0];
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
                   );
                 }
-                final folio = state[index - 1];
-                final statusColor = controller.parseColor(
-                  folio.statusColor?.toString(),
-                  defaultColor: const Color(0XFF1D6CFF),
+                return Center(
+                  child: Text("Ocurrió un error inesperado: $error"),
                 );
-
-                return InkWell(
-                  onLongPress: () {
-                    direccionDialog(folio: folio);
-                  },
-                  onTap: () {
-                    if (folio.folioId != null) {
-                      Get.toNamed(
-                        Routes.DETALLES_FOLIO,
-                        arguments: folio.folioId.toString(),
-                      );
-                    }
-                  },
-                  child: Dismissible(
-                    key: ValueKey(folio.id),
-                    direction: controller.rolName.value == "Reparto"
-                        ? DismissDirection.startToEnd
-                        : DismissDirection.horizontal,
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFE8F0FE),
-                                      child: Icon(
-                                        Icons.archive_outlined,
-                                        size: 40,
-                                        color: Color(0xFF1A73E8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Archivar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.archivarFolio(
-                                              folio.id ?? "",
-                                            );
-                                            Navigator.pop(context, true);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.orange,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Archivar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        return confirmacion ?? false;
-                      }
-                      if (direction == DismissDirection.endToStart) {
-                        final bool? confirmacion = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Color(0xFFFEECEC),
-                                      child: Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 40,
-                                        color: Color(0xFFD9534F),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Eliminar Folio',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text(
-                                            'Cancelar',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            controller.eliminarFolio(
-                                              folio.id ?? "",
-                                            );
-                                            Navigator.pop(context, true);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFFD9534F,
-                                            ),
-                                            foregroundColor: Colors.white,
-                                          ),
-                                          child: const Text('Eliminar'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-
-                        return confirmacion ?? false;
-                      }
-                      return true;
+              },
+              onEmpty: RefreshIndicator(
+                color: Colors.white,
+                backgroundColor: const Color(0XFF1D6CFF),
+                onRefresh: () async {
+                  await controller.getFoliosWithDate();
+                },
+                child: FoliosEmptyPage(needDate: true),
+              ),
+              (state) {
+                return RefreshIndicator(
+                  color: Colors.white,
+                  backgroundColor: const Color(0XFF1D6CFF),
+                  onRefresh: () => controller.getFoliosWithDate(),
+                  child: ListView.separated(
+                    separatorBuilder: (context, index) {
+                      return Divider(height: 0);
                     },
-                    background: Container(
-                      color: Colors.orange,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.archive_outlined,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Archivar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'Eliminar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.delete_outline,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ],
-                      ),
-                    ),
-                    child: ListTile(
-                      style: ListTileStyle.list,
-                      dense: true,
-                      isThreeLine: false,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      leading: Column(
-                        children: [
-                          Text(
-                            folio.cantidad.toString(),
-                            textScaleFactor: 3.2,
-                            style: const TextStyle(height: 1),
-                          ),
-                          Flexible(
-                            child: Container(
-                              constraints: const BoxConstraints(maxWidth: 35),
-                              child: Text(
-                                folio.tiporefaccion.toString(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      title: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.business_center_outlined, size: 20),
-                          const SizedBox(width: 8.0),
-                          Expanded(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: state!.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == state.length) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Center(
                             child: Text(
-                              folio.nombreComercial ?? 'Sin nombre comercial',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              state.isEmpty
+                                  ? "No hay folios registrados para esta fecha"
+                                  : "No hay más folios por mostrar",
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                color: Color(0XFF94A3B8),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      subtitle: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
+                        );
+                      }
+
+                      final folio = state[index];
+                      final statusColor = controller.parseColor(
+                        folio.statusColor?.toString(),
+                        defaultColor: const Color(0XFF1D6CFF),
+                      );
+
+                      return InkWell(
+                        onLongPress: () {
+                          direccionDialog(folio: folio);
+                        },
+                        onTap: () {
+                          if (folio.folioId != null) {
+                            Get.toNamed(
+                              Routes.DETALLES_FOLIO,
+                              arguments: folio.folioId.toString(),
+                            );
+                          }
+                        },
+                        child: Dismissible(
+                          key: ValueKey(folio.id),
+                          direction: controller.rolName.value == "Reparto"
+                              ? DismissDirection.startToEnd
+                              : DismissDirection.horizontal,
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              final bool? confirmacion = await showDialog<bool>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: Color(0xFFE8F0FE),
+                                            child: Icon(
+                                              Icons.archive_outlined,
+                                              size: 40,
+                                              color: Color(0xFF1A73E8),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          const Text(
+                                            'Archivar Folio',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            '¿Estás seguro de enviar el folio #${folio.folioId ?? ""} al archivo?',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  false,
+                                                ),
+                                                child: const Text(
+                                                  'Cancelar',
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  controller.archivarFolio(
+                                                    folio.id ?? "",
+                                                  );
+                                                  Navigator.pop(context, true);
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.orange,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                                child: const Text('Archivar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+
+                              return confirmacion ?? false;
+                            }
+                            if (direction == DismissDirection.endToStart) {
+                              final bool? confirmacion = await showDialog<bool>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: Color(0xFFFEECEC),
+                                            child: Icon(
+                                              Icons.delete_outline_rounded,
+                                              size: 40,
+                                              color: Color(0xFFD9534F),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          const Text(
+                                            'Eliminar Folio',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            '¿Estás seguro de eliminar el folio #${folio.folioId ?? ""}? Esta acción no se puede deshacer.',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                  context,
+                                                  false,
+                                                ),
+                                                child: const Text(
+                                                  'Cancelar',
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  controller.eliminarFolio(
+                                                    folio.id ?? "",
+                                                  );
+                                                  Navigator.pop(context, true);
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(
+                                                    0xFFD9534F,
+                                                  ),
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                                child: const Text('Eliminar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+
+                              return confirmacion ?? false;
+                            }
+                            return true;
+                          },
+                          background: Container(
+                            color: Colors.orange,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            child: const Row(
                               children: [
-                                if (folio.municipio != null &&
-                                    folio.municipio!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
+                                Icon(
+                                  Icons.archive_outlined,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Archivar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.municipio!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    " - ",
-                                    style: TextStyle(color: Color(0XFF64748B)),
-                                  ),
-                                ],
-
-                                if (folio.condicionPago != null &&
-                                    folio.condicionPago!.trim().isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.payments_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.condicionPago!,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                  ),
-                                  if (folio.folioId != null &&
-                                      folio.folioId
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty)
-                                    const Text(
-                                      " - ",
-                                      style: TextStyle(
-                                        color: Color(0XFF64748B),
-                                      ),
-                                    ),
-                                ],
-
-                                if (folio.folioId != null &&
-                                    folio.folioId
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty) ...[
-                                  const Icon(
-                                    Icons.confirmation_number_outlined,
-                                    size: 16,
-                                    color: Color(0XFF64748B),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      folio.folioId.toString(),
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Color(0XFF64748B),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: folio.status != "Por entregar"
-                                  ? statusColor
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(color: statusColor),
-                            ),
-                            child: Text(
-                              folio.status.toString(),
-                              style: TextStyle(
-                                color: folio.status == "Por entregar"
-                                    ? statusColor
-                                    : Colors.white,
-                                fontSize: 12,
-                              ),
+                          secondaryBackground: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Eliminar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                          child: ListTile(
+                            style: ListTileStyle.list,
+                            dense: true,
+                            isThreeLine: false,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                            leading: Column(
+                              children: [
+                                Text(
+                                  folio.cantidad.toString(),
+                                  textScaler: const TextScaler.linear(3.2),
+                                  style: const TextStyle(height: 1),
+                                ),
+                                Flexible(
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 35,
+                                    ),
+                                    child: Text(
+                                      folio.tiporefaccion.toString(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            title: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.business_center_outlined,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: Text(
+                                    folio.nombreComercial ??
+                                        'Sin nombre comercial',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: [
+                                      // 1. MUNICIPIO
+                                      if (folio.municipio != null &&
+                                          folio.municipio!.trim().isNotEmpty)
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 160,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.location_on_outlined,
+                                                size: 15,
+                                                color: Color(0XFF64748B),
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Flexible(
+                                                child: Text(
+                                                  folio.municipio!,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Color(0XFF64748B),
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                      // 2. CONDICIÓN DE PAGO
+                                      if (folio.condicionPago != null &&
+                                          folio.condicionPago!
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                        if (folio.municipio != null &&
+                                            folio.municipio!.trim().isNotEmpty)
+                                          const Text(
+                                            "•",
+                                            style: TextStyle(
+                                              color: Color(0XFF94A3B8),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 160,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.payments_outlined,
+                                                size: 15,
+                                                color: Color(0XFF64748B),
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Flexible(
+                                                child: Text(
+                                                  folio.condicionPago!,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Color(0XFF64748B),
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+
+                                      // 3. FOLIO ID
+                                      if (folio.folioId != null &&
+                                          folio.folioId
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                        if ((folio.municipio != null &&
+                                                folio.municipio!
+                                                    .trim()
+                                                    .isNotEmpty) ||
+                                            (folio.condicionPago != null &&
+                                                folio.condicionPago!
+                                                    .trim()
+                                                    .isNotEmpty))
+                                          const Text(
+                                            "•",
+                                            style: TextStyle(
+                                              color: Color(0XFF94A3B8),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 140,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons
+                                                    .confirmation_number_outlined,
+                                                size: 15,
+                                                color: Color(0XFF64748B),
+                                              ),
+                                              const SizedBox(width: 3),
+                                              Flexible(
+                                                child: Text(
+                                                  folio.folioId.toString(),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    color: Color(0XFF64748B),
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: folio.status != "Por entregar"
+                                        ? statusColor
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(50),
+                                    border: Border.all(color: statusColor),
+                                  ),
+                                  child: Text(
+                                    folio.status.toString(),
+                                    style: TextStyle(
+                                      color: folio.status == "Por entregar"
+                                          ? statusColor
+                                          : Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
